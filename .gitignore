@@ -17,7 +17,6 @@ e
 f
 
 # Byte-compiled / optimized / DLL files
-server/ml/
 __pycache__/
 *.npy
 *.py[cod]
@@ -26,6 +25,7 @@ __pycache__/
 *.exe
 *.apk
 *.db
+sha256.txt
 
 # temp
 *.bak
