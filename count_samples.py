@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""Count the number of all samples in the Repo."""
 
 from __future__ import print_function
 import os

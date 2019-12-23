@@ -32,6 +32,8 @@ sha256.txt
 *.tmp
 *.swp
 .DS_Store
+temp
+samples
 
 # Jupyter Notebook
 .ipynb_checkpoints

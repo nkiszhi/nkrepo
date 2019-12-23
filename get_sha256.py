@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+""" Get a SHA256 list of all samples in the repo
+"""
 
 from __future__ import print_function
 import os
