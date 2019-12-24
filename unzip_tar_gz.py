@@ -13,4 +13,3 @@ for f in files:
     f = "temp/"+f
     print(f)
     os.system("tar xvzf {} -C samples".format(f)) 
-exit()

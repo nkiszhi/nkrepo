@@ -34,4 +34,3 @@ for i in hex_string:
                     continue
                 print(f)
                 shutil.move(src_path, dst_path)
-                #exit()
