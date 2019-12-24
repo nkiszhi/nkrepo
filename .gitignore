@@ -35,13 +35,5 @@ sha256.txt
 temp
 samples
 
-# Jupyter Notebook
-.ipynb_checkpoints
 
-# pyenv
-.python-version
 
-# virtualenv
-.venv
-venv/
-ENV/
