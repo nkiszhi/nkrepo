@@ -7,6 +7,8 @@ import os
 import shutil
 
 hex_string = "0123456789abcdef"
+n_delete = 0
+n_mov = 0
 
 for i in hex_string:
     for j in hex_string:
@@ -30,8 +32,13 @@ for i in hex_string:
                 if os.path.exists(dst_path):
                     # Delete duplicated samples
                     os.remove(src_path)
+                    n_delete = n_delete + 1
                     print("Delete: {}".format(f))
                     continue
                 print(f)
                 shutil.move(src_path, dst_path)
-                #exit()
+                n_mov = n_mov + 1
+
+print("[o] {} new samples are added into repo.".format(n_mov))
+print("[o] {} duplicated samples are deleted.".format(n_delete))
+
