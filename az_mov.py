@@ -37,9 +37,9 @@ def mov_samples():
                         os.remove(src_path)
                         n_delete = n_delete + 1
                         print("[i]: Deleted duplicated sample {}".format(f))
-                        continue
-                    shutil.move(src_path, dst_path)
-                    n_mov = n_mov + 1
+                    else:
+                        shutil.move(src_path, dst_path)
+                        n_mov = n_mov + 1
     
     print("[o] {} new samples are added into repo.".format(n_mov))
     print("[i] {} duplicated samples are deleted.".format(n_delete))
