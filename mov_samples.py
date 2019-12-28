@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" move samples into repo.""" 
+""" Move samples from samples folder in  the three-level storing architecture
+into the repo in four-level storing architecture.""" 
 
 from __future__ import print_function
 import os
@@ -19,10 +20,10 @@ for i in hex_string:
             files = os.listdir(folder)
             if not files:
                 continue
-            print(folder)
+            print("[o]: Moving samples in {}".format(folder))
             for f in files:
                 if len(f) != 64:
-                    print(f)
+                    #print(f)
                     continue
                 l = f[3]
                 src_path = folder+f
@@ -33,12 +34,11 @@ for i in hex_string:
                     # Delete duplicated samples
                     os.remove(src_path)
                     n_delete = n_delete + 1
-                    print("Delete: {}".format(f))
+                    print("[i]: Deleted duplicated sample {}".format(f))
                     continue
-                print(f)
                 shutil.move(src_path, dst_path)
                 n_mov = n_mov + 1
 
 print("[o] {} new samples are added into repo.".format(n_mov))
-print("[o] {} duplicated samples are deleted.".format(n_delete))
+print("[i] {} duplicated samples are deleted.".format(n_delete))
 
