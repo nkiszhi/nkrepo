@@ -24,10 +24,18 @@ for i in hex_string:
                             continue
                         else:
                             list_samples.append(f)
+        f_sha256 = "sha256_{}{}.txt".format(i,j)
+        with open(f_sha256, 'w') as f:
+            for item in list_samples:
+                f.write("%s\n" % item)
+        list_samples = []
+        print(f_sha256)
 
-with open('sha256.txt', 'w') as f:
-    for item in list_samples:
-        f.write("%s\n" % item)
+
+#Save all sha256
+#with open('sha256.txt', 'w') as f:
+#    for item in list_samples:
+#        f.write("%s\n" % item)
 
 print("In total there are " + str(len(list_samples)) + " malware samples without virus total scan result.")
 
