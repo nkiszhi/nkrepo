@@ -6,7 +6,8 @@ from __future__ import print_function
 import os
 
 hex_string = "0123456789abcdef"
-sample_count = 0
+n_sample = 0
+n_json = 0
 
 for i in hex_string:
     for j in hex_string:
@@ -16,7 +17,10 @@ for i in hex_string:
                 list_all = os.listdir(folder)
                 for f in list_all:
                     if len(f) == 64:
-                        sample_count += 1
+                        n_sample += 1
+                    if f[-5:] == ".json":
+                        n_json += 1
 
-print("In total there are " + str(sample_count) + " malware samples.")
+print("There are {} malware samples in the repo.".format(n_sample))
+print("{} samples are labeled by VirusTotal.com.".format(n_json))
 

@@ -26,7 +26,7 @@ def main():
             continue
         f_zip = "az_zip/"+f
         f_unzip = "az_unzip/"+f
-        p.apply_async(job, (f_zip,f_unzip,))
+        p.apply_async(job, (f_zip, f_unzip, ))
     p.close()
     p.join()
 

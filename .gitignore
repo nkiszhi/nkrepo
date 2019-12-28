@@ -24,9 +24,10 @@ __pycache__/
 *.exe
 *.apk
 *.db
-sha256.txt
+sha256*
 json.txt
 DATA
+kefan_script
 
 # temp
 *.bak
