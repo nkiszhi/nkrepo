@@ -7,6 +7,37 @@ from __future__ import print_function
 import os
 import shutil
 from time import sleep
+import hashlib
+
+input_folder = "./0/"
+repo_folder = "./DATA/"
+# Python program to find SHA256 hexadecimal hash string of a file
+ 
+
+def mov_raw_data():
+    files = os.listdir(input_folder)
+    if not files:
+        return 0
+    print("[o]: Moving samples in {}".format(input_folder))
+    count = 0
+    for sample in files:
+        sha256 = sample[88:].lower()
+        #print(sample[88:])
+        #print(sha256)
+        sample = input_folder+sample
+        with open(sample,"rb") as f:
+            bytes = f.read() # read entire file as bytes
+            _sha256 = hashlib.sha256(bytes).hexdigest();
+            #print(_sha256)
+        if sha256 != _sha256:
+            os.remove(sample)
+            continue
+        dst_path = "./DATA/{}/{}/{}/{}/{}".format(sha256[0],sha256[1],sha256[2],sha256[3],sha256)
+        if os.path.exists(dst_path):
+            os.remove(dst_path)
+        shutil.move(sample, dst_path)
+        count = count + 1
+        print("[i]: {}  {}".format(count, sha256))
 
 
 def mov_samples():
@@ -45,9 +76,7 @@ def mov_samples():
     print("[i] {} duplicated samples are deleted.".format(n_delete))
 
 def main():
-    while 1:
-        mov_samples()
-        sleep(120)
+    mov_raw_data()
 
 if __name__ == "__main__":
     main()
