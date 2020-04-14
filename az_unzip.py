@@ -20,7 +20,7 @@ def job(f_zip, f_unzip):
 
 def main():
     files = os.listdir("az_zip")
-    p = Pool(30)
+    p = Pool(50)
     for f in files:
         if f[-7:] != ".tar.gz":
             continue

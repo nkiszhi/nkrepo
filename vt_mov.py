@@ -13,16 +13,18 @@ REPO = "DATA"
 def mov_vt_results():
     n_mov = 0 # The number of moved json files
     n_del = 0 # The number of deleted json files
-    n_json = 0
     json_files = os.listdir(VT_RESULTS)
     for f in json_files:
         if len(f) != 69:
             continue
+        if f[-5:] != ".json":
+            continue
+        sha256_json = f.lower()
         src_path = "{}/{}".format(VT_RESULTS, f)
-        dst_path = "{}/{}/{}/{}/{}/{}".format(REPO, f[0], f[1], f[2], f[3], f)
+        dst_path = "{}/{}/{}/{}/{}/{}".format(REPO, sha256_json[0], sha256_json[1], sha256_json[2], sha256_json[3], sha256_json)
         if not os.path.exists(dst_path):
             n_mov = n_mov + 1
-            print("{}: {}".format(n_json, f))
+            print("{}: {}".format(n_mov, f))
             shutil.move(src_path, dst_path)
         else:
             n_del = n_del + 1
