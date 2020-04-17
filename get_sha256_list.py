@@ -20,9 +20,10 @@ for i in hex_string:
                 for f in list_all:
                     if len(f) == 64:
                         list_samples.append(f)
+
 f_sha256 = "sha256.txt"
 with open(f_sha256, 'w') as f:
     for item in list_samples:
-        f.write("%s\n" % item)
+        f.write("{}\n".format(item))
 print("In total there are " + str(len(list_samples)) + " malware samples in the repo.")
 
