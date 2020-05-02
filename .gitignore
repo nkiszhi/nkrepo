@@ -28,6 +28,8 @@ sha256*
 json.txt
 DATA
 kefan_script
+az_zip
+az_unzip
 
 # temp
 *.bak

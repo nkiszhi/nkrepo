@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """ Get a SHA256 list of all samples in the repo
@@ -19,6 +20,7 @@ for i in hex_string:
                 for f in list_all:
                     if len(f) == 64:
                         list_samples.append(f)
+<<<<<<< HEAD
                         #f_json = folder + f + ".json"
                         #if os.path.exists(f_json):
                         #    n_json = n_json + 1
@@ -30,6 +32,12 @@ f_sha256 = "sha256.txt"
 with open(f_sha256, 'w') as f:
     for item in list_samples:
         f.write("%s\n" % item)
+=======
+>>>>>>> de8955f8b54d540c6d5ea485c47400df5b4330bb
 
-#print("In total there are " + str(len(list_samples)) + " malware samples without virus total scan result.")
+f_sha256 = "sha256.txt"
+with open(f_sha256, 'w') as f:
+    for item in list_samples:
+        f.write("{}\n".format(item))
+print("In total there are " + str(len(list_samples)) + " malware samples in the repo.")
 
