@@ -10,7 +10,8 @@ def worker(folder):
     _n = 0
     list_all = os.listdir(folder)
     for f in list_all:
-        if len(f) == 64:
+        if f[64:] == ".json":
+            #print(f)
             _n += 1
     return _n
 

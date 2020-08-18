@@ -19,6 +19,7 @@ for i in hex_string:
                 for f in list_all:
                     if f[-5:] == ".json":
                         json_list.append(f)
+                        print(f)
 
 with open('json.txt', 'w') as f:
     for i in json_list:
