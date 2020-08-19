@@ -9,7 +9,7 @@ import datetime
 
 """ get file type, size, time information in a specific folder"""
 def worker(folder):
-    print(folder)
+    print("Start {}".format(folder))
     _n = 0
     list_all = os.listdir(folder)
     list_f_info = []
@@ -33,20 +33,26 @@ def worker(folder):
     with open(f_csv, "w") as f:
         for item in list_f_info:
             f.write("{}\n".format(item))
+    print("Finished {}: {}".format(folder, len(list_f_info)))
     return _n
 
 def main():
     list_dir = []
     hex_string = "0123456789abcdef"
-    p = Pool(200)
+    p = Pool(10)
     _count = []
+    n = 0
     
     for i in hex_string:
         for j in hex_string:
             for k in hex_string:
                 for l in hex_string:
                     folder = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
-                    print(folder)
+                    f_csv = folder + "f_info.csv"
+                    if os.path.isfile(f_csv):
+                        continue
+                    n = n + 1
+                    print("{} : {}".format(n, folder))
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
     print(_count)

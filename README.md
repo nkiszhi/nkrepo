@@ -18,4 +18,4 @@ malware sample, samples are stored in the subfolder
 First, input sample SHA256 value into search.py, and output following information:
 1. Basic information including file name, file size, file type, MD5, SHA-1, SHA256, access time, modify time, changetime, file compress or packer information;
 2. If sample is a PE file, output PE sections information, malware commonly used APIs, anamoly information.
-
+3. If sample has a vt json file, output Anti-Virus engines detection results.
