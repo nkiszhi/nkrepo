@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" Unzip VirusShare.com zip files """
+
+""" Add samples into repo."""
 
 import os
 import shutil
