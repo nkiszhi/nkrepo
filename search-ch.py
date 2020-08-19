@@ -25,12 +25,12 @@ def greet():
 
 
 def log(data):
-    global handle
+    #global handle
     print(data)
-    data = data
-    nextline = "\n"
-    handle.write(data)
-    handle.write(nextline)
+    #data = data
+    #nextline = "\n"
+    #handle.write(data)
+    #handle.write(nextline)
     return
 
 class ExeScan():
@@ -201,25 +201,25 @@ class StringAndThreat():
     def __init__(self,MD5,data):
         self.MD5 = MD5
         self.data = data
-        self.handle = None
+        #self.handle = None
   
     def StringE(self):
         name = "strings_"+self.MD5+".txt"
         name = os.path.join(self.MD5,name)
         if os.path.exists(name):
             return
-        self.handle = open(name,'a')
+        #self.handle = open(name,'a')
         headline = "\t\t\tStrings-%s\n\n" % self.MD5
-        self.handle.write(headline)
-        for m in re.finditer("([\x20-\x7e]{3,})", self.data):
-            self.handle.write(m.group(1))
-            self.handle.write("\n")
+        #self.handle.write(headline)
+        #for m in re.finditer("([\x20-\x7e]{3,})", self.data):
+            #self.handle.write(m.group(1))
+            #self.handle.write("\n")
         return
 
 
 
 def main_s(pe,ch,f,name):
-    global handle
+    #global handle
     filesize = os.stat(name).st_size
     filesize = filesize/1024
     filesize = str(filesize)+"KB"
@@ -238,14 +238,14 @@ def main_s(pe,ch,f,name):
     (MD5,SHA1,SHA256,data) = exescan.hashes()
     stx = StringAndThreat(MD5,data)
     # store reports in folders
-    if os.path.exists(MD5):
-        report_name = str(MD5)+".txt"
-        report_name = os.path.join(MD5,report_name)
-    else:
-        os.mkdir(MD5)
-        report_name = str(MD5)+".txt"
-        report_name = os.path.join(MD5,report_name)
-    handle = open(report_name,'a')
+    #if os.path.exists(MD5):
+    #    report_name = str(MD5)+".txt"
+    #    report_name = os.path.join(MD5,report_name)
+    #else:
+    #    os.mkdir(MD5)
+    #    report_name = str(MD5)+".txt"
+    #    report_name = os.path.join(MD5,report_name)
+    #handle = open(report_name,'a')
     greet()
     log("\n\n[+] 文件名 : %s" % name)
     log("\n\t[*] MD5 	: %s" % MD5)
@@ -262,6 +262,7 @@ def main_s(pe,ch,f,name):
         log("\n[+] 文件类型: DLL")
     else:
         log("\n 不是PE文件结构")
+        return 2
     strings = f.readlines()
     mf = open("API.txt","r")
     MALAPI = mf.readlines()
@@ -296,7 +297,7 @@ def main_s(pe,ch,f,name):
     #else:
     #    print()
     mf.close()
-    handle.close()
+    #handle.close()
     return MD5
 
 def main():
