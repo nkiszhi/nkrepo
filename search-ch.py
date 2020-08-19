@@ -17,11 +17,11 @@ def help():
 
 
 def greet():
-    log("\t\t**********************************************************")
-    log("\t\t**                                                      **")
-    log("\t\t**           Cyber攻击代码库样本检索工具                **")
-    log("\t\t**                                                      **")
-    log("\t\t**********************************************************")
+    log("\t**********************************************************")
+    log("\t**                                                      **")
+    log("\t**           Cyber攻击代码库样本检索工具                **")
+    log("\t**                                                      **")
+    log("\t**********************************************************")
 
 
 def log(data):
@@ -253,7 +253,7 @@ def main_s(pe,ch,f,name):
     log("\t[*] SHA-256	: %s" % SHA256)
     log("\t[*] 文件访问时间      : %s" % atime)
     log("\t[*] 文件内容修改时间      : %s" % mtime)
-    log("\t[*] 文件属性修改时间      : %s" % ctime)
+    #log("\t[*] 文件属性修改时间      : %s" % ctime)
     log("\t[*] 文件大小      : %s" % filesize)
     #check file type (exe, dll)
     if pe.is_exe():
@@ -300,11 +300,11 @@ def main_s(pe,ch,f,name):
     return MD5
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         help()
         sys.exit(0)
     ch = sys.argv[1]
-    fname = sys.argv[2]
+    fname = sys.argv[1]
     folder = "DATA/" + fname[0] + "/"+ fname[1] + "/"+ fname[2]+ "/" + fname[3] + "/"
     fname = folder + fname
     str_cmd = "file {}".format(fname)

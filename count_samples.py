@@ -6,6 +6,13 @@ from __future__ import print_function
 from multiprocessing import Pool
 import os
 
+def greet():
+    print("\t\t**********************************************************")
+    print("\t\t**                                                      **")
+    print("\t\t**           Cyber攻击代码样本库                        **")
+    print("\t\t**                                                      **")
+    print("\t\t**********************************************************")
+
 def worker(folder):
     _n = 0
     list_all = os.listdir(folder)
@@ -15,9 +22,11 @@ def worker(folder):
     return _n
 
 def main():
+    greet()
     list_dir = []
     hex_string = "0123456789abcdef"
     p = Pool(200)
+    print("\n启动200个进程正在统计样本数量\n")
     _count = []
     
     for i in hex_string:
@@ -27,7 +36,7 @@ def main():
                     folder = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
-    print("There are {} malware samples in the repo.".format(sum(_count)))
+    print("Cyber 攻击代码样本库有样本 {} 个.".format(sum(_count)))
 
 
 
