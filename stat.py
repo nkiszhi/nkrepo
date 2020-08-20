@@ -39,7 +39,7 @@ def worker(folder):
 def main():
     list_dir = []
     hex_string = "0123456789abcdef"
-    p = Pool(10)
+    p = Pool(200)
     _count = []
     n = 0
     

@@ -37,6 +37,8 @@ def main():
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
     print("Cyber 攻击代码样本库有样本 {} 个.".format(sum(_count)))
+    print()
+    print()
 
 
 
