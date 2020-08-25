@@ -1,0 +1,1561 @@
+<!--当前所用版本，2020.7.16-->
+<!DOCTYPE html>
+<html>
+<head>
+{#	<link rel="shortcut icon" href="#" />#}
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<!-- 使用IE8以上的渲染 -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>数据统计结果</title>
+	<!--导入的为ECharts3的js -->
+
+</head>
+<body>
+
+    <!--中国地图-->
+    <div id="china_map" style="width: 100%;height: 500px;"></div>
+	<!-- ip关系图-->
+	<div id="chart1" style="width: 100%;height: 1000px;"></div>
+    <!-- ip访问数量-->
+    <div id="chart3" style="width: 100%;height: 450px;padding: 70px 0 0 0"></div>
+    <!-- ip访问数量,时间轴-->
+    <div id="chart6" style="width: 100%;height: 450px;padding: 20px 0 0 0"></div>
+    <!-- ip公有私有饼图-->
+    <div id="bing1" style="width: 100%;height: 700px;padding: 70px 0 0 0"></div>
+    <!-- ip公有私有统计-->
+    <div id="chart5" style="width: 100%;height: 700px;padding: 70px 0 0 0 "></div>
+        <!-- ip流量-->
+    <div id="chart4" style="width: 100%;height: 700px;padding: 70px  0 0 0"></div>
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts-gl/dist/echarts-gl.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts-stat/dist/ecStat.min.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/extension/dataTool.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/map/js/world.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/extension/bmap.min.js"></script>
+<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=o3qDkeQeqpLved3L2kVlHeFWhbv8sUv1&__ec_v__=20190126"></script>
+</body>
+</html>
+
+<!--中国地图-->
+ <script type="text/javascript">
+var dom = document.getElementById("china_map");
+var china_map = echarts.init(dom);
+var app = {};
+option = null;
+
+var data = [
+    {name: '北京', value: 300},
+];
+
+var geoCoordMap = {
+    '北京':[116.408000,39.904000],
+};
+
+var convertData = function (data) {
+    var res = [];
+    for (var i = 0; i < data.length; i++) {
+        var geoCoord = geoCoordMap[data[i].name];
+        if (geoCoord) {
+            res.push({
+                name: data[i].name,
+                value: geoCoord.concat(data[i].value)
+            });
+        }
+    }
+    return res;
+};
+
+option = {
+    backgroundColor: 'transparent',
+    title : {
+        text : '病毒样本库展示',
+        left : '3%',                    // 标题距离左侧边距
+        top : '3%',
+        textStyle : {
+            fontSize: 40,
+            color : '#fff'
+        },
+        subtext:'2020年8月',
+        subtextStyle:{
+            fontSize: 35,
+            color : '#fff'
+        }
+    },
+    tooltip : {
+        textStyle:{fontSize:35},
+        formatter(params){
+           for(x in params){
+               return '北京';
+           }
+        }
+    },
+    bmap: {
+        center: [104.114129, 37.550339],
+        zoom: 5,
+        roam: true,
+        mapStyle: {
+            styleJson: [
+                    {
+                        "featureType": "water",
+                        "elementType": "all",
+                        "stylers": {
+                            "color": "#044161"
+                        }
+                    },
+                    {
+                        "featureType": "land",
+                        "elementType": "all",
+                        "stylers": {
+                            "color": "#004981"
+                        }
+                    },
+                    {
+                        "featureType": "boundary",
+                        "elementType": "geometry",
+                        "stylers": {
+                            "color": "#064f85"
+                        }
+                    },
+                    {
+                        "featureType": "railway",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "highway",
+                        "elementType": "geometry",
+                        "stylers": {
+                            "color": "#004981"
+                        }
+                    },
+                    {
+                        "featureType": "highway",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                            "color": "#005b96",
+                            "lightness": 1
+                        }
+                    },
+                    {
+                        "featureType": "highway",
+                        "elementType": "labels",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "arterial",
+                        "elementType": "geometry",
+                        "stylers": {
+                            "color": "#004981"
+                        }
+                    },
+                    {
+                        "featureType": "arterial",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                            "color": "#00508b"
+                        }
+                    },
+                    {
+                        "featureType": "poi",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "green",
+                        "elementType": "all",
+                        "stylers": {
+                            "color": "#056197",
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "subway",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "manmade",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "local",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "arterial",
+                        "elementType": "labels",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "boundary",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                            "color": "#029fd4"
+                        }
+                    },
+                    {
+                        "featureType": "building",
+                        "elementType": "all",
+                        "stylers": {
+                            "color": "#1a5787"
+                        }
+                    },
+                    {
+                        "featureType": "label",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    }
+            ]
+        }
+    },
+    series : [
+        {
+            name: 'pm2.5',
+            type: 'scatter',
+            coordinateSystem: 'bmap',
+            data: convertData(data),
+            encode: {
+                value: 2
+            },
+            symbolSize: function (val) {
+                return val[2] / 10;
+            },
+            label: {
+                formatter: '{b}',
+                position: 'right'
+            },
+            itemStyle: {
+                color: '#ddb926'
+            },
+            emphasis: {
+                label: {
+                    show: true
+                }
+            }
+        },
+        {
+            name: '北京',
+            type: 'effectScatter',
+            coordinateSystem: 'bmap',
+            data: convertData(data.sort(function (a, b) {
+                return b.value - a.value;
+            }).slice(0, 6)),
+            encode: {
+                value: 2
+            },
+            symbolSize: function (val) {
+                return val[2] / 10;
+            },
+            // showEffectOn: 'emphasis',
+            showEffectOn: 'render',
+            rippleEffect: {
+                brushType: 'stroke'
+            },
+            hoverAnimation: true,
+            label: {
+				textStyle:{
+                    fontSize:20,
+                },
+                formatter: '{b}',
+                position: 'right',
+                show: true
+            },
+            itemStyle: {
+                color: '#f4e925',
+                shadowBlur: 10,
+                shadowColor: '#333'
+            },
+            zlevel: 1
+        },
+    ]
+};
+if (option && typeof option === "object") {
+    china_map.setOption(option, true);
+}
+</script>
+<div>你</div>
+<HR style="FILTER: alpha(opacity=50,finishopacity=0,style=3)" width="100%" color=#e9e9e9 SIZE=2>
+        <div class="LSTM" style="width:100%;padding-top: 15px;padding-left: 30px;padding-bottom15px">
+                <h1 style='font-size:35px;text-align:left'>LSTM检测可疑IP</h1>
+                <div style='height:40px;font-size:20px;text-align:left;vertical-align:center;'>实验室已收集恶意样本数：357761537</div>
+                <div style='height:40px;font-size:20px;text-align:left;vertical-align:center;'>本数据中DNS样本数：148165579</div>
+        </div>
+<!-- ip关系图-->
+<script type="text/javascript">
+	// 基于准备好的容器(这里的容器是id为chart1的div)，初始化echarts实例
+	var chart1 = echarts.init(document.getElementById("chart1"));
+
+	var	option = {
+		backgroundColor: '#fff',	// 背景颜色
+	    title: {                    // 图表标题
+	        text: "IP关系图",           // 标题文本
+	        left : '3%',                    // 标题距离左侧边距
+	        top : '3%',                     // 标题距顶部边距
+			textStyle : {                       // 标题样式
+				color : '#000',                     // 标题字体颜色
+				fontSize : '40',                    // 标题字体大小
+			}
+	    },
+
+	    tooltip: {                  // 提示框的配置
+		    textStyle:{fontSize:35},
+	        formatter: function(param) {
+	            if (param.dataType === 'edge') {
+	                //return param.data.category + ': ' + param.data.target;
+	                return param.data.target;
+	            }
+	            //return param.data.category + ': ' + param.data.name;
+	            return param.data.name;
+	        }
+	    },
+
+	    legend : { //=========圖表控件 图例
+                    show : true,
+                    orient: 'vertical',  //垂直布局
+                    x: '3%',
+                    y: '100px',  //垂直布局的位置  y: 'center'
+                    textStyle: {
+                        fontSize: 20,
+                    },
+                    data : [ {
+                        name : '访问量：大于1亿',
+                        icon : 'circle'//'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow'
+                    },
+                    {
+                        name : '访问量：1000万～1亿',
+                        icon : 'circle'
+                    }, {
+                        name : '访问量：100万～1000万',
+                        icon : 'circle'
+                    }, {
+                        name : '访问量：10万～100万',
+                        icon : 'circle'
+                    }, {
+                        name : '访问量：1万～10万',
+                        icon : 'circle'
+                    }, {
+                        name : '访问量：100～1万',
+                        icon : 'circle'
+                    }, {
+                        name : '访问量：小于100',
+                        icon : 'circle'
+                    }]
+                },
+	    series: [{
+		    top:'5%',
+            bottom:'5%',
+		    grid:{
+		    left:'left',
+            //right:'5%',
+            },
+	        type: "graph",          // 系列类型:关系图
+	        //top: '10%',             // 图表距离容器顶部的距离
+	        roam: true,             // 是否开启鼠标缩放和平移漫游。默认不开启。如果只想要开启缩放或者平移，可以设置成 'scale' 或者 'move'。设置成 true 为都开启
+	        edgeSymbol: ['circle', 'arrow'],
+			edgeSymbolSize: [4, 7],
+			focusNodeAdjacency: true,   // 是否在鼠标移到节点上的时候突出显示节点以及节点的边和邻接节点。[ default: false ]
+			force: {                // 力引导布局相关的配置项，力引导布局是模拟弹簧电荷模型在每两个节点之间添加一个斥力，每条边的两个节点之间添加一个引力，每次迭代节点会在各个斥力和引力的作用下移动位置，多次迭代后节点会静止在一个受力平衡的位置，达到整个模型的能量最小化。
+	                                // 力引导布局的结果有良好的对称性和局部聚合性，也比较美观。
+	            repulsion: [70,200],            // [ default: 50 ]节点之间的斥力因子(关系对象之间的距离)。支持设置成数组表达斥力的范围，此时不同大小的值会线性映射到不同的斥力。值越大则斥力越大
+	            edgeLength: [50, 500],    // [ default: 30 ]边的两个节点之间的距离(关系对象连接线两端对象的距离,会根据关系对象值得大小来判断距离的大小)，
+	            //layoutAnimation : false        // 这个距离也会受 repulsion。支持设置成数组表达边长的范围，此时不同大小的值会线性映射到不同的长度。值越小则长度越长。如下示例:
+	                                        // 值最大的边长度会趋向于 10，值最小的边长度会趋向于 50      edgeLength: [10, 50]
+	        },
+			draggable: true,
+	        layout: "force",            // 图的布局。[ default: 'none' ]
+	                                    // 'none' 不采用任何布局，使用节点中提供的 x， y 作为节点的位置。
+	                                    // 'circular' 采用环形布局;'force' 采用力引导布局.
+	        // 标记的图形
+	        //symbol: "path://M19.300,3.300 L253.300,3.300 C262.136,3.300 269.300,10.463 269.300,19.300 L269.300,21.300 C269.300,30.137 262.136,37.300 253.300,37.300 L19.300,37.300 C10.463,37.300 3.300,30.137 3.300,21.300 L3.300,19.300 C3.300,10.463 10.463,3.300 19.300,3.300 Z",
+	        symbol: 'circle',
+	        itemStyle: {
+                    normal: {
+                        borderColor: '#fff',
+                        borderWidth: 1,
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.3)',
+
+                    }
+                },
+	        label: {                // 关系对象上的标签
+	            position: 'right',
+                    formatter: '{b}'
+	        },
+			lineStyle: {
+                    color: 'source',
+                    curveness: 0.2
+                },
+	        emphasis: {
+                    lineStyle: {
+                        width: 10
+                    }
+                },
+	        data: [],
+	        categories: [],
+	        links: [],
+	    }],
+	    animationEasingUpdate: "quinticInOut",          // 数据更新动画的缓动效果。[ default: cubicOut ]    "quinticInOut"
+	    animationDurationUpdate: 100                    // 数据更新动画的时长。[ default: 300 ]
+	};
+	// 使用刚指定的配置项和数据显示图表
+	chart1.setOption(option)
+	window.onresize = chart1.resize;
+	$(function () {
+		$.ajax({
+			async:false,
+			type: 'get',
+			url: '/get_name',
+			dataType: 'json',
+			success: function (res) {
+				chart1.hideLoading();    //隐藏加载动画
+				chart1.setOption({        //加载数据图表
+					series: [{
+					// 根据名字对应到相应的系列
+						data: res['key'],
+                        categories: res['cat'],
+					}]
+				});
+			},
+			error: function(XMLHttpRequest, textStatus, errorThrown) {
+				alert(XMLHttpRequest.status);
+				alert(XMLHttpRequest.readyState);
+				alert(textStatus);
+        	},
+		});
+	})
+	$(function () {
+        $.ajax({
+            async: false,
+            type: 'get',
+            url: '/get_link',
+            dataType: 'json',
+            success: function (res) {
+                chart1.hideLoading();    //隐藏加载动画
+                chart1.setOption({        //加载数据图表
+                    series: [{
+                        // 根据名字对应到相应的系列
+                        links: res['key'],
+                    }]
+                });
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                alert(XMLHttpRequest.status);
+                alert(XMLHttpRequest.readyState);
+                alert(textStatus);
+            },
+        });
+    })
+</script>
+ <!-- ip访问数量-->
+ <script type="text/javascript">
+var dom = document.getElementById("chart3");
+var chart3 = echarts.init(dom);
+var app = {};
+function formatNum(strNum) {
+                if(strNum.length <= 3) {
+                    return strNum;
+                }
+                if(!/^(\+|-)?(\d+)(\.\d+)?$/.test(strNum)) {
+                    return strNum;
+                }
+                var a = RegExp.$1,
+                    b = RegExp.$2,
+                    c = RegExp.$3;
+                var re = new RegExp();
+                re.compile("(\\d)(\\d{3})(,|$)");
+                while(re.test(b)) {
+                    b = b.replace(re, "$1,$2$3");
+                }
+                return a + "" + b + "" + c;
+            }
+option = null;
+option = {
+    title: {
+        left:'3%',
+			text: 'IP访问次数统计',
+            textStyle:{
+			   fontSize:35,
+			    align:'center',
+            }
+        },
+    tooltip: {
+        trigger: 'axis',
+        textStyle:{fontSize:30},
+        axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+    legend: {
+        data: ['IP访问次数'],
+        x:'right',
+        textStyle: {fontSize: 18,}
+    },
+    grid: {
+        top:80,
+        left: '2%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+    xAxis: [
+        {
+            type: 'category',
+			axisLabel:{
+                'interval':0,
+                rotate:30,
+                show:true,
+                textStyle: {
+                    fontSize: 15,
+                }
+            },
+            data: ['01/19', '01/20', '01/21', '01/22', '01/23', '01/24', '01/25', '01/26',
+			'01/27', '01/28', '01/29', '01/30', '01/31', '02/01', '02/02', '02/03', '02/04',
+			'02/05', '02/06', '02/07', '02/08', '02/09', '02/10', '02/11', '02/12', '02/13',
+			'02/14', '02/15', '02/16', '02/17'],
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            axisLabel:{
+                show:true,
+                textStyle: {
+                    fontSize: 15,
+                }
+            }
+        }
+    ],
+
+    series: [
+		{
+            name: 'IP访问次数',
+            type: 'line',
+			smooth: true, seriesLayoutBy: 'row',
+            data: [450000, 3916248, 7264391, 10530607, 12832594, 1719795, 3418964, 5085141, 6711365, 8374038, 10111696, 1711978, 3396892, 5072617, 6777211, 9055811, 2095517, 4145981, 6265299, 8399258, 10131495, 1720848, 3986957, 6217463, 2240149, 4491864, 2225211, 4049839, 1831927, 3027075],
+			itemStyle: {
+                   normal: {
+                       label: {
+                           show: true,		//开启显示
+                           position: 'top',	//在上方显示
+                           textStyle: {	    //数值样式
+                               fontSize:15,
+                               color: 'gray',
+                           },
+                           formatter:function (params) {
+                               var int_num = Math.round(params.data/10000)
+                               var str = int_num.toString() + '万'
+                               return str
+                           }
+                       }
+                   }
+               }
+        }
+    ]
+};
+
+if (option && typeof option === "object") {
+    chart3.setOption(option, true);
+    window.onresize = chart3.resize;
+}
+ </script>
+<!-- ip流量-->
+<script type="text/javascript">
+var dom = document.getElementById("chart4");
+var chart4 = echarts.init(dom);
+var app = {};
+option = null;
+option = {
+    title: {
+    left:'3%',
+			text: '流量统计',
+            textStyle:{
+			    fontSize:35,
+			    align:'center',
+            }
+        },
+    tooltip: {
+        trigger: 'axis',
+        textStyle:{fontSize:30},
+        axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+    legend: {
+        data: ['发送数据流量',  '接收数据流量'],
+        x:'right',
+        textStyle:{fontSize:18}
+    },
+    grid: {
+		top:80,
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+    xAxis: [
+        {
+            type: 'category',
+
+            axisLabel: {
+                    show:true,
+                    rotate:30,
+                    textStyle: {fontSize: 15,}
+            },
+            data: ['01/19', '01/20', '01/21', '01/22', '01/23', '01/24', '01/25', '01/26',
+			'01/27', '01/28', '01/29', '01/30', '01/31', '02/01', '02/02', '02/03', '02/04',
+			'02/05', '02/06', '02/07', '02/08', '02/09', '02/10', '02/11', '02/12', '02/13',
+			'02/14', '02/15', '02/16', '02/17']
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            axisLabel: {
+                    show:true,
+                    textStyle: {fontSize: 15,}
+            }
+        }
+    ],
+
+    series: [
+		{
+            name: '发送数据流量',
+            type: 'bar',
+			stack: '发起访问',
+            data: [3145581283, 113066000000, 116760000000, 147237000000,  58103737157,  24736096492,  21398633109,
+                19047270598,  18355747457 , 19784983072, 22313141537,  27161927411,  20224677017,  22957846724,  21649089599,
+                69356583513,  55660498290,  41412665896,  69684815092,  63171369840, 21571688268,  19294499375,
+                67616667445,  45843762733,  71519705432,  58447726796,  74868184890,  25920366283,  22630179681,  27094835151]},
+		{
+            name: '接收数据流量',
+            type: 'bar',
+			stack: '发起访问',
+            data: [11276270224,108177000000, 109077000000, 117637000000,  82583902468, 35633104523,  33712536301,  28643387596,
+                24499751726,  23978414032, 28899592833,  27737571580,  33937962080,  28830153445 , 52564115437,  84382239829,
+                66912755116,  44651953417, 111474000000,  72243855351,  25129442877,  25112269447,  72358423971,
+                58929383310, 110959000000,  65753102117,  73549429572 , 29879299738 , 25537238037,  39650602827]
+        },
+
+    ]
+};
+
+if (option && typeof option === "object") {
+    chart4.setOption(option, true);
+    window.onresize = chart4.resize;
+}
+</script>
+<!-- ip公有私有统计-->
+<script type="text/javascript">
+var dom = document.getElementById("chart5");
+var chart5 = echarts.init(dom);
+var app = {};
+option = null;
+var dataMap = {};
+function dataFormatter(obj) {
+    var pList = ['2020/01/19','2020/01/20','2020/01/21','2020/01/22','2020/01/23','2020/01/24','2020/01/25','2020/01/26','2020/01/27','2020/01/28','2020/01/29','2020/01/30','2020/01/31','2020/02/01','2020/02/02','2020/02/03','2020/02/04','2020/02/05','2020/02/06','2020/02/07','2020/02/08','2020/02/09','2020/02/10','2020/02/11','2020/02/12','2020/02/13','2020/02/14','2020/02/15','2020/02/16','2020/02/17'];
+    var temp;
+    for (var year = 2002; year < 2003; year++) {
+        var max = 0;
+        var sum = 0;
+        temp = obj[year];
+        for (var i = 0, l = temp.length; i < l; i++) {
+            max = Math.max(max, temp[i]);
+            sum += temp[i];
+            obj[year][i] = {
+                name: pList[i],
+                value: temp[i]
+            };
+        }
+        obj[year + 'max'] = Math.floor(max / 100) * 100;
+        obj[year + 'sum'] = sum;
+    }
+    return obj;
+}
+
+dataMap.dataGDP = dataFormatter({
+    //max : 60000,
+    2002:[4315,2150.76,6018.28,2324.8,1940.94,5458.22,2348.54,3637.2,5741.03,10606.85,8003.67,3519.72,4467.55,2450.48,10275.5,6035.48,4212.82,4151.54,13502.42,2523.73,642.73,2232.86,4725.01,1243.43,2312.82,162.04,2253.39,1232.03,340.65,377.16,1612.6]
+});
+
+dataMap.dataPI = dataFormatter({
+    //max : 4000,
+    2002:[82.44,84.21,956.84,197.8,374.69,590.2,446.17,474.2,79.68,1110.44,685.2,783.66,664.78,535.98,1390,1288.36,707,847.25,1015.08,601.99,222.89,317.87,1047.95,281.1,463.44,39.75,282.21,215.51,47.31,52.95,305]
+});
+
+dataMap.dataSI = dataFormatter({
+    //max : 26600,
+    2002:[1249.99,1069.08,2911.69,1134.31,754.78,2609.85,943.49,1843.6,2622.45,5604.49,4090.48,1337.04,2036.97,941.77,5184.98,2768.75,1709.89,1523.5,6143.4,846.89,148.88,958.87,1733.38,481.96,934.88,32.72,1007.56,501.69,144.51,153.06,603.15]
+});
+
+dataMap.dataTI = dataFormatter({
+    //max : 25000,
+    2002:[2982.57,997.47,2149.75,992.69,811.47,2258.17,958.88,1319.4,3038.9,3891.92,3227.99,1399.02,1765.8,972.73,3700.52,1978.37,1795.93,1780.79,6343.94,1074.85,270.96,956.12,1943.68,480.37,914.5,89.56,963.62,514.83,148.83,171.14,704.5]
+});
+
+dataMap.dataEstate = dataFormatter({
+    //max : 3600,
+    2002:[298.02,73.04,140.89,65.83,51.48,130.94,76.11,118.7,384.86,371.09,360.63,139.18,188.09,125.27,371.13,199.31,145.17,165.29,808.16,82.83,21.45,90.48,210.82,53.49,95.68,3.42,77.68,41.52,9.74,13.46,43.04]
+});
+
+dataMap.dataFinancial = dataFormatter({
+    //max : 3200,
+    2002:[561.91,76.86,179.6,124.1,48.39,137.18,75.45,31.6,485.25,368.86,347.53,81.85,138.28,76.51,310.07,158.77,96.95,92.43,454.65,35.86,10.08,134.52,183.13,41.45,102.39,2.81,67.3,42.08,16.75,21.45,52.18]
+});
+
+
+option = {
+    baseOption: {
+        title: {
+            left:'3%',
+			text: '公有私有IP访问情况',
+            textStyle:{
+			    fontSize:35,
+			    align:'center',
+            }
+        },
+
+        legend: {
+            x:'right',
+            data: ['发起访问的私有IP', '发起访问的公有IP', '接受访问的私有IP', '接受访问的公有IP'],
+            textStyle:{fontSize:18}
+        },
+        calculable : true,
+        grid: {
+            top: 80,
+            bottom: 100,
+            tooltip: {
+                trigger: 'axis',
+                textStyle:{fontSize:30},
+                axisPointer: {
+                    type: 'shadow',
+                    label: {
+                        show: true,
+                        textStyle:{fontSize:15},
+                        formatter: function (params) {
+                            return params.value.replace('\n', '');
+                        }
+                    }
+                }
+            }
+        },
+        xAxis: [
+            {
+                'type':'category',
+
+                axisLabel:{
+                    'interval':0,
+                    show:true,
+                    rotate:30,
+                    textStyle: {fontSize: 15,}
+                },
+                'data':['01/19', '01/20', '01/21', '01/22', '01/23', '01/24', '01/25', '01/26',
+			'01/27', '01/28', '01/29', '01/30', '01/31', '02/01', '02/02', '02/03', '02/04',
+			'02/05', '02/06', '02/07', '02/08', '02/09', '02/10', '02/11', '02/12', '02/13',
+			'02/14', '02/15', '02/16', '02/17'],
+                splitLine: {show: false},
+
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value',
+                //name: 'GDP（亿元）'
+                axisLabel: {
+                    show:true,
+                    textStyle: {fontSize: 15,}
+
+            }
+            }
+        ],
+        tooltip: {
+            trigger: 'axis',
+            textStyle:{fontSize:30},
+            axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                }
+        },
+
+        series: [
+		    {
+				name: '发起访问的私有IP',
+				type: 'bar',
+				stack: '发起访问的IP',
+				data: [920, 1791, 1998, 2098, 2142, 769, 848, 941, 1018, 1068, 1110, 815, 907, 967, 1047, 1392, 1115, 1284, 1414, 1475, 1498, 874, 1306, 1482, 1149, 1357, 1119, 1182, 917, 1266],
+				itemStyle: {
+                   normal: {
+                       label: {
+                           textStyle:{fontSize:15},
+                           show: true,		//开启显示
+                           position: 'top',	//在上方显示
+						   distance: 5,
+
+                       }
+                   }
+               }
+			},
+            {
+				name: '发起访问的公有IP',
+				type: 'bar',
+				stack: '发起访问的IP',
+				data: [0, 0, 3, 4, 4, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 3],
+				itemStyle: {
+                   normal: {
+                       label: {
+                            textStyle:{fontSize:15},
+                           show: true,		//开启显示
+                           position: 'top',	//在上方显示
+						   distance: 30,
+
+
+                       }
+                   }
+               }
+			},
+
+            {
+				name: '接受访问的私有IP',
+				type: 'bar',
+				stack: '接受访问的IP',
+				data: [2273, 2966, 3112, 3158, 3173, 2278, 2351, 2403, 2443, 2492, 2522, 2296, 2381, 2429, 2478, 2715, 2522, 2680, 2777, 2821, 2838, 2330, 2627, 2765, 2519, 2706, 2508, 2569, 2322, 2546],
+				itemStyle: {
+                   normal: {
+                       label: {
+                           textStyle:{fontSize:15},
+                           show: true,		//开启显示
+                           position: 'top',	//在上方显示
+						   distance: 20,
+
+
+                       }
+                   }
+               }
+			},
+			{
+				name: '接受访问的公有IP',
+				type: 'bar',
+				stack: '接受访问的IP',
+				data: [0, 25, 55, 55, 55, 25, 26, 26, 26, 26, 26, 24, 24, 25, 26, 26, 25, 25, 25, 25, 26, 25, 26, 26, 25, 25, 25, 26, 25, 25],
+				itemStyle: {
+                   normal: {
+                       label: {
+                           textStyle:{fontSize:15},
+                           show: true,		//开启显示
+                           position: 'top',	//在上方显示
+						   distance: 35,
+
+
+                       }
+                   }
+               }
+			},
+
+        ]
+    },
+
+};
+if (option && typeof option === "object") {
+    chart5.setOption(option, true);
+    window.onresize = chart5.resize;
+}
+       </script>
+<!-- ip公有私有饼图-->
+ <script type="text/javascript">
+var dom = document.getElementById("bing1");
+var bing1 = echarts.init(dom);
+var app = {};
+option = null;
+var dataMap = {};
+
+option = {
+    baseOption: {
+        title: {
+            left:'3%',
+            textStyle:{
+			    fontSize:35,
+			    align:'center',
+            }
+        },
+        timeline: {
+            axisType: 'category',
+			position: 'left',
+            autoPlay: true,
+            symbolSize:7,
+            label:{
+                textStyle:{fontSize:15},
+
+            },
+            data: [
+                '01/19','01/20','01/21','01/22','01/23','01/24','01/25','01/26','01/27','01/28','01/29','01/30','01/31','02/01','02/02','02/03','02/04','02/05','02/06','02/07','02/08','02/09','02/10','02/11','02/12','02/13','02/14','02/15','02/16','02/17'
+            ],
+        },
+        grid: [
+	        {x: '50%', y: '7%', width: '45%', height: '80%'},
+	    ],
+        tooltip: {
+            textStyle:{fontSize:30},
+        },
+        legend: {
+            show : true,
+            orient: 'vertical',  //垂直布局
+            x: '2%',
+            left:'3%',
+            y: '50px',  //垂直布局的位置  y: 'center'
+            textStyle:{fontSize:20},
+            data: ['私有IP', '公有IP'],
+        },
+        calculable : true,
+
+        series: [
+            {
+                name: 'IP地址',
+                type: 'pie',
+                z: 100,
+				label:{            //饼图图形上的文本标签
+                            normal:{
+                                show:true,
+                                textStyle : {
+                                    fontWeight : 500 ,
+                                    fontSize : 30    //文字的字体大小
+                                },
+                                formatter:'{d}%'
+
+                                
+                            }
+                        },
+            }
+        ]
+    },
+    options: [
+        {
+            title: {text: '2020/01/19 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 0},
+                    {name: '私有IP', value: 2341},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/20 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 25},
+                    {name: '私有IP', value: 3095},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/21 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 58},
+                    {name: '私有IP', value: 3246},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/22 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 59},
+                    {name: '私有IP', value: 3308},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/23 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 59},
+                    {name: '私有IP', value: 3326},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/24 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2331},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/25 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 27},
+                    {name: '私有IP', value: 2400},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/26 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 27},
+                    {name: '私有IP', value: 2459},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/27 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 27},
+                    {name: '私有IP', value: 2505},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/28 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 27},
+                    {name: '私有IP', value: 2562},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/29 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 27},
+                    {name: '私有IP', value: 2594},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/30 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 24},
+                    {name: '私有IP', value: 2338},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/01/31 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 24},
+                    {name: '私有IP', value: 2427},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/01 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 25},
+                    {name: '私有IP', value: 2484},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/02 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2539},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/03 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 27},
+                    {name: '私有IP', value: 2806},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/04 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2593},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/05 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2766},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/06 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2875},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/07 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2930},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/08 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 27},
+                    {name: '私有IP', value: 2952},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/09 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2381},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/10 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 28},
+                    {name: '私有IP', value: 2703},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/11 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 28},
+                    {name: '私有IP', value: 2851},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/12 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2607},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/13 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2813},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/14 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2594},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/15 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 27},
+                    {name: '私有IP', value: 2661},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/16 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 26},
+                    {name: '私有IP', value: 2379},
+                ]}
+            ]
+        },
+		{
+            title: {text: '2020/02/17 IP分布'},
+            series: [
+                {data: [
+                    {name: '公有IP', value: 28},
+                    {name: '私有IP', value: 2639},
+                ]}
+            ]
+        },
+    ]
+};
+if (option && typeof option === "object") {
+    bing1.setOption(option, true);
+    window.onresize = bing1.resize;
+}
+</script>
+<!-- ip访问数量,时间轴-->
+<script type="text/javascript">
+var dom = document.getElementById("chart6");
+var chart6 = echarts.init(dom);
+var app = {};
+option = null;
+var dataMap = {};
+
+option = {
+    baseOption: {
+        title: {
+            left:'3%',
+            textStyle:{
+			   fontSize:35,
+			    align:'center',
+            },
+        },
+        timeline: {
+            axisType: 'category',
+            position: 'left',
+            autoPlay: true,
+            symbolSize:7,
+            label:{
+                textStyle:{fontSize:15},
+
+            },
+            data: [
+                '01/19','01/20','01/21','01/22','01/23','01/24','01/25','01/26','01/27','01/28','01/29','01/30','01/31',
+                '02/01','02/02','02/03','02/04','02/05','02/06','02/07','02/08','02/09','02/10','02/11','02/12','02/13',
+                '02/14','02/15','02/16','02/17'
+            ],
+        },
+
+        legend: {
+            left: 'right',
+            data: ['IP访问次数'],
+            textStyle: {
+                        fontSize: 20,
+                    },
+        },
+        tooltip: {
+            textStyle:{fontSize:30},
+        },
+        calculable : true,
+        grid: {
+            top: 80,
+            //bottom: 100,
+			left: '3%',
+			right: '4%',
+			bottom: '12%',
+			containLabel: true,
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow',
+                    label: {
+                        show: true,
+                        formatter: function (params) {
+                            return params.value.replace('\n', '');
+                        }
+                    }
+                }
+            }
+        },
+        xAxis: [
+            {
+                type: 'category',
+                axisLabel: {
+                    show:true,
+                    rotate:30,
+                    textStyle: {fontSize: 15,}
+                    },
+                data:[
+                    '00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00','08:00','09:00','10:00','11:00',
+                    '12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00',
+                ],
+                splitLine: {show: false}
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value',
+                axisLabel: {
+                    show:true,
+                    textStyle: {fontSize: 15,}
+                },
+
+            }
+        ],
+        series: [
+            {
+                name: 'IP访问次数',
+                type: 'bar',
+                itemStyle: {
+                       normal: {
+                           label: {
+                               show: true,		//开启显示
+                               position: 'top',	//在上方显示
+                               textStyle: {	    //数值样式
+                                   fontSize:15,
+                                   color: 'gray',
+                               },
+                               formatter:function (params) {
+                                   var int_num = Math.round(params.data/10000)
+                                   var str = int_num.toString() + '万'
+                                   return str
+                               }
+                           }
+                       }
+                   }
+            },
+        ]
+    },
+    options: [
+        {
+            title: {text: '2020/01/19 每日IP访问次数'},
+            series: [
+                {
+                    data: [67656, 60726, 60755, 60105, 16852, 37809, 67747, 64664, 13686, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0],
+                },
+
+            ]
+        },
+        {
+            title: {text: '2020/01/20 IP访问次数'},
+            series: [
+                {data: [99655, 93869, 93136, 90359, 91712, 90172, 94169, 97149, 165526, 222221, 238086, 200307, 203426,
+                        201032, 225218, 229251, 207256, 139323, 123741, 117187, 114695, 111101, 109998, 107659]},
+            ]
+        },
+        {
+            title: {text: '2020/01/21 IP访问次数'},
+            series: [
+                {data: [96781, 90886, 90611, 88463, 89764, 88403, 91626, 96888, 167030, 211964, 221735, 197799, 205756,
+                        196422, 222857, 207652, 197297, 129426, 113666, 110727, 111400, 108110, 106767, 106113]},
+            ]
+        },
+        {
+            title: {text: '2020/01/22 IP访问次数'},
+            series: [
+                {data: [92983, 87589, 86955, 84918, 85599, 84683, 88767, 91140, 157367, 214473, 222072, 201999, 192730,
+                        193115, 214527, 223595, 190420, 121310, 109306, 106618, 105491, 103459, 104317, 102783]},
+            ]
+        },
+        {
+            title: {text: '2020/01/23 IP访问次数'},
+            series: [
+                {data: [91724, 84911, 84730, 82112, 82941, 82097, 86144, 89117, 135926, 176353, 174356, 128321, 115758,
+                        97967, 92670, 83901, 81844, 78127, 78218, 75477, 75919, 75250, 75253, 72871]},
+            ]
+        },
+        {
+            title: {text: '2020/01/24 IP访问次数'},
+            series: [
+                {data: [70271, 65839, 65959, 64037, 64925, 63701, 67073, 68152, 73422, 75705, 75014, 74763, 77652,
+                        74654, 76211, 74376, 74539, 72668, 74289, 73182, 74092, 73003, 74389, 71879]},
+            ]
+        },
+        {
+            title: {text: '2020/01/25 IP访问次数'},
+            series: [
+                {data: [70038, 66213, 65586, 64317, 65042, 64172, 67652, 68990, 74464, 77098, 77229, 74674, 74498,
+                        72067, 73632, 71475, 72842, 72270, 72892, 71106, 71427, 71153, 71421, 68911]},
+            ]
+        },
+        {
+            title: {text: '2020/01/26 IP访问次数'},
+            series: [
+                {data: [68383, 66932, 64594, 62407, 62749, 62124, 65349, 66425, 71582, 71993, 73196, 72488, 72608,
+                        71926, 73865, 72672, 73001, 71005, 71565, 71047, 71367, 70544, 70047, 68308]},
+            ]
+        },
+        {
+            title: {text: '2020/01/27 IP访问次数'},
+            series: [
+                {data: [67210, 63833, 61501, 59162, 59782, 59427, 62401, 63301, 68336, 70816, 71708, 70406, 71867,
+                        71163, 71606, 70962, 71363, 70968, 70093, 69303, 69462, 70906, 70934, 69714]},
+            ]
+        },
+        {
+            title: {text: '2020/01/28 IP访问次数'},
+            series: [
+                {data: [67826, 65122, 61900, 62017, 62501, 62483, 64534, 66228, 71736, 73932, 73271, 72969, 77262,
+                        74037, 73723, 72795, 72225, 70984, 70721, 70059, 69775, 69639, 68781, 68153]},
+            ]
+        },
+        {
+            title: {text: '2020/01/29 IP访问次数'},
+            series: [
+                {data: [67931, 64482, 61501, 63285, 63546, 63750, 66302, 68190, 74850, 78166, 78936, 78711, 80247,
+                        77936, 77925, 76367, 77027, 74702, 75050, 74977, 73796, 73496, 74019, 72466]},
+            ]
+        },
+        {
+            title: {text: '2020/01/30 IP访问次数'},
+            series: [
+                {data: [69998, 67015, 65134, 64018, 64133, 64004, 66917, 68466, 73171, 76258, 76862, 77107, 77682,
+                        74855, 74688, 74708, 74136, 73400, 73170, 72354, 71940, 71229, 70929, 69804]},
+            ]
+        },
+        {
+            title: {text: '2020/01/31 IP访问次数'},
+            series: [
+                {data: [68110, 64916, 62005, 62869, 63245, 62877, 65005, 66857, 73286, 75449, 75510, 75552, 77089,
+                        75052, 74452, 74948, 74162, 72690, 71674, 70697, 69241, 70218, 70301, 68709]},
+            ]
+        },
+        {
+            title: {text: '2020/02/01 IP访问次数'},
+            series: [
+                {data: [67468, 65206, 62863, 61768, 61890, 62109, 63613, 66188, 73278, 74757, 74752, 73963, 74487,
+                        73996, 74397, 74134, 73954, 72777, 72281, 71391, 70634, 70835, 69972, 69012]},
+            ]
+        },
+        {
+            title: {text: '2020/02/02 IP访问次数'},
+            series: [
+                {data: [67718, 64552, 63325, 62475, 62961, 63474, 65260, 66992, 71588, 75638, 74987, 75746, 75881,
+                        75439, 77641, 76397, 76243, 74339, 73437, 73290, 72457, 71787, 71555, 71412]},
+            ]
+        },
+        {
+            title: {text: '2020/02/03 IP访问次数'},
+            series: [
+                {data: [69487, 67097, 65042, 64085, 63795, 64021, 66559, 70423, 111276, 140709, 137833, 132201, 130707,
+                        129530, 138496, 136192, 121434, 88799, 81720, 80388, 79850, 80295, 79895, 78766]},
+            ]
+        },
+        {
+            title: {text: '2020/02/04 IP访问次数'},
+            series: [
+                {data: [71273, 66115, 65365, 64053, 64449, 63693, 66108, 70427, 102852, 118402, 119920, 114239, 114505,
+                        111130, 116224, 112207, 102895, 83315, 79645, 79398, 79062, 78140, 76409, 75691]},
+            ]
+        },
+        {
+            title: {text: '2020/02/05 IP访问次数'},
+            series: [
+                {data: [71064, 67113, 64561, 66137, 64405, 64699, 67045, 69231, 97306, 116678, 116751, 108091, 103843,
+                        107907, 111696, 110514, 100525, 82506, 79441, 77721, 77176, 76307, 74745, 75002]},
+            ]
+        },
+        {
+            title: {text: '2020/02/06 IP访问次数'},
+            series: [
+                {data: [71612, 67257, 65590, 65936, 65187, 64965, 66986, 70098, 95157, 121559, 121396, 114148, 112035,
+                        109446, 117166, 117300, 104786, 87253, 82069, 80755, 80169, 80039, 79860, 78549]},
+            ]
+        },
+        {
+            title: {text: '2020/02/07 IP访问次数'},
+            series: [
+                {data: [74110, 69512, 67369, 68024, 67015, 66716, 69444, 72327, 101681, 117256, 120309, 114119, 115473,
+                        114530, 119259, 112231, 103736, 86284, 81119, 79485, 79641, 78863, 78572, 76884]},
+            ]
+        },
+        {
+            title: {text: '2020/02/08 IP访问次数'},
+            series: [
+                {data: [71147, 67602, 65690, 67144, 66086, 65939, 67423, 69074, 74782, 77083, 77810, 75554, 76124,
+                        74902, 74665, 75237, 76280, 74011, 73961, 73724, 73097, 72511, 71768, 70623]},
+            ]
+        },
+        {
+            title: {text: '2020/02/09 IP访问次数'},
+            series: [
+                {data: [70447, 67087, 65007, 66087, 65213, 64655, 67332, 69087, 74052, 76341, 75875, 73228, 73992,
+                        73980, 75445, 74445, 74749, 74140, 74869, 73713, 73747, 73368, 72712, 71277]},
+            ]
+        },
+        {
+            title: {text: '2020/02/10 IP访问次数'},
+            series: [
+                {data: [70620, 67622, 66530, 64936, 65875, 65023, 67751, 70888, 108107, 141501, 134312, 125812, 123578,
+                        121332, 130989, 123807, 115287, 94249, 88324, 84907, 85310, 83574, 83643, 82132]},
+            ]
+        },
+        {
+            title: {text: '2020/02/11 IP访问次数'},
+            series: [
+                {data: [77263, 73275, 71629, 69446, 69823, 69566, 71754, 75314, 104554, 129094, 125892, 119578, 122865,
+                        117953, 120612, 115919, 109081, 92762, 85303, 83684, 82901, 81920, 80257, 80061]},
+            ]
+        },
+        {
+            title: {text: '2020/02/12 IP访问次数'},
+            series: [
+                {data: [75728, 71821, 70548, 69703, 69782, 69220, 72148, 75850, 107669, 127749, 127432, 120864, 121816,
+                        117464, 124750, 119388, 112186, 89748, 85316, 83944, 82774, 81803, 81939, 80507]},
+            ]
+        },
+        {
+            title: {text: '2020/02/13 IP访问次数'},
+            series: [
+                {data: [75553, 71134, 69671, 68759, 69343, 68834, 71668, 74417, 104230, 123877, 128129, 120769, 122301,
+                        125879, 129916, 123824, 114687, 90794, 86453, 83837, 83367, 82176, 81617, 80480]},
+            ]
+        },
+        {
+            title: {text: '2020/02/14 IP访问次数'},
+            series: [
+                {data: [77665, 73947, 73043, 70595, 71491, 70674, 73630, 76690, 102198, 124512, 123963, 116433, 117128,
+                        118564, 122306, 120111, 110241, 89275, 84360, 82553, 82981, 81890, 81346, 79615]},
+            ]
+        },
+        {
+            title: {text: '2020/02/15 IP访问次数'},
+            series: [
+                {data: [76376, 71623, 70927, 68868, 69698, 69410, 71228, 73127, 78560, 80292, 81230, 80292, 79461,
+                        78137, 79182, 79136, 79041, 77203, 77923, 76775, 77029, 76906, 77010, 75194]},
+            ]
+        },
+        {
+            title: {text: '2020/02/16 IP访问次数'},
+            series: [
+                {data: [74920, 71987, 70816, 69238, 69871, 68905, 71736, 73918, 79969, 80858, 80557, 78912, 80277,
+                        79658, 80548, 79680, 80288, 78110, 78295, 77475, 78006, 76440, 77006, 74457]},
+            ]
+        },
+        {
+            title: {text: '2020/02/17 IP访问次数'},
+            series: [
+                {data: [73992, 71281, 69730, 68106, 68738, 68690, 71353, 74644, 110587, 139124, 142790, 131608, 104505,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            ]
+        },
+    ]
+};
+if (option && typeof option === "object") {
+    chart6.setOption(option, true);
+    window.onresize = chart6.resize;
+}
+       </script>
