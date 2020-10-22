@@ -19,11 +19,11 @@ for i in hex_string:
     for j in hex_string:
         for k in hex_string:
             for l in hex_string:
-                f = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/f_info.csv"
+                f = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/f_pack_info.csv"
                 list_f.append(f)
 
 p = Pool(100)
 n = p.map(worker, list_f)
-print("Finished {} f_info.csv".format(sum(n)))
+print("Finished {} f_pack_info.csv".format(sum(n)))
 
 

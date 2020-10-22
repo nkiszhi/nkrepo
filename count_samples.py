@@ -7,11 +7,11 @@ from multiprocessing import Pool
 import os
 
 def greet():
-    print("\t\t**********************************************************")
-    print("\t\t**                                                      **")
-    print("\t\t**           Cyber攻击代码样本库                        **")
-    print("\t\t**                                                      **")
-    print("\t\t**********************************************************")
+    print("\t\t******************************************")
+    print("\t\t**                                      **")
+    print("\t\t**           计算机病毒样本库           **")
+    print("\t\t**                                      **")
+    print("\t\t******************************************")
 
 def worker(folder):
     _n = 0
@@ -26,7 +26,7 @@ def main():
     list_dir = []
     hex_string = "0123456789abcdef"
     p = Pool(200)
-    print("\n启动200个进程正在统计样本数量\n")
+    print("\n\t\t启动200个进程正在统计样本数量\n")
     _count = []
     
     for i in hex_string:
@@ -36,7 +36,7 @@ def main():
                     folder = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
-    print("Cyber 攻击代码样本库有样本 {} 个.".format(sum(_count)))
+    print("\t\t计算机病毒样本库有样本 {} 个.".format(sum(_count)))
     print()
     print()
 

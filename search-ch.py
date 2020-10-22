@@ -6,13 +6,13 @@ import time, datetime
 
 def help():
     print("")
-    print("Usage: prog [option] file/Directory")
-    print("For eg: exescan.py -a malware.exe/malware")
-    print("-a","advanced scan with anomaly detection")
-    print("-b","display basic information")
-    print("-m","scan for commonly known malware APIs")
-    print("-i","display import/export table")
-    print("-p","display PE header")
+    print("Usage: search.py SHA256")
+#    print("For eg: exescan.py -a malware.exe/malware")
+#    print("-a","advanced scan with anomaly detection")
+#    print("-b","display basic information")
+#    print("-m","scan for commonly known malware APIs")
+#    print("-i","display import/export table")
+#    print("-p","display PE header")
     print("")
 
 
@@ -94,7 +94,7 @@ class ExeScan():
  
         # SizeOfRawData Check.. some times size of raw data value is used to crash some debugging tools.
         nsec = self.pe.FILE_HEADER.NumberOfSections
-        for i in range(0,nsec-1):
+        for i in range(0, nsec-1):
             if i == nsec-1:
                 break
             else:
@@ -107,6 +107,8 @@ class ExeScan():
                     pass
 
     # Non-Ascii or empty section name check
+        print(5555)
+       # print(sec.Name)
         for sec in self.pe.sections:
             if not re.match("^[.A-Za-z][a-zA-Z]+",sec.Name):
                 log("\t[*] Non-ascii or empty section names detected")
@@ -236,6 +238,7 @@ def main_s(pe,ch,f,name):
     
     exescan = ExeScan(pe,name)
     (MD5,SHA1,SHA256,data) = exescan.hashes()
+    
     stx = StringAndThreat(MD5,data)
     # store reports in folders
     #if os.path.exists(MD5):
@@ -253,7 +256,7 @@ def main_s(pe,ch,f,name):
     log("\t[*] SHA-256	: %s" % SHA256)
     log("\t[*] 文件访问时间      : %s" % atime)
     log("\t[*] 文件内容修改时间      : %s" % mtime)
-    #log("\t[*] 文件属性修改时间      : %s" % ctime)
+    log("\t[*] 文件属性修改时间      : %s" % ctime)
     log("\t[*] 文件大小      : %s" % filesize)
     #check file type (exe, dll)
     if pe.is_exe():
@@ -263,41 +266,27 @@ def main_s(pe,ch,f,name):
     else:
         log("\n 不是PE文件结构")
         return 2
-    strings = f.readlines()
+
+    exescan.importtab()
+   
+    exescan.exporttab()
+
+    exescan.header()
+
+    #exescan.anomalis()
+    #print("123")
+    
     mf = open("API.txt","r")
     MALAPI = mf.readlines()
+    strings = f.readlines()
+    exescan.malapi(MALAPI,strings)
+
     signature  = peutils.SignatureDatabase("userdb.txt")
     check = signature.match_all(pe,ep_only = True)
-
     exescan.base(check)
-    #exescan.header()
-    #exescan.importtab()
-    #exescan.exporttab()
-    exescan.malapi(MALAPI,strings)
     exescan.anomalis()
-    #stx.StringE()
+    sys.exit(0)
 
-    #if ch == "-i":
-    #    exescan.base(check)
-    #    exescan.importtab()
-    #    exescan.exporttab()
-    #elif ch == "-b":
-    #    exescan.base(check)
-    #elif ch == "-m":
-    #    exescan.base(check)
-    #    exescan.malapi(MALAPI,strings)
-    #elif ch == "-p":
-    #    exescan.base(check)
-    #    exescan.header()
-    #elif ch == "-a":
-    #    exescan.base(check)
-    #    exescan.anomalis()
-    #    exescan.malapi(MALAPI,strings)
-    #    stx.StringE()
-    #else:
-    #    print()
-    mf.close()
-    #handle.close()
     return MD5
 
 def main():
