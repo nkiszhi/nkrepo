@@ -1,0 +1,720 @@
+<!--当前所用版本，2020.7.16-->
+<!DOCTYPE html>
+<html>
+<head>
+{#	<link rel="shortcut icon" href="#" />#}
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<!-- 使用IE8以上的渲染 -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>数据分析结果</title>
+	<!--导入的为ECharts3的js中国民用航空华东地区空中交通管理局数据分析结果 -->
+    <style type="text/css">
+    html {
+        font-family: sans-serif;
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        margin: 10px;
+    }
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    td,th {
+        padding: 0;
+    }
+
+    .pure-table {
+	    width:80%;
+        border-collapse: collapse;
+        border-spacing: 0;
+		padding-bottom:30px;
+        margin: 0px auto;
+        empty-cells: show;
+        border: 1px solid #cbcbcb;
+    }
+
+    .pure-table caption {
+        color: #000;
+        font: italic 85%/1 arial,sans-serif;
+        padding: 1em 0;
+        text-align: center;
+    }
+
+    .pure-table td,.pure-table th {
+        border-left: 1px solid #cbcbcb;
+        border-width: 0 0 0 1px;
+        font-size: inherit;
+        text-align:center;
+        vertical-align:center;
+        margin: 0;
+        overflow: visible;
+        padding: .5em 1em;
+    }
+
+    .pure-table thead {
+        background-color: #e0e0e0;
+        color: #000;
+        text-align: left;
+        vertical-align: bottom;
+    }
+
+    .pure-table td {
+        background-color: transparent;
+    }
+    .ul_lstm{
+        font-size:20px;
+
+    }
+
+    </style>
+</head>
+<body>
+    <!--中国地图-->
+    <div id="china_map" style="width: 100%;height: 500px;"></div>
+    <!-- ip扫描230 -->
+    <!-- div id="ip_scan_230" style="width: 100%;height: 700px;padding: 70px  0 0 0"></div-->
+    <!-- ip扫描37 -->
+    <!-- div id="ip_scan_37" style="width: 100%;height: 700px;padding: 70px  0 0 0"></div-->
+    <!-- knn算法-->
+    <!-- div id="knn" style="width: 100%;height: 1000px;"></div-->
+    <!-- pca算法-->
+    <!-- div id="pca" style="width: 100%;height: 1000px;"></div-->
+    <!-- LOF算法-->
+    <!-- div id="lof" style="width: 100%;height: 1000px;"></div-->
+    <!-- VAE算法-->
+    <!-- div id="vae" style="width: 100%;height: 1000px;"></div-->
+    <!-- LSTM算法检测恶意域名和可疑ip--> 
+    <HR style="FILTER: alpha(opacity=50,finishopacity=0,style=3)" width="100%" color=#e9e9e9 SIZE=2>
+	<div class="LSTM" style="width:100%;padding-top: 15px;padding-left: 30px;padding-bottom15px">
+		<h1 style='font-size:35px;text-align:center'>Cyber攻击代码样本库样本数量：2106.9471万</h1>
+		<div style='height:40px;font-size:20px;text-align:center;vertical-align:center;'>Windows PE样本数：1173.8009万</div>
+		<div style='height:40px;font-size:20px;text-align:center;vertical-align:center;'>Linux ELF样本数：132.1475万</div>
+                <div style='height:40px;font-size:20px;text-align:center;vertical-align:center;'>Android样本数：453.6742万</div>
+	</div>	
+	<div>
+		<div id="fileratio" style="width: 100%;height: 500px;padding:20px 0 10px 0"></div>
+		<div id="filetime" style="width: 100%;height: 700px;padding:20px 0 10px 0"></div>
+                <!--div id="filetype" style="width: 100%;height: 700px;padding:20px 0 10px 0"></div-->
+                <div id="filesize" style="width: 100%;height: 700px;padding:20px 0 10px 0"></div>
+	</div>
+
+    <HR style="FILTER: alpha(opacity=50,finishopacity=0,style=3)" width="100%" color=#e9e9e9 SIZE=2>
+        <div class="LSTM" style="width:100%;padding-top: 15px;padding-left: 30px;padding-bottom15px">
+                <h1 class='search' style='font-size:35px;text-align:center'><a class="search_a" href="{{url_for('search')}}">搜索页面展示</a></h1>
+        </div>
+	
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts-gl/dist/echarts-gl.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts-stat/dist/ecStat.min.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/extension/dataTool.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/map/js/world.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/extension/bmap.min.js"></script>
+<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=o3qDkeQeqpLved3L2kVlHeFWhbv8sUv1&__ec_v__=20190126"></script>
+</body>
+</html>
+
+<!--中国地图-->
+ <script type="text/javascript">
+var dom = document.getElementById("china_map");
+var china_map = echarts.init(dom);
+var app = {};
+option = null;
+
+var data = [
+    {name: '北京', value: 300},
+];
+
+var geoCoordMap = {
+    '北京':[116.408000,39.904000],
+};
+
+var convertData = function (data) {
+    var res = [];
+    for (var i = 0; i < data.length; i++) {
+        var geoCoord = geoCoordMap[data[i].name];
+        if (geoCoord) {
+            res.push({
+                name: data[i].name,
+                value: geoCoord.concat(data[i].value)
+            });
+        }
+    }
+    return res;
+};
+
+option = {
+    backgroundColor: 'transparent',
+    title : {
+        text : 'Cyber攻击代码样本库数据展示',
+        left : '3%',                    // 标题距离左侧边距
+        top : '3%',
+        textStyle : {
+            fontSize: 40,
+            color : '#fff'
+        },
+        subtext:'2020年8月',
+        subtextStyle:{
+            fontSize: 35,
+            color : '#fff'
+        }
+    },
+    tooltip : {
+        textStyle:{fontSize:35},
+        formatter(params){
+           for(x in params){
+               return '北京';
+           }
+        }
+    },
+    bmap: {
+        center: [104.114129, 37.550339],
+        zoom: 5,
+        roam: true,
+        mapStyle: {
+            styleJson: [
+                    {
+                        "featureType": "water",
+                        "elementType": "all",
+                        "stylers": {
+                            "color": "#044161"
+                        }
+                    },
+                    {
+                        "featureType": "land",
+                        "elementType": "all",
+                        "stylers": {
+                            "color": "#004981"
+                        }
+                    },
+                    {
+                        "featureType": "boundary",
+                        "elementType": "geometry",
+                        "stylers": {
+                            "color": "#064f85"
+                        }
+                    },
+                    {
+                        "featureType": "railway",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "highway",
+                        "elementType": "geometry",
+                        "stylers": {
+                            "color": "#004981"
+                        }
+                    },
+                    {
+                        "featureType": "highway",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                            "color": "#005b96",
+                            "lightness": 1
+                        }
+                    },
+                    {
+                        "featureType": "highway",
+                        "elementType": "labels",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "arterial",
+                        "elementType": "geometry",
+                        "stylers": {
+                            "color": "#004981"
+                        }
+                    },
+                    {
+                        "featureType": "arterial",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                            "color": "#00508b"
+                        }
+                    },
+                    {
+                        "featureType": "poi",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "green",
+                        "elementType": "all",
+                        "stylers": {
+                            "color": "#056197",
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "subway",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "manmade",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "local",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "arterial",
+                        "elementType": "labels",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    },
+                    {
+                        "featureType": "boundary",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                            "color": "#029fd4"
+                        }
+                    },
+                    {
+                        "featureType": "building",
+                        "elementType": "all",
+                        "stylers": {
+                            "color": "#1a5787"
+                        }
+                    },
+                    {
+                        "featureType": "label",
+                        "elementType": "all",
+                        "stylers": {
+                            "visibility": "off"
+                        }
+                    }
+            ]
+        }
+    },
+    series : [
+        {
+            name: 'pm2.5',
+            type: 'scatter',
+            coordinateSystem: 'bmap',
+            data: convertData(data),
+            encode: {
+                value: 2
+            },
+            symbolSize: function (val) {
+                return val[2] / 10;
+            },
+            label: {
+                formatter: '{b}',
+                position: 'right'
+            },
+            itemStyle: {
+                color: '#ddb926'
+            },
+            emphasis: {
+                label: {
+                    show: true
+                }
+            }
+        },
+        {
+            name: '北京',
+            type: 'effectScatter',
+            coordinateSystem: 'bmap',
+            data: convertData(data.sort(function (a, b) {
+                return b.value - a.value;
+            }).slice(0, 6)),
+            encode: {
+                value: 2
+            },
+            symbolSize: function (val) {
+                return val[2] / 10;
+            },
+            // showEffectOn: 'emphasis',
+            showEffectOn: 'render',
+            rippleEffect: {
+                brushType: 'stroke'
+            },
+            hoverAnimation: true,
+            label: {
+				textStyle:{
+                    fontSize:20,
+                },
+                formatter: '{b}',
+                position: 'right',
+                show: true
+            },
+            itemStyle: {
+                color: '#f4e925',
+                shadowBlur: 10,
+                shadowColor: '#333'
+            },
+            zlevel: 1
+        },
+    ]
+};
+if (option && typeof option === "object") {
+    china_map.setOption(option, true);
+}
+</script>
+<!-- ip公有私有饼图-->
+<script type="text/javascript">
+var dom = document.getElementById("fileratio");
+var fileratio = echarts.init(dom);
+var app = {};
+option = null;
+var dataMap = {};
+var option = {
+         title: {
+             text: 'Cyber攻击代码样本库样本分布',
+             left: '1%',
+             textStyle: {
+                 fontSize:30,
+                 align:'center',
+             }
+         },
+          grid: [
+	        {x: '50%', y: '7%', width: '45%', height: '80%'},
+	    ],
+         tooltip : {
+             trigger: 'item',
+		 formatter: "{a} <br/>{b}: {c}({d}%)"
+         },
+         legend: {
+            show : true,
+            orient: 'vertical',  //垂直布局
+            x: '2%',
+            left:'3%',
+            y: '50px',  //垂直布局的位置  y: 'center'
+            textStyle:{fontSize:20},
+            data: ['Windows样本', 'Linux样本','Android样本','其他'],
+        },
+         series : [
+             {
+                 name:'样本分布',
+                 type:'pie',
+                 clockwise:'true',
+                 startAngle:'0',
+                 radius : '60%',
+                 center: ['50%', '50%'],
+                 data:[
+                     {
+                         value:11738009,
+                         name:'Windows样本',
+                     },
+                     {
+                         value:1321475,
+                         name:'Linux样本',
+                     },
+                     {
+                         value:4536742,
+                         name:'Android样本',
+                     },
+                     {
+                         value:3473245,
+                         name:'其他',
+                     }
+
+                 ],
+             }
+         ]
+       };
+if (option && typeof option === "object") {
+    fileratio.setOption(option, true);
+    window.onresize = filetatio.resize;
+}
+</script>
+
+<!-- 样本时间分布-->
+<script type="text/javascript">
+var dom = document.getElementById("filetime");
+var filetime = echarts.init(dom);
+var app = {};
+option = null;
+option = {
+    title: {
+        left:'1%',
+			text: '样本时间统计',
+            textStyle:{
+			   fontSize:30,
+			    align:'center',
+            },
+			subtext: 'Cyber攻击代码样本库',
+            	subtextStyle:{
+			   		fontSize:20,
+            },
+        },
+    tooltip: {
+        trigger: 'axis',
+        textStyle:{fontSize:20},
+        axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+
+    grid: {
+		left: 100,
+		right: 50,
+		top: 100,
+		bottom: 100,
+        //containLabel: true
+    },
+    xAxis: [
+        {
+            type: 'category',
+			axisLabel:{
+                'interval':0,
+                rotate:30,
+                show:true,
+                textStyle: {
+                    fontSize: 10,
+                }
+            },
+            data: ['2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020'],
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            axisLabel:{
+                show:true,
+                textStyle: {
+                    fontSize: 15,
+                }
+            }
+        }
+    ],
+
+    series: [
+		{
+            name: 'Cyber攻击样本数',
+            type: 'bar',
+            data: [ 2336457, 1172328, 1281028, 1656388, 1722107, 2607164, 2257317, 5172927, 2563701],
+			itemStyle: {
+                   normal: {
+                       label: {
+                           show: true,		//开启显示
+                           position: 'top',	//在上方显示
+                           textStyle: {	    //数值样式
+                               fontSize:10,
+                               color: 'gray',
+                           },
+                           formatter:function (params) {
+                               var float_num = Math.round((params.data/10000)*100)/100
+                               var str = float_num.toString() + '万'
+                               return str
+                           }
+                       }
+                   }
+               }
+        }
+    ]
+};
+
+if (option && typeof option === "object") {
+    filetime.setOption(option, true);
+    window.onresize = filetime.resize;
+}
+ </script>
+<!-- 样本类型分布-->
+<script type="text/javascript">
+var dom = document.getElementById("filetype");
+var filetype = echarts.init(dom);
+var app = {};
+option = null;
+option = {
+    title: {
+        left:'1%',
+                        text: '样本类型统计',
+            textStyle:{
+                           fontSize:30,
+                            align:'center',
+            },
+                        subtext: 'Cyber攻击代码样本库',
+                subtextStyle:{
+                             fontSize:20,
+            },
+
+        },
+    tooltip: {
+        trigger: 'axis',
+         textStyle:{fontSize:20},
+        axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+ grid: {
+                left: 100,
+                right: 50,
+                top: 100,
+                bottom: 100,
+        //containLabel: true
+    },
+
+    xAxis: [
+        {
+            type: 'category',
+                        axisLabel:{
+                'interval':0,
+                rotate:30,
+                show:true,
+                textStyle: {
+                    fontSize: 10,
+                }
+            },
+        data: ['bambenekconsulting', 'abuse', 'voipbl','sslproxies', 'openphiish', 'greensnow', 'proxyrss', 'botscout', 'emergingthreats.',  'otx.alienvault.com', 'github.com/gwillem', 'spys.ru', 'torproject.org', 'dshield.org'],
+
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            axisLabel:{
+                show:true,
+                textStyle: {
+                    fontSize: 15,
+                }
+            }
+        }
+    ],
+
+    series: [
+                {
+            name: 'Cyber攻击代码样本数',
+            type: 'bar',
+            data: [ 1027679, 1012706, 403829, 436731, 379263, 266387, 274956, 115752, 165087, 205243, 93240, 65100, 7932, 12012073],
+                        itemStyle: {
+                   normal: {
+                       label: {
+                           show: true,          //开启显示
+                           position: 'top',     //在上方显示
+                           textStyle: {     //数值样式
+                               fontSize:10,
+                               color: 'gray',
+                           },
+                           formatter:function (params) {
+                               var float_num = Math.round((params.data/10000)*100)/100
+                               var str = float_num.toString() + '万'
+                               return str
+                           }
+                       }
+                   }
+               }
+        }
+    ]
+};
+
+if (option && typeof option === "object") {
+    filetype.setOption(option, true);
+    window.onresize = filetype.resize;
+}
+ </script>
+<!-- 样本大小分布-->
+<script type="text/javascript">
+var dom = document.getElementById("filesize");
+var filesize = echarts.init(dom);
+var app = {};
+option = null;
+   option = {
+    title: {
+        left:'1%',            
+            text: '样本大小统计(log10)',
+            textStyle:{
+                           fontSize:30,
+                            align:'center',
+            },
+                        subtext: 'Cyber攻击代码样本库',
+                subtextStyle:{
+            fontSize:20,
+        },
+    tooltip: {
+        trigger: 'axis',
+            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+ grid: {
+                left: 100,
+                right: 50,
+                top: 100,
+                bottom: 100,
+        //containLabel: true
+    },
+
+    xAxis: [
+        {
+            type: 'category',
+                        axisLabel:{
+                'interval':0,
+                rotate:30,
+                show:true,
+                textStyle: {
+                    fontSize: 10,
+                }
+            },
+         data: ['10MB', '20MB', '30MB', '40MB', '50MB', '60MB','70MB','80MB','90MB','100MB'],
+
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            axisLabel:{
+                show:true,
+                textStyle: {
+                    fontSize: 15,
+                }
+            }
+        }
+    ],
+
+    series: [
+                {
+            name: 'Cyber攻击代码样本数',
+            type: 'bar',
+            data: [7.14, 4.64, 4.16, 3.46, 2.79, 2.49, 2.24, 1.85, 1.91, 1.83, 2.42], 
+                        itemStyle: {
+                   normal: {
+                       label: {
+                           show: true,          //开启显示
+                           position: 'top',     //在上方显示
+                           textStyle: {     //数值样式
+                               fontSize:10,
+                               color: 'gray',
+                           },
+                           formatter:function (params) {
+                               var float_num = params.data
+                               var str = float_num.toString()
+                               var str = "10^"+str 
+                               return str
+                           }
+                       }
+                   }
+               }
+        }
+    ]
+};
+
+if (option && typeof option === "object") {
+    filesize.setOption(option, true);
+    window.onresize = filesize.resize;
+}
+ </script>
+
