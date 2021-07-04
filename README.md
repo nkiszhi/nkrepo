@@ -1,49 +1,41 @@
-# nkrepo: A malware sample repository
+# nkrepo: 恶意代码样本库管理项目
 
-Malware samples are stored in DATA folder. Based on the SHA256 of each
-malware sample, samples are stored in the subfolder
-"DATA/SHA256[0]/SHA256[1]/SHA256[2]/SHA256[3]/" with 4 levels architecture.
+## 1. 恶意代码样本库内容
+- 恶意代码样本库，样本总数量千万级别；
+- 恶意代码文件类型包括PE（Windows操作系统）、ELF（Linux操作系统）、APK（Android系统）、可执行脚本（Web平台）、JAVA文件（嵌入式、物联网平台）等； 
+- 样本的类型标签、家族标签；
+- 杀毒软件检测结果；
+- 静态特征，包括字节序列、API函数、字符串等；
+- 动态特征，沙箱中记录的API调用序列。
 
-## nkrepo中Python文件作用
-check.py:	统计DATA文件夹下所有sha256文件名称，并写入到sha256.txt中，在屏幕上输出文件总数
-count_f_info.py:	统计DATA文件夹中f_pack_info.csv的个数并输出到屏幕
-count_labels.py：	统计DATA文件夹中json文件个数
-count_samples.py:	统计DATA文件夹中病毒样本个数
+## 2. 恶意代码样本库查询
+- Web形式和命令行形式的基于哈希值的快速查询；
+- 基于样本创建时间的查询；
+- 基于恶意代码家族信息的查询；
+- 基于恶意代码类型信息的查询；
+- 基于恶意代码特征信息的查询；
+- 基于杀毒软件检测结果的查询；
+- 多种查询条件的综合样本查询；
+- Yara规则检索；
 
-del_sample.py:	输入一个sha256.txt文件，删除文件中的样本，并将已删除/不存在的文件个数输出到屏幕
-delvirus.py:    将本地服务器的sample文件和主服务器上的文件进行对比，删除本地重复的文件
+## 3. 恶意代码样本库下载
+- 支持多个恶意代码样本的同时下载，提供可编程的API下载接口，支持基于API接口的软件二次开发； 
+- 支持多样本的自动压缩和加密下载，支持GB级的海量样本打包和压缩；
+- 支持torrent文件分享和P2P模式下载。 
 
-get_json_list:	将数据集中所有后缀为json的文件名写入json.txt的文本文档中
+## 4. 恶意代码样本库统计分析
+- 基于Web界面展示样本库中样本的统计信息；
+- 展示恶意代码库中样本的时间分布；                                  
+- 展示样本大小分布、样本的文件类型分布；                                  
+- 展示样本的家族信息、类型信息的统计结果；                                  
+- 展示样本多种特征信息的统计结果。  
+                                
+## 5. 恶意代码样本库自动更新
+- 恶意代码样本的添加接口，对恶意代码样本库进行样本文件的扩充； 
+- 恶意代码标签自动更新； 
+- 恶意代码样本特征点的自动提取； 
+- 特征点的扩充，可以添加新的特征点提取函数、更新样本特征文件； 
+- 机器学习算法的接入，支持对样本标注机器学习模型检测结果； 
+- 自动更新统计信息；
+        
 
-get_pack_samples:	先扫描各病毒文件夹下是否有f_pack_info.csv文件，如果没有，进行病毒文件的扫描，标记规则如下：是userdb.txt文件，则写入信息，若只是pe32则写文件名加none最后放入f_pack_info.csv文件中
-get_all_pack_samples:	是用来查找数据集中的f_pack_info.csv文件，并将它信息提取出来，放入一个新的excel表格中，表格名称为pack_info.csv
-get_pack:	将pack_info.csv重新排序后放入pack.csv，中间用none判断来，所以现在pack.csv里面只有userdb.txt
-
-get_samples_info_about_userdb.py:	是将所有病毒文件中userdb.txt文件信息收集，放入pack.csv文件中
-get_samples_info_about_allpe32.py:	是将所有病毒文件中所有pe文件信息收集，放入f_info_del.csv
-get_info_count:	将f_info_del.csv中文件大小的信息统计分组，单位为kb,并将结果写入all_KB_size.csv
-get_filetype:	将f_info_del.csv中的内容经过判断后放入f_pack_del.csv,f_pack_del.csv是pe32文件中除了userdb.txt之外的文件
-
-get_filetype_filesize:	将数据集中所有f_pack_info.csv文件中的信息都放入f_info_del.csv
-get_info_count:	将f_info_del.csv中文件大小信息统计分组，单位为kb,并将结果写入all_KB_size.csv
-get_filetype:	将f_info_del.csv中的内容经过判断后放入f_pack_del.csv,f_pack_del.csv是pe32文件中除了userdb.txt之外的文件
-
-init_repo.py:   检测并补充DATA文件夹下的目录
-
-search-ch.py:	传入一个sha256，判断是否为pe文件，若不是则退出；若是则输出信息：
-		
-		1. 文件路径
-		2. MD5
-		3. SHA-1
-		4. SHA-256
-		5. 文件访问时间
-		6. 文件内容修改时间
-		7. 文件属性修改时间
-		8. 文件大小
-		9. 导入表
-		10.导出表
-		11.文件类型
-		12.文件头信息
-		13.恶意api检测
-		14.编译器和加壳信息检测
-		15.异常信息检测
