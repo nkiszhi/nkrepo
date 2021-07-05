@@ -1,6 +1,12 @@
 # nkrepo: 恶意代码样本库管理项目
 #### 南开大学 反病毒实验室（NKAMG，Nankai Anti-Malware Group）
 
+
+
+#### ![nkrepo](images/nkrepo.png)
+
+
+
 ## 1. 恶意代码样本库内容
 - 恶意代码样本库，样本总数量千万级别；
 - 恶意代码文件类型包括PE（Windows操作系统）、ELF（Linux操作系统）、APK（Android系统）、可执行脚本（Web平台）、JAVA文件（嵌入式、物联网平台）等； 
