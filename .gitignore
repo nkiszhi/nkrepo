@@ -38,3 +38,15 @@ az_unzip
 .DS_Store
 temp
 samples
+
+# pic
+*.graffle
+
+# nkvs
+resume
+torrents
+DATA
+transmission.log
+url_list.txt
+html.txt
+html_.txt
