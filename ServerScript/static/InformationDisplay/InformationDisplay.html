@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据可视化</title>
+    <link rel="stylesheet" href="css/index.css">
+    <script src="js/jquery.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <script>
+        $(function () {
+            $('.myscroll').myScroll({
+                speed: 50, //数值越大，速度越慢
+                rowHeight: 20 //li的高度
+            });
+        });
+
+        $(document).ready(function () {
+            var whei = $(window).width()
+            $("html").css({ fontSize: whei / 22 });
+            $(window).resize(function () {
+                var whei = $(window).width();
+                $("html").css({ fontSize: whei / 22 })
+            });
+        });
+    </script>
+</head>
+<body>
+    <script>
+        MyArguments = window.parent.MyArguments;
+    </script>
+<div class="main">
+    <div class="header">
+        <div class="header-left fl" id="time"></div>
+        <div class="header-center fl">
+            <div class="header-title">
+                恶意代码样本库信息总览
+            </div>
+        </div>
+        <div class="header-right fl"></div>
+        <div class="header-bottom fl"></div>
+
+    </div>
+
+    <div class="center">
+        <div class="center-left fl">
+            <div class="left-top">
+                <div class="title">数据总览</div>
+                <div class="top-list">
+                    <br><br>
+                    <p style="font-size:20px; text-align:center; color:white; font-weight:bold;">样 本 数 量</p>
+                    <p id="TotalFileStatistics" style = "font-size:30px; color: rgb(182, 182, 182); text-align:center;">3000 万</p>
+                    <p id="TotalFileStatistics_detail" style = "font-size:15px; color: gray; text-align:center;">具体数量：32 219 466个</p>
+                    <script src="./js/TotalFileStatistics.js"></script>
+                </div>
+
+            </div>
+            <div class="left-cen">
+                <div class="title">基本信息</div>
+                <ul class="company">
+                    <li>南开大学反恶意代码研究组（NKAMG）</li>
+                    <!-- <li>Github</li>> -->
+                </ul>
+
+            </div>
+            <div class="left-bottom">
+                <div class="title">家族分布</div>
+                <div class="bottom-b">
+                    <div id="chart3" class="allnav"></div>
+                </div>
+
+            </div>
+        </div>
+        <div class="center-cen fl">
+            <div class="cen-top">
+                <div class="top-title">
+                    <ul>
+                        <li>
+                            <p style="font-size: 20px;">样本类型分布</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="top-bottom">
+                    <div id="chart1" class="allnav"></div>
+                </div>
+
+
+            </div>
+            <div class="cen-bottom">
+                <div class="title">样本库数据变化</div>
+                <div class="bottom-b">
+                    <div id="chart4" class="allnav"></div>
+                </div>
+
+            </div>
+        </div>
+        <div class="center-right fr">
+            <div class="right-top">
+                <div class="title">类别信息</div>
+
+                <div class="echart wenzi">
+                    <div class="gun">
+                        <span>名称</span>
+                        <span>数量</span>
+                    </div>
+                    <div id="FontScroll" class="myscroll">
+                        <ul id = "ScriptState">
+                            <li>
+                                <div class="fontInner clearfix">
+                                    <span>nkaz</span>
+                                    <span id = "nkazstate">2小时15分</span>
+                                </div>
+                                <div class="fontInner clearfix">
+                                    <span>nkvs</span>
+                                    <span id = "nkvsstate">2小时15分</span>
+                                </div>
+                                <div class="fontInner clearfix">
+                                    <span>nkvt</span>
+                                    <span id = "nkvtstate">2小时15分</span>
+                                </div>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+            <div class="right-cen">
+                <div class="title">大小分布</div>
+                <div id="chart2" class="allnav"></div>
+            </div>
+            <div class="right-bottom">
+                <div class="title">时间分布（单位：万）</div>
+                <div class="chat">
+                    <div id="chart5" class="allnav"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+<script src="js/jquery.min.js"></script>
+<!-- <script src="js/wodry.min.js"></script> -->
+<script src="js/fontscroll.js"></script>
+<script src="js/echarts.js"></script>
+
+<script>
+
+    //顶部时间
+    function getTime(){
+        var myDate = new Date();
+        var myYear = myDate.getFullYear(); //获取完整的年份(4位,1970-????)
+        var myMonth = myDate.getMonth()+1; //获取当前月份(0-11,0代表1月)
+        var myToday = myDate.getDate(); //获取当前日(1-31)
+        var myDay = myDate.getDay(); //获取当前星期X(0-6,0代表星期天)
+        var myHour = myDate.getHours(); //获取当前小时数(0-23)
+        var myMinute = myDate.getMinutes(); //获取当前分钟数(0-59)
+        var mySecond = myDate.getSeconds(); //获取当前秒数(0-59)
+        var week = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+        var nowTime;
+
+        nowTime = myYear+'-'+fillZero(myMonth)+'-'+fillZero(myToday)+'&nbsp;&nbsp;'+fillZero(myHour)+':'+fillZero(myMinute)+':'+fillZero(mySecond)+'&nbsp;&nbsp;'+week[myDay]+'&nbsp;&nbsp;';
+        $('#time').html(nowTime);
+    };
+    function fillZero(str){
+        var realNum;
+        if(str<10){
+            realNum	= '0'+str;
+        }else{
+            realNum	= str;
+        }
+        return realNum;
+    }
+    setInterval(getTime,1000);
+
+</script>
+
+</body>
+</html>

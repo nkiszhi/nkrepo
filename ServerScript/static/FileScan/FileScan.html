@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<head>
+    <link rel="stylesheet" href="FileScan.css">
+</head>
+<body>
+    <!-- title -->
+    <div id="Title" style = "margin:150px 0px 0px 0px; font-size:70px; color:dodgerblue; text-align:center; font-weight:bold;">
+        FileScan
+    </div>
+
+        <!-- display -->
+        <div id="ScanDisplay">
+            <div id="UploadReset">
+                <input type="file" id="FileUpload" style="visibility: hidden;">
+            </div>
+            <button id="FileUploadButton" name='ScanContent'>选择文件上传</button>
+            <div id="FileDisplay">
+                <img id="ScanImage" src="../images/scan.png">
+            </div>
+            <button id="ScanSubmitButton">scan</button>
+        </div>
+        <div id="ReportNotice" style="text-align: center;visibility: hidden;font-size: 10px;">点击文件查看该文件的报告</div>
+</div>
+
+<script src="FileScan.js"></script>
+</body>

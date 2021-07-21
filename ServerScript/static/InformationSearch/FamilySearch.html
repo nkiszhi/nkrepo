@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HOME</title>
+    <link rel="stylesheet" href="../css/FamilySearch.css">
+    <link rel="shortcut icon" href="../images/ioc.png" type="image/x-icon">
+	<style>
+		.searchtitle {
+			font-size:40px;
+			color:white;
+			position:relative;
+			top:70px;
+		}
+		.worker {
+			font-size:20px;
+			color:white;
+			position:relative;
+			top:85px;
+		}
+	</style>
+</head>
+<body>
+    <!-- title -->
+    <div id="Title" style = "margin:150px 0px 50px 0px;"></div>
+        
+		<div  align="center" class="searchtitle">NKAMG 恶意代码样本库</div>
+		<div align="center" class="worker">Provided by Nankai Anti-Malware Group</div>
+
+        <!-- 搜索框-->
+        <section class="searchBox">
+            <!-- <div class="inputBox">
+                <input type="text" placeholder="Please input Sha256 to search" id="searchInput" v-model="queryString" v-on:keyup.enter="search">
+                <img src="../images/ioc.png" alt="" @click="search">
+            </div> -->
+            <!-- search input -->
+        <div id="SearchSubmit" style="width: 550px; height: 40px; margin: auto;">
+            <input type="text" id="SearchSubmitContent" name='SearchContent' placeholder="请输入一个病毒家族进行查询" v-model="queryString" v-on:keyup.enter="search"/>
+            <button type="button" id="SearchSubmitButton">搜索</button>
+            <style>
+                #SearchSubmitContent {
+                    width: 414px; 
+                    height: 36px; 
+                    padding: 0;
+                    float: left;
+                    border-radius : 10px 0px 0px 10px;
+                    border: 2px solid grey; 
+                    outline: none;
+                    font-size: 15px;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                }
+                #SearchSubmitButton {
+                    width: 112px; 
+                    height: 100%; 
+                    padding: 0;
+                    float: right; 
+                    border-radius : 0px 10px 10px 0px;
+                    border: 2px solid grey; 
+                    outline: none;
+                    background-color: lightgrey;
+                    font-size: 15px;
+                } 
+                #SearchSubmitButton:hover{
+                    background-color: darkgray;
+                }
+                #SearchSubmitButton:active{
+                    background-color: gray;
+                }
+            </style>
+        </div>
+        </section>
+    
+    <!-- result display -->
+    <div id="ResultList" style="visibility: hidden; margin: 50px auto; width: 700px;"></div>
+    <div id = "PageControl" style="visibility: hidden; margin: 10px auto; width: 200px;text-align: center;">
+        <button type="button" id = "PrePage" style="height: 25px; width: 60px; display: float; float: left;">上一页</button>
+        <span id = "AllPage" style="color: white;">1 / 1</span>
+        <button type="button" id = "NextPage" style="height: 25px; width: 60px;display: float; float: right;">下一页</button>
+    </div>
+    <br><br><br>
+</div>
+
+<script src="FamilySearch.js"></script>
+</body>
