@@ -44,5 +44,29 @@
 - 特征点的扩充，可以添加新的特征点提取函数、更新样本特征文件； 
 - 机器学习算法的接入，支持对样本标注机器学习模型检测结果； 
 - 自动更新统计信息；
-        
+       
+
+# Management of Malware Samples
+
+## Statistics
+count_samples.py: Counting the number of all malware samples. 
+count_kav_label.py: Counting the Kaspersky labels in the repo. 
+count_vt_label.py: Counting the VirusTotal labels in the repo. 
+
+## Initialization
+init_repo.py:  Create a 4-tier storage structure. The first layer has 16
+folders, which are named 0 to 9 and a to f. In each folder at the first layer,
+there are 16 subfolders, which are also named 0 to 9 and a to f. The subfolders
+are at the second layer. In total there are 256 (16 x 16) folders at the second
+layer. In the same way, there are 4096 (16 x 16 x 16) subfolders at the third
+layer and 65536 (16 x 16 x 16 x 16) subfolders at the fourth layer. For each
+malware sample, we firstly calculate the sample SHA256 value. Secondly, based on the
+first 4 characters of this SHA256 value, we store the sample to the specific
+subfolder at the fourth layer. For example, there is a malware sample and its
+SHA 256 value is 1234...64. The first 4 characters of the SHA256 value is 1234,
+so this malware sample will be stored in the subfolder 1/2/3/4. 
+
+## Add and delete malware samples
+del_sample.py : delete malware samples from repo.
+add_sample.py : add new malware samples into repo.
 

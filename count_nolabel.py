@@ -7,18 +7,26 @@ from multiprocessing import Pool
 import os
 
 def greet():
-    print("\t******************************************")
-    print("\t**                                      **")
-    print("\t**           计算机病毒样本库           **")
-    print("\t**                                      **")
-    print("\t******************************************")
+    print("\t\t******************************************")
+    print("\t\t**                                      **")
+    print("\t\t**     The Repo of Malware Samples      **")
+    print("\t\t**              NKAMG                   **")
+    print("\t\t**                                      **")
+    print("\t\t******************************************")
 
 def worker(folder):
     _n = 0
     list_all = os.listdir(folder)
     for f in list_all:
         if len(f) == 64:
-            _n += 1
+            json_f = folder + f + ".json" # VirusTotal label file
+            kav_f = folder + f + ".kav"   # Kaspersky label file
+            if os.path.exists(json_f):
+                continue 
+            if os.path.exists(kav_f):
+                continue 
+            _n = _n + 1
+
     return _n
 
 def main():
@@ -26,7 +34,7 @@ def main():
     list_dir = []
     hex_string = "0123456789abcdef"
     p = Pool(200)
-    print("\n\t\t启动200个进程正在统计样本数量\n")
+    print("\n\t\tCounting samples without label using 200 processes.\n")
     _count = []
     
     for i in hex_string:
@@ -36,7 +44,7 @@ def main():
                     folder = "./DATA/sha256/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
-    print("\t\t计算机病毒样本库有样本 {} 个.".format(sum(_count)))
+    print("\t\tThere are {} samples without label.".format(sum(_count)))
     print()
     print()
 

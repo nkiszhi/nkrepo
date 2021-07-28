@@ -42,6 +42,10 @@ samples
 # pic
 *.graffle
 
+# scan
+*log.txt
+*result.txt
+
 # nkvs
 resume
 torrents
@@ -51,4 +55,4 @@ url_list.txt
 html.txt
 html_.txt
 stats.json
-
+url_list.txt
