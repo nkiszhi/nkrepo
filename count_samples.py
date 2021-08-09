@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """Count the number of all malware samples in the repo."""
 
-from __future__ import print_function
-from multiprocessing import Pool
 import os
+import datetime
+from multiprocessing import Pool
 
 def greet():
     print("\t******************************************")
@@ -33,13 +33,12 @@ def main():
         for j in hex_string:
             for k in hex_string:
                 for l in hex_string:
-                    folder = "./DATA/sha256/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
+                    folder = "/nkrepo/DATA/sha256/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
     print("\t\t计算机病毒样本库有样本 {} 个.".format(sum(_count)))
+    print(datetime.datetime.now())
     print()
-    print()
-
 
 
 if __name__ == "__main__":

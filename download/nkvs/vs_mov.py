@@ -34,10 +34,13 @@ def get_sha256(file_path: str) -> str:
 
 def mov_sha256(folder):
     #print("Moving {} \n".format(folder))
-    
+    _n = 0 # The number of moved files 
     files = os.listdir(folder)
-    if len(files):
-        print("{}: {} lefted.\n".format(folder, len(files)))
+    if not len(files):
+        print("{} is empty.\n".format(folder))
+    return 0
+
+    print("{}: {} lefted.\n".format(folder, len(files)))
     #return len(files)
 
     for item in files:
@@ -48,6 +51,9 @@ def mov_sha256(folder):
         dst_f = REPO_PATH + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256
         shutil.move(src_f, dst_f)
         print("\tMove {} to {}".format(src_f, dst_f))
+        _n = _n + 1
+
+    return _n
 
 def main():
     dir_list = os.listdir(ROOT_PATH)
@@ -64,5 +70,3 @@ def main():
 
 if __name__=="__main__":
     main()
-    #path_test = "/nkrepo/nkvs/DATA/tmp/VirusShare_00328/"
-    #rename_sha256(path_test) 
