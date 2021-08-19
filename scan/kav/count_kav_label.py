@@ -7,6 +7,7 @@ from multiprocessing import Pool
 import os
 
 DIR_DATA = "/nkrepo/DATA/sha256/"
+HEX_STRING = "0123456789abcdef"
 
 def greet():
     print()
@@ -31,17 +32,16 @@ def worker(folder):
 def main():
     greet()
     list_dir = []
-    hex_string = "0123456789abcdef"
     p = Pool(200)
     _count = []
 
     
     print("\tCounting kaspersky scan results with 200 processes...\n")
     
-    for i in hex_string:
-        for j in hex_string:
-            for k in hex_string:
-                for l in hex_string:
+    for i in HEX_STRING:
+        for j in HEX_STRING:
+            for k in HEX_STRING:
+                for l in HEX_STRING:
                     folder = DIR_DATA + i + "/"+ j + "/"+ k+ "/" + l + "/"
                     list_dir.append(folder)
 
