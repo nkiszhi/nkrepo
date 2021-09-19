@@ -59,7 +59,9 @@ def parseargs():
     args = parser.parse_args()
     return args
 
-if __name__ == '__main__':
+def main():
     args = parseargs()
     delete(args.sha256)
 
+if __name__ == '__main__':
+    main()

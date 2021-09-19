@@ -13,10 +13,12 @@ def save_result(sha256, result, algorithm, mal_class, mal_platform, mal_family):
     f_kav = DIR_REPO + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256 + ".kav"
     #print(f_kav)
     if os.path.exists(f_kav):
-        os.remove(f_kav)
+        return 0
+        #os.remove(f_kav)
     with open(f_kav, "w") as f:
         t = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
         f.write("{}, {}, {}, {}, {}, {}".format(t, result, algorithm, mal_class, mal_platform, mal_family))
+        return 1
 
 def read_log():
     ''' Read Kaspersky raw scan log file and extract samples detection information.
@@ -57,9 +59,10 @@ The extracted information is stored in kav_results.txt already.'''
             #mal_variant = result.group(5)
             # 6. detection result: Algorithm:Class.Platform.Family.Variant
             result = result.group()
-            save_result(sha256, result, algorithm, mal_class, mal_platform, mal_family)
-            _n = _n + 1
-            print("{}: {} {}".format(_n, sha256, result))
+            _r = save_result(sha256, result, algorithm, mal_class, mal_platform, mal_family)
+            if _r: 
+                _n = _n + 1
+                print("{}: {} {}".format(_n, sha256, result))
     return
             
 def main():
