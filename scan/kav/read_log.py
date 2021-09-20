@@ -5,7 +5,7 @@ import os
 import re
 import time
 
-KAV_LOG = "kav_log.txt" # Raw log file
+KAV_LOG = "kav.log" # Raw log file
 DIR_REPO = "/nkrepo/DATA/sha256/"
 
 def save_result(sha256, result, algorithm, mal_class, mal_platform, mal_family):
