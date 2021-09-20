@@ -8,8 +8,8 @@ __license__ = "GPL"
 
 import os
 
-DIR_SHA256 = "/nkrepo/DATA/sha256"
-DIR_MD5 = "/nkrepo/DATA/md5"
+DIR_SHA256 = "./DATA/sha256"
+DIR_MD5 = "./DATA/md5"
 HEX_STRING = "0123456789abcdef"
 
 

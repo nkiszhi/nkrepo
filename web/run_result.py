@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-# -*-coding:utf-8 -*-
-"""
-@Author: liying
-@Email: liying_china@163.com
-@File: run.py
-@Create Time: 2020/7/10 上午9:53
-"""
+#!/usr/bin/env python3
+# -*-coding: utf-8 -*-
 
+__author__ = "NKAMG"
+__copyright__ = "Copyright (c) 2016 NKAMG"
+__license__ = "GPL"
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 import json
@@ -14,11 +11,9 @@ import pandas as pd
 import sys
 import os
 from search import get_sha256_info 
-import sys
+
 reload(sys)
 sys.setdefaultencoding('utf8') 
-#sys.setdefaultencoding('utf8')
-#HOST_IP = "60.205.204.64"
 HOST_IP = "0.0.0.0"
 PORT = 5000
 
@@ -38,9 +33,9 @@ class MyEncoder(json.JSONEncoder):
             return str(obj)
 
 
-@app.route('/')
-def graph_ip():
-    return render_template('/graph_result.html')
+#@app.route('/')
+#def graph_ip():
+#    return render_template('/graph_result.html')
 
 @app.route('/detail')
 def detail():
@@ -48,7 +43,7 @@ def detail():
     return render_template('detail.html', labels=labels, \
             contents=contents,title=title,slabels=slabels,scontents=scontents,stitle=stitle,atitle=atitle,alabels=alabels,acontents=acontents,ititle=ititle,ilabels=ilabels,icontents=icontents,icontents_=icontents_,etitle=etitle,elabels=elabels,econtents=econtents)
 
-@app.route('/search')
+@app.route('/')
 def search():
     return render_template('search.html')
 
