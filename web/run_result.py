@@ -9,11 +9,11 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for
 import json
 import pandas as pd
 import sys
+import imp
 import os
 from search import get_sha256_info 
 
-reload(sys)
-sys.setdefaultencoding('utf8') 
+imp.reload(sys)
 HOST_IP = "0.0.0.0"
 PORT = 5000
 
