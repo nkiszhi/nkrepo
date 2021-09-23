@@ -1,0 +1,23 @@
+{% extends "superset/basic.html" %}
+
+{% block head_css %}
+  <link rel="stylesheet" href="../../static/css/font-awesome.min.css">
+  <link rel="stylesheet" href="../../static/css/main.css">
+  {{ super() }}
+{% endblock %}
+
+{% block body %}
+<div class="main">
+    <div class="center-block">
+            <h1 style="font-family:verdana,serif;color:#000000; text-align:center">查询失败</h1>
+            <br>
+         <script type="text/javascript">
+	setTimeout("history.go(-1)",2500);
+         </script>
+
+    </div>
+</div>
+
+<script src="../../static/lib/js/jquery-2.2.0.js"></script>
+<script src="../../static/js/build/dist/echarts.js"></script>
+{% endblock %}

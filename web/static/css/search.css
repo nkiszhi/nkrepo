@@ -5,7 +5,7 @@
 html{
     width: 100vw;
     height: 100vh;
-    background-image: url("../static/bgc.jpg");
+    background-image: url("../../static/bgc.jpg");
     background-size: cover;
 }
 
