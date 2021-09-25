@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>恶意代码样本查询</title>
+    <!--<link rel="stylesheet" href="{{url_for('static', filename='css/search.css')}}">-->
+    <link rel="shortcut icon" href="../static/shield-check.svg" type="image/x-icon">
+    <!-- Bootstrap core CSS -->
+    <link href="{{url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">
+    <!-- Custom styles for form -->
+    <link href="{{url_for('static', filename='css/form-validation.css')}}" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container">
+    <div class="py-5 text-center">
+	    <img class="d-block mx-auto mb-4 animated-gif" src="{{url_for('static', filename='protect.gif')}}" alt="" width="72" height="72">
+        <h2 class="text-primary">恶意代码样本查询</h2>
+	<p class="text-muted text-secondary">恶意代码样本查询支持基于样本<b>哈希值</b>的快速查询、样本创建<b>时间</b>查询、恶意代码<b>家族</b>信息查询、恶意代码<b>类型</b>信息查询、恶意代码<b>特征点</b>查询、杀毒软件检测<b>结果</b>查询，<b>yara</b>规则查询，以及多种查询条件的<b>综合</b>样本查询。
+    </div>
+
+    <table class="table table-striped">
+        <thead> <!-- 表头 -->
+	    <tr>
+                <th scope="col">#</th>
+	        <th scope="col">匹配样本的哈希值</th>
+	    </tr>
+	</thead>
+	<tbody>
+	    {% for sha256 in list_sha256 %}
+	    <tr>
+	        <th scope="row">{{loop.index}}</th>
+	        <td class="text-primary">
+
+		    <button type="button" class="btn btn-link"> {{sha256}}</button>
+		</td>
+            </tr>
+            {% endfor %}
+	</tbody>
+    </table>
+</div>
+</body>
+
+</html>

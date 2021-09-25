@@ -1,0 +1,89 @@
+{% extends "superset/theme.html" %}
+
+{% block head_css %}
+  <link rel="stylesheet" href="../../static/css/font-awesome.min.css">
+  <link rel="stylesheet" href="../../static/css/main.css">
+  {{ super() }}
+{% endblock %}
+
+{% block body %}
+<div class="main">
+    <div class="center-block">
+        <h1 style="font-family:verdana,serif;color:#000000; text-align:center">查询结果</h1>
+        <br>
+        <br>
+
+       <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>查询结果</th>
+            </tr>
+        </thead>
+        <tbody>
+             <script type="text/javascript">
+                  var values1 = {{ values1 | safe}}
+                    var table="";
+					table+="<tbody>";
+                     table+="<tr>";
+                     table+="<td>文件名称</td>";
+                  　　table+="<td>"+values1[0]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>家族父类</td>";
+                  　　table+="<td>"+values1[1]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>家族子类</td>";
+                  　　table+="<td>"+values1[2]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>SHA1</td>";
+                  　　table+="<td>"+values1[3]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>MD5</td>";
+                  　　table+="<td>"+values1[4]+"</td>";
+                     table+="</tr>";
+                     table+="<tr>";
+                     table+="<td>Dex_Date</td>";
+                  　　table+="<td>"+values1[5]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>文件大小</td>";
+                  　　table+="<td>"+values1[6]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>PKG_NAME</td>";
+                  　　table+="<td>"+values1[7]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+					  table+="<td>VERCODE</td>";
+                  　　table+="<td>"+values1[8]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>VT_DETECTION</td>";
+                  　　table+="<td>"+values1[9]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>VT_SCAN_DATE</td>";
+                  　　table+="<td>"+values1[10]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>DEX_SIZE</td>";
+                  　　table+="<td>"+values1[11]+"</td>";
+                     table+="</tr>";
+                      table+="<tr>";
+                     table+="<td>市场</td>";
+                  　　table+="<td>"+values1[12]+"</td>";
+					 table+="</tr>";
+					table+="</tbody>";
+                    document.write(table);
+                </script>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<script src="../../static/lib/js/jquery-2.2.0.js"></script>
+<script src="../../static/js/build/dist/echarts.js"></script>
+{% endblock %}

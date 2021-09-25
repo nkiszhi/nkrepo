@@ -30,6 +30,9 @@ DATA
 kefan_script
 az_zip
 az_unzip
+todo.txt
+test*
+*.swo
 
 # temp
 *.bak
@@ -38,3 +41,39 @@ az_unzip
 .DS_Store
 temp
 samples
+smj
+smjtest
+dianwang
+informationOfSamples
+bhy
+nkrepo
+nkrepo_2021
+*sha256.txt
+jianwen
+chengkai
+*.rar
+
+# web
+web1
+old_web
+match_result.txt
+scan_result.csv
+info.csv
+
+# yara 
+yararules
+
+# nkvt
+json
+json_files
+log
+keys.txt
+
+#yara
+file_type.jar
+network
+mal_trainset
+yararules
+norm_trainset
+
+
