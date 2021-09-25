@@ -514,7 +514,11 @@ def parseargs():
     args = parser.parse_args()
     return args
 
-if __name__ == '__main__':
+def main():
     args = parseargs()
-    get_sha256_info(args.sha256)
+    #get_sha256_info(args.sha256)
+    get_json_info()
+
+if __name__ == '__main__':
+    main()
 

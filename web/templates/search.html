@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>搜索</title>
-    <link rel="stylesheet" href="../static/search.css">
+    <title>SHA256查询</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/search.css')}}">
     <link rel="shortcut icon" href="../static/baidu.png" type="image/x-icon">
 </head>
+
 <body>
     <div id="app">
         <!-- 提示信息 -->
@@ -26,12 +27,13 @@
                 <p id="second"></p>
             </div>
             <div class="inputBox">
-                <input type="text" placeholder="Search" id="searchInput" v-model.trim="queryString" v-on:keyup.enter="search">
+                <input type="text" placeholder="Search SHA256" id="searchInput" v-model.trim="queryString" v-on:keyup.enter="search">
                 <img src="../static/search.png" alt="" @click="search">
             </div>
         </section>
     </div>
 </body>
+
 <script>
     window.onload = function(){
         // 时钟代码
@@ -62,11 +64,14 @@
         searchInput.focus();
     };
 </script>
-<script src="../static/vue.min.js"></script>
-<script src="../static/vue-resource.js"></script>
+
+<script src="{{url_for('static', filename='js/vue.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/vue-resource.js')}}"></script>
+
+
 <script>
-    const vm = new Vue({
-        el:"#app",
+    const vm = new Vue({ // 创建Vue示例
+        el:"#app", // 挂载到一个DOM元素上
         data:{
             queryString:"", // 查询字符串
             isInfo:false, // 是否显示提示信息
@@ -78,9 +83,9 @@
         methods: {
             // 按下enter键或点击搜索图标进行搜索
             search:function(){
-			    let reg = /[A-Fa-f0-9]{64}/;
+	    	let reg = /[A-Fa-f0-9]{64}/;
                 if(this.queryString === ""){  
-                    this.infoText = "输入的内容不能为空！";                  
+                    this.infoText = "输入内容不能为空！";                  
                     this.isInfo = true;
                     let that = this;
                     // 1200毫秒之后关闭提示信息
@@ -88,8 +93,8 @@
                         that.isInfo = false;
                     }, 1200);
                 }
-				else if(!reg.test(this.queryString)){  
-                    this.infoText = "输出正确的sha256！";                  
+		else if(!reg.test(this.queryString)){  
+                    this.infoText = "输出正确的SHA256！";                  
                     this.isInfo = true;
                     let that = this;
                     // 1200毫秒之后关闭提示信息
@@ -97,23 +102,17 @@
                         that.isInfo = false;
                     }, 1200);
                 }
-				else{
-                        this.$http.post('/search_data', this.queryString, { emulateJSON: true }).then(result => {
-                    console.log(result.status)
-                    if(parseInt(result.status) === 200){
-                    window.location.href = 'detail'
-                    }
-                })
-
-                   // this.queryString = "";
-                    // 在当前窗口打开
-                    // window.location.href = "https://www.baidu.com/s?ie=UTF-8&wd=" + this.queryString;
-
-                    // 在新窗口打开
-                    //window.open("https://www.baidu.com/s?ie=UTF-8&wd=" + this.queryString);
+	        else{
+                    this.$http.post('/search_data', this.queryString, { emulateJSON: true }).then(result => {
+                        console.log(result.status)
+                        if(parseInt(result.status) === 200){
+                            window.location.href = 'detail'
+                        }
+                    })
                 }
             }
         },
     });
 </script>
+
 </html>
