@@ -60,14 +60,7 @@ match_result.txt
 scan_result.csv
 info.csv
 
-# yara 
-yararules
 
-# nkvt
-json
-json_files
-log
-keys.txt
 
 #yara
 file_type.jar
@@ -99,4 +92,8 @@ latest*
 nohup.out
 
 # nkvt
+keys.txt
+*json
+json_files
+log
 keys.txt

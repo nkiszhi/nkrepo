@@ -7,8 +7,6 @@ import time
 
 KAV_LOG = "kav.log" # Raw log file
 DIR_REPO = "/nkrepo/DATA/sha256/"
-<<<<<<< HEAD
-=======
 CSV_RESULT = "./scan_result.csv"
 
 def save_csv(list_scan_result):
@@ -16,7 +14,6 @@ def save_csv(list_scan_result):
         for r in list_scan_result:
             f.write("{}\n".format(r))
 
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 
 def save_result(sha256, result, algorithm, mal_class, mal_platform, mal_family):
     # Create kav file to store kav scan result, and save kav file into nkrepo.
@@ -34,10 +31,7 @@ def read_log():
     ''' Read Kaspersky raw scan log file and extract samples detection information.
 The extracted information is stored in kav_results.txt already.'''
 
-<<<<<<< HEAD
-=======
     list_scan_result = [] 
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
     pattern_sha256 = r'[a-f0-9]{64}'
     # Algorithm:Class.Platform.Famliy.Variant
     pattern_result = r'([a-zA-Z0-9-]*:)?([a-zA-Z0-9-]*)\.([a-zA-Z0-9-]*)\.([a-zA-Z0-9-]*)(\.[a-zA-Z0-9-]*)*'
@@ -73,31 +67,20 @@ The extracted information is stored in kav_results.txt already.'''
             #mal_variant = result.group(5)
             # 6. detection result: Algorithm:Class.Platform.Family.Variant
             result = result.group()
-<<<<<<< HEAD
-            _r = save_result(sha256, result, algorithm, mal_class, mal_platform, mal_family)
-            if _r: 
-                _n = _n + 1
-                print("{}: {} {}".format(_n, sha256, result))
-=======
 
             scan_result = "{}, {}, {}, {}, {}".format(sha256, mal_class, mal_platform, mal_family, result)
             print(scan_result)
 
             list_scan_result.append(scan_result)
 
-            #_r = save_result(sha256, result, algorithm, mal_class, mal_platform, mal_family)
-            #if _r:
-            #    _n = _n + 1
-            #    print("{}: {} {}".format(_n, sha256, result))
 
             _n = _n + 1
             print("{}: {} {}".format(_n, sha256, result))
 
     list_scan_result = set(list_scan_result) # remove duplicated results
     save_csv(list_scan_result)
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
     return
-            
+ 
 def main():
     read_log() # Read Kaspersky scan result and extract class and family information
     

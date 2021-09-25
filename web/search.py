@@ -474,57 +474,26 @@ def file_info(folder,s,path,filetype, algorithm):
     e_contents=[]
     return labels,contents,s_labels,s_contents,s_title,a_title,a_labels,a_contents,i_title,i_labels,i_contents,i_contents_,e_title,e_labels,e_contents
 
-
-    
-def get_info_by_sha256(s):
-    print("Get info by sha256")
-    folder = "../DATA/sha256/" + s[0] + "/"+ s[1] + "/"+ s[2]+ "/" + s[3] + "/"
-    f_path = folder + s
-    if not os.path.exists(os.path.abspath(f_path)):
-        fileinfo = s+"?"+"恶意代码样本库没有此样本"
-        print(fileinfo)
-        title = "文件基本信息"
-        f_labels = [s]
-        f_contents = ["恶意代码样本库没有此样本"]
-        s_labels = []
-        s_contents = []
-        s_title = ""
-        a_title = ""
-        a_labels = []
-        a_contents = []
-        i_title=""
-        i_labels=[]
-        i_contents=[]
-        i_contents_=[]
-        e_title=""
-        e_labels=[]
-        e_contents=[]
-    else:
-        str_cmd = "file {}".format(f_path)
-        filetype =  os.popen(str_cmd).read().strip().split("/")[-1]
-        filetype = filetype.split(":")[-1]
-        print(filetype)
-        print(type(filetype))
-        print("GUI" is filetype)
-        print(filetype.find("PE32"))
-        if filetype.find("PE32") != -1:
-            print(1111)
-            title = "PE文件基本信息"
-            f_labels,f_contents,s_labels,s_contents,s_title,a_title,a_labels,a_contents,i_title,i_labels,i_contents,i_contents_,e_title,e_labels,e_contents = pe_info(s)
-        else:
-            print(222)
-            title = "文件基本信息"
-            f_labels,f_contents,s_labels,s_contents,s_title,a_title,a_labels,a_contents,i_title,i_labels,i_contents,i_contents_,e_title,e_labels,e_contents=file_info(folder,s,f_path,filetype,hashlib.md5())
-    return title,f_labels,f_contents,s_labels,s_contents,s_title,a_title,a_labels,a_contents,i_title,i_labels,i_contents,i_contents_,e_title,e_labels,e_contents
-
 def get_info_by_md5(md5):
-    # TODO
-    pass
+    # 1. Get md5 info file
+    f_md5 = "../DATA/md5/" + md5[0] + "/"+ md5[1] + "/"+ md5[2]+ "/" + md5[3] + "/" + md5 
+    f_md5 = os.path.abspath(f_md5)
+    print(f_md5)
 
-def get_sha256(sha256):
+    # 2. Get sample SHA256 value
+    with open(f_md5, "r") as f:
+        sha256 = f.readline().strip()
+
+    # 3. get info by sha256
+    dict_json = get_info_by_sha256(sha256)
+    return dict_json
+
+
+def get_info_by_sha256(sha256):
     # 1. Get json file location
     f_json = "../DATA/sha256/" + sha256[0] + "/"+ sha256[1] + "/"+ sha256[2]+ "/" + sha256[3] + "/" + sha256 + ".json"
     #print(f_json)
+
     # 2. Check if json file is existed
     if not os.path.exists(f_json):
         return "" # If json file is not existed return -1
@@ -532,11 +501,6 @@ def get_sha256(sha256):
     # 3. Read json file 
     with open(f_json, "r") as f:
         dict_json = json.load(f)
-    #for key in dict_json.keys():
-    #    print(key)
-    #dict_scan = dict_json['scans']
-    #for key, value in dict_scan.items():
-    #    print("{}:{}".format(key, value))
 
     # 4. return json info 
     return dict_json
@@ -586,7 +550,8 @@ def get_info_all(platform, category, family, scan_result, year, feature):
     list_match_result = []
     n = 0
     for l in lines:
-        (sha256, s_category, s_platform, s_family, s_scan_result, s_year) = l.strip().split(",")
+        (md5, sha256, s_category, s_platform, s_family, s_scan_result, s_year) = l.strip().split(",")
+        md5 = md5.strip().lower()
         sha256 = sha256.strip().lower()
         s_category = s_category.strip().lower()
         s_platform = s_platform.strip().lower()
@@ -627,7 +592,8 @@ def get_info_all(platform, category, family, scan_result, year, feature):
                 continue
         n = n + 1
         print("{} Match: {}".format(n, l))
-        list_match_result.append(sha256)
+        list_match_result.append({"sha256":sha256, "md5":md5, "year":year})
+
     return list_match_result
 
 
@@ -638,16 +604,10 @@ def parseargs():
     return args
 
 def main():
-<<<<<<< HEAD
     #args = parseargs()
     #get_sha256_info(args.sha256)
     sha256 = "0000fd72e1ec4578218850543824997d9142092a23a2490091b393c8483ca6ee"
     get_json_info(sha256)
-=======
-    args = parseargs()
-    #get_sha256_info(args.sha256)
-    get_json_info()
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 
 if __name__ == '__main__':
     main()
