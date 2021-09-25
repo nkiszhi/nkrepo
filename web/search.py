@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = "NKAMG"
+__copyright__ = "Copyright (c) 2016 NKAMG"
+__license__ = "GPL"
+
+
 import pandas as pd
 import argparse
 import os
@@ -9,7 +14,9 @@ import hashlib
 import sys,pefile,re,peutils,os
 from hashlib import md5,sha1,sha256
 import time, datetime
+import json
 
+CSV_INFO = "info.csv"
 
 def help():
     print("")
@@ -25,7 +32,7 @@ def help():
 def greet():
     log("\t**********************************************************")
     log("\t**                                                      **")
-    log("\t**           Cyber攻击代码库样本检索工具                **")
+    log("\t**           恶意代码库样本检索工具                     **")
     log("\t**                                                      **")
     log("\t**********************************************************")
 
@@ -399,7 +406,7 @@ def main_s(pe,f,name):
     return f_labels,f_contents,s_labels,s_contents,s_title,a_title,a_labels,a_contents,i_title,i_labels,i_contents,i_contents_,e_title,e_labels,e_contents
 
 def pe_info(fname):
-    folder = "../DATA/" + fname[0] + "/"+ fname[1] + "/"+ fname[2]+ "/" + fname[3] + "/"
+    folder = "../DATA/sha255/" + fname[0] + "/"+ fname[1] + "/"+ fname[2]+ "/" + fname[3] + "/"
     fname = folder + fname
     str_cmd = "file {}".format(fname)
     filetype =  os.popen(str_cmd).read().strip().split("/")[-1]
@@ -466,17 +473,19 @@ def file_info(folder,s,path,filetype, algorithm):
     e_labels=[]
     e_contents=[]
     return labels,contents,s_labels,s_contents,s_title,a_title,a_labels,a_contents,i_title,i_labels,i_contents,i_contents_,e_title,e_labels,e_contents
+
+
     
-    
-def get_sha256_info(s):
-    folder = "../DATA/" + s[0] + "/"+ s[1] + "/"+ s[2]+ "/" + s[3] + "/"
+def get_info_by_sha256(s):
+    print("Get info by sha256")
+    folder = "../DATA/sha256/" + s[0] + "/"+ s[1] + "/"+ s[2]+ "/" + s[3] + "/"
     f_path = folder + s
     if not os.path.exists(os.path.abspath(f_path)):
-        fileinfo = s+"?"+"Cyber攻击代码库没有此文件"
+        fileinfo = s+"?"+"恶意代码样本库没有此样本"
         print(fileinfo)
         title = "文件基本信息"
         f_labels = [s]
-        f_contents = ["Cyber攻击代码库没有此文件"]
+        f_contents = ["恶意代码样本库没有此样本"]
         s_labels = []
         s_contents = []
         s_title = ""
@@ -491,7 +500,7 @@ def get_sha256_info(s):
         e_labels=[]
         e_contents=[]
     else:
-        str_cmd = "file {}".format(f_path) 
+        str_cmd = "file {}".format(f_path)
         filetype =  os.popen(str_cmd).read().strip().split("/")[-1]
         filetype = filetype.split(":")[-1]
         print(filetype)
@@ -507,14 +516,133 @@ def get_sha256_info(s):
             title = "文件基本信息"
             f_labels,f_contents,s_labels,s_contents,s_title,a_title,a_labels,a_contents,i_title,i_labels,i_contents,i_contents_,e_title,e_labels,e_contents=file_info(folder,s,f_path,filetype,hashlib.md5())
     return title,f_labels,f_contents,s_labels,s_contents,s_title,a_title,a_labels,a_contents,i_title,i_labels,i_contents,i_contents_,e_title,e_labels,e_contents
-   
+
+def get_info_by_md5(md5):
+    # TODO
+    pass
+
+def get_sha256(sha256):
+    # 1. Get json file location
+    f_json = "../DATA/sha256/" + sha256[0] + "/"+ sha256[1] + "/"+ sha256[2]+ "/" + sha256[3] + "/" + sha256 + ".json"
+    #print(f_json)
+    # 2. Check if json file is existed
+    if not os.path.exists(f_json):
+        return "" # If json file is not existed return -1
+
+    # 3. Read json file 
+    with open(f_json, "r") as f:
+        dict_json = json.load(f)
+    #for key in dict_json.keys():
+    #    print(key)
+    #dict_scan = dict_json['scans']
+    #for key, value in dict_scan.items():
+    #    print("{}:{}".format(key, value))
+
+    # 4. return json info 
+    return dict_json
+
+
+def get_info_all(platform, category, family, scan_result, year, feature):
+    # platform is the platform samples are running on
+    # category is the category of the samples
+    # famliy is the family of the samples
+    # result is the Kaspersky scan result of the samples
+    # year is the year in which the sample was found
+    # feature is a short opcode sequence of samples
+
+    print("Sample search conditions:")
+    print("1. Platform：{}".format(platform))
+    print("2. Category：{}".format(category))
+    print("3. Family：{}".format(family))
+    print("4. Scan Result：{}".format(scan_result))
+    print("5. Year：{}".format(year))
+    print("6. Feature: {}".format(feature))
+
+    # 1. preprocess input parameters
+    platform = str(platform).strip().lower()
+    if platform == "any":
+        platform = ""
+    category = str(category).strip().lower()
+    if category == "any":
+        category = ""
+    family = str(family).strip().lower()
+    if family == "any":
+        family = ""
+    scan_result = str(scan_result).strip().lower()
+    if scan_result == "any":
+        scan_result = ""
+    year = str(year).strip().lower()
+    if year == "any":
+        year = ""
+    feature = str(feature).strip().lower()
+    if feature == "any":
+        feature = ""
+
+    # 2. read info.csv
+    with open(CSV_INFO, "r") as info:
+        lines = info.readlines()
+
+    # 3. match 
+    list_match_result = []
+    n = 0
+    for l in lines:
+        (sha256, s_category, s_platform, s_family, s_scan_result, s_year) = l.strip().split(",")
+        sha256 = sha256.strip().lower()
+        s_category = s_category.strip().lower()
+        s_platform = s_platform.strip().lower()
+        s_family = s_family.strip().lower()
+        s_scan_result = s_scan_result.strip().lower()
+        s_year = s_year.strip().lower()
+
+        #print("1. Platform：{}".format(s_platform))
+        #print("2. Category：{}".format(s_category))
+        #print("3. Family：{}".format(s_family))
+        #print("4. Scan Result：{}".format(s_scan_result))
+        #print("5. Year：{}".format(s_year))
+
+        # 3.1 match platform
+        if platform:
+            if platform != s_platform:
+                #print("Not match!")
+                continue
+        # 3.2 match category
+        if category:
+            if category != s_category:
+                #print("Not match!")
+                continue
+        # 3.3 match family
+        if family:
+            if family != s_family:
+                #print("Not match!")
+                continue
+        # 3.4 match scan result
+        if scan_result:
+            if scan_result != s_scan_result:
+                #print("Not match!")
+                continue
+        # 3.5 match year
+        if year:
+            if year != s_year:
+                #print("Not match!")
+                continue
+        n = n + 1
+        print("{} Match: {}".format(n, l))
+        list_match_result.append(sha256)
+    return list_match_result
+
+
 def parseargs():
     parser = argparse.ArgumentParser(description = "to get samples info from sha256")
     parser.add_argument("-s", "--sha256", help="input sha256", type=str, required=True)
     args = parser.parse_args()
     return args
 
+def main():
+    #args = parseargs()
+    #get_sha256_info(args.sha256)
+    sha256 = "0000fd72e1ec4578218850543824997d9142092a23a2490091b393c8483ca6ee"
+    get_json_info(sha256)
+
 if __name__ == '__main__':
-    args = parseargs()
-    get_sha256_info(args.sha256)
+    main()
 
