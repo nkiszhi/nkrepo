@@ -6,7 +6,8 @@ import shutil
 import argparse
 import hashlib
 
-repo_folder = "./DATA/"
+md5_folder = "./DATA/md5/"
+sha256_folder = "./DATA/sha256/"
 list_samples = []
 
 
@@ -25,7 +26,7 @@ def delete(filename):
         for line in f:
             if len(line.strip('\n')) == 64:
                 sha256 = line.strip('\n')
-                dst_path = repo_folder + "{}/{}/{}/{}/{}".format(sha256[0],sha256[1],sha256[2],sha256[3],sha256)
+                dst_path = md5_folder + "{}/{}/{}/{}/{}".format(sha256[0],sha256[1],sha256[2],sha256[3],sha256)
                 if os.path.isfile(dst_path):
                     os.remove(dst_path)
                     n_del = n_del + 1
@@ -33,6 +34,16 @@ def delete(filename):
                 else:
                     n_non = n_non + 1
                     print("样本不存在  {}".format( dst_path))
+
+                dst_path = sha256_folder + "{}/{}/{}/{}/{}".format(sha256[0],sha256[1],sha256[2],sha256[3],sha256)
+                if os.path.isfile(dst_path):
+                    os.remove(dst_path)
+                    n_del = n_del + 1
+                    print("{} : 删除样本  {}".format(n_del,  dst_path))
+                else:
+                    n_non = n_non + 1
+                    print("样本不存在  {}".format( dst_path))
+
     print()
     greet()
     print("一共删除 {} Cyber攻击样本".format(n_del))
@@ -48,7 +59,9 @@ def parseargs():
     args = parser.parse_args()
     return args
 
-if __name__ == '__main__':
+def main():
     args = parseargs()
     delete(args.sha256)
 
+if __name__ == '__main__':
+    main()

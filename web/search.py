@@ -638,10 +638,16 @@ def parseargs():
     return args
 
 def main():
+<<<<<<< HEAD
     #args = parseargs()
     #get_sha256_info(args.sha256)
     sha256 = "0000fd72e1ec4578218850543824997d9142092a23a2490091b393c8483ca6ee"
     get_json_info(sha256)
+=======
+    args = parseargs()
+    #get_sha256_info(args.sha256)
+    get_json_info()
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 
 if __name__ == '__main__':
     main()

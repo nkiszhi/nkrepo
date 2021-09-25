@@ -11,9 +11,13 @@ import pandas as pd
 import sys
 import imp
 import os
+<<<<<<< HEAD
 from search import get_info_by_sha256 
 from search import get_info_by_md5 
 from search import get_info_all
+=======
+from search import get_json_info 
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 
 HOST_IP = "0.0.0.0"
 PORT = 5000
@@ -167,6 +171,12 @@ def search_md5():
             scans = d,\
             scan_sha256 = sha256)
 
+<<<<<<< HEAD
+=======
+#@app.route('/')
+#def graph_ip():
+#    return render_template('/graph_result.html')
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 
 @app.route('/detail')
 def detail():
@@ -181,19 +191,32 @@ def detail():
 
     for key, value in d.items():
         print("{}: {}".format(key, value))
+<<<<<<< HEAD
 
     return render_template('detail.html', \
             title = title,\
             scans = d,\
             scan_sha256 = sha256)
 
+=======
+
+    return render_template('detail.html', \
+            title = title,\
+            scans = d,\
+            scan_sha256 = sha256)
+
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 @app.route('/')
 def search():
     return render_template('search.html')
 
 @app.route('/sha256/<sha256>')
 def download_sha256(sha256):
+<<<<<<< HEAD
     path = "../DATA/sha256/" + sha256[0] + '/' +  sha256[1] + '/' + sha256[2] + '/' + sha256[3] + '/' + sha256
+=======
+    path = "../DATA/" + sha256[0] + '/' +  sha256[1] + '/' + sha256[2] + '/' + sha256[3] + '/' + sha256
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
     path = os.path.abspath(path)
     print(path)
     return send_file(path, as_attachment=True)
@@ -242,6 +265,45 @@ def search_data():
 
     return jsonify({ title:title })
 
+<<<<<<< HEAD
+=======
+
+
+    #'''
+    #str_cmd = "python2 search.py -s {}".format(T)
+    #filetype =  os.popen(str_cmd).read().strip().split("?")
+    #print(filetype)
+    #'''
+
+    #title,labels,contents,slabels,scontents,stitle,atitle,alabels,acontents,ititle,ilabels,icontents,icontents_,etitle,elabels,econtents =\
+    #        get_sha256_info(T)
+    ##labels=[]
+    ##contents=[]
+    ##title = ""
+    #print(ilabels)
+    #print(icontents)
+    #print(66666) 
+    #print(econtents)
+    ##return redirect(url_for('detail',labels=labels,content=content,jlabels=jlabels,jcontent=jcontent))
+    #return jsonify({title:title,\
+    #        "labels":labels,\
+    #        "contents":contents,\
+    #        "slabels":slabels,\
+    #        "scontents":scontents,\
+    #        "stitle":stitle,\
+    #        "atitle":atitle,\
+    #        "alabels":alabels,\
+    #        "acontents":acontents,\
+    #        "ititle":ititle,\
+    #        "ilabels":ilabels,\
+    #        "icontents":icontents,\
+    #        "icontents_":icontents_,\
+    #        "etitle":etitle,\
+    #        "elabels":elabels,\
+    #        "econtents":econtents})
+
+
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 if __name__ == '__main__':
     app.run(host=HOST_IP, port=PORT, debug=True)
 

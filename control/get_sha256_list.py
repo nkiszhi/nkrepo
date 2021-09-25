@@ -10,7 +10,11 @@ __license__ = "GPL"
 
 import os
 
+<<<<<<< HEAD
 DIR_REPO = "/home/RaidDisk/nkrepo/DATA/sha256/0/"
+=======
+DIR_REPO = "/nkrepo/DATA/sha256/0/"
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 FILE_SHA256 = "list_sha256.txt"
 
 def main():

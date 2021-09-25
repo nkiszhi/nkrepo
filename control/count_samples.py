@@ -2,16 +2,24 @@
 # -*- coding: utf-8 -*-
 """Count the number of all malware samples in the repo."""
 
-from __future__ import print_function
-from multiprocessing import Pool
 import os
+import datetime
+from multiprocessing import Pool
 
 def greet():
+<<<<<<< HEAD:control/count_samples.py
     print("\t\t**********************************************************")
     print("\t\t**                                                      **")
     print("\t\t**           Cyber攻击代码样本库                        **")
     print("\t\t**                                                      **")
     print("\t\t**********************************************************")
+=======
+    print("\t******************************************")
+    print("\t**                                      **")
+    print("\t**           计算机病毒样本库           **")
+    print("\t**                                      **")
+    print("\t******************************************")
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce:control/count_samples.py
 
 def worker(folder):
     _n = 0
@@ -33,13 +41,16 @@ def main():
         for j in hex_string:
             for k in hex_string:
                 for l in hex_string:
-                    folder = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
+                    folder = "/nkrepo/DATA/sha256/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
+<<<<<<< HEAD:control/count_samples.py
     print("Cyber 攻击代码样本库有样本 {} 个.".format(sum(_count)))
+=======
+    print("\t\t计算机病毒样本库有样本 {} 个.".format(sum(_count)))
+    print(datetime.datetime.now())
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce:control/count_samples.py
     print()
-    print()
-
 
 
 if __name__ == "__main__":

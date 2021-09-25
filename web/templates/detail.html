@@ -27,6 +27,8 @@
     </style>
     <title>恶意代码样本库查询结果</title>
 </head>
+<<<<<<< HEAD
+=======
 
 <body class="bg-light">
 <div class="row",class="first">
@@ -70,13 +72,194 @@
 </table>
 <p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.download_sha256', sha256=scan_sha256)}}">下载样本</a> </p>
 </div>
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
+
+<body class="bg-light">
+<div class="row",class="first">
+<div class="col-md-12 col-sm-30 col-xs-30">
+<div class="panel panel-default">
+<div class="panel-heading">
+    <h4 style='font-size:35px;text-align:center'>{{ title }}</h4>
+</div>
+<<<<<<< HEAD
+<div class="panel-body">
+<div class="table-responsive">
+
+<!-- 杀毒软件检测结果 -->
+<div class="container">
+<div class="py-5 text-center">
+    <h3> 杀毒软件检测结果 </h3>
+    <p class="text-muted "> 共有<b>{{scans|length}}</b>款杀毒软件进行检测. {{sha256}}</p>
+</div>
+<table class="table table-striped">
+    <thead> <!-- 表头 -->
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">杀毒软件</th>
+            <th scope="col">版本</th>
+            <th scope="col">检测结果</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key, value in scans.items() %}
+        <tr>
+	    <th scope="row">{{loop.index}}</th>
+	    <td class="text-primary">{{key}}</td>
+	    <td class="text-secondary">{{value['version']}}</td>
+	    {% if value['result'] == "CLEAN" %}
+	        <td class="text-success">{{value['result']}}</td>
+	    {% else %}
+	        <td class="text-danger">{{value['result']}}</td>
+	    {% endif %}
+        </tr>
+        {% endfor %} 
+    </tbody>
+</table>
+<p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.download_sha256', sha256=scan_sha256)}}">下载样本</a> </p>
+=======
+</div>
+</div>
+</div>
+</div>
+
+<!---
+
+<div class="row",class="second">
+    <div class="col-md-12 col-sm-30 col-xs-30">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 style='font-size:35px;text-align:center'>{{stitle}}</h4>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                      <tbody style='font-size:35px;text-align:center'>
+                        {% for i in slabels %}
+                           <table class="mailTable"  cellspacing="0" cellpadding="0">
+
+                           <tr>
+                           <td class="column">{{ slabels[slabels.index(i)] }}</td>
+                           {% for j in scontents %}
+                              <td>{{scontents[scontents.index(j)][slabels.index(i)]}}</td>
+                           {% endfor %}
+                           </tr>
+                         {% endfor %}
+                       </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
 
 </div>
+-->
+
+<!--
+<div class="row",class="third">
+    <div class="col-md-12 col-sm-30 col-xs-30">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 style='font-size:35px;text-align:center'>{{atitle}}</h4>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                      <tbody style='font-size:35px;text-align:center'>
+                        {% for i in alabels %}
+                           <table class="mailTable"  cellspacing="0" cellpadding="0">
+
+                           <tr>
+                           <td class="column">{{ alabels[alabels.index(i)] }}</td>
+                           <td>{{acontents[alabels.index(i)]}}</td>
+                           </tr>
+                         {% endfor %}
+                       </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
+</div>
+-->
+
+<<<<<<< HEAD
+</div>
 </div>
 </div>
 </div>
 </div>
 
+=======
+<!--
+<div class="row",class="forth">
+    <div class="col-md-12 col-sm-30 col-xs-30">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 style='font-size:35px;text-align:center'>{{ititle}}</h4>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                      <tbody style='font-size:35px;text-align:center'>
+                        {% for i in ilabels %}
+                           <table class="mailTable"  cellspacing="0" cellpadding="0">
+
+                           <tr>
+                           <td class="column">{{ ilabels[ilabels.index(i)] }}</td>
+                           <td>{{icontents[ilabels.index(i)]}}</td>
+                           <td>{{icontents_[ilabels.index(i)]}}</td>
+                           </tr>
+                         {% endfor %}
+                       </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+-->
+
+<!--
+<div class="row",class="forth">
+    <div class="col-md-12 col-sm-30 col-xs-30">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 style='font-size:35px;text-align:center'>{{etitle}}</h4>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                      <tbody style='font-size:35px;text-align:center'>
+                        {% for i in elabels %}
+                           <table class="mailTable"  cellspacing="0" cellpadding="0">
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script type="text/javascript" 
+	src="{{url_for('static', filename='js/jquery.js')}}">
+</script>
+
+<script type="text/javascript"
+	src="{{url_for('static', filename='js/popper.js')}}">
+</script>
+
+<script type="text/javascript" 
+	src="{{url_for('static', filename='js/bootstrap.js')}}">
+</script>
+
+<<<<<<< HEAD
+
+=======
+</div>
+-->
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -93,5 +276,11 @@
 </script>
 
 
+<script src="{{url_for('static', filename='js/vue.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/vue-resource.js')}}"></script>
+
+
+
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 </body>
 </html>

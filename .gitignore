@@ -39,7 +39,7 @@ test*
 *.tmp
 *.swp
 .DS_Store
-temp
+temp*
 samples
 smj
 smjtest
@@ -76,4 +76,27 @@ mal_trainset
 yararules
 norm_trainset
 
+# pic
+*.graffle
 
+# scan
+*log.txt
+*result.txt
+
+# nkvs
+resume
+torrents
+DATA
+transmission.log
+url_list.txt
+html.txt
+html_.txt
+stats.json
+url_list.txt
+
+# nkaz
+latest*
+nohup.out
+
+# nkvt
+keys.txt

@@ -19,7 +19,11 @@ for i in hex_string:
     for j in hex_string:
         for k in hex_string:
             for l in hex_string:
+<<<<<<< HEAD:control/count_f_info.py
                 f = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/f_info.csv"
+=======
+                f = "./DATA/sha256/" + i + "/"+ j + "/"+ k+ "/" + l + "/f_pack_info.csv"
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce:control/count_f_info.py
                 list_f.append(f)
 
 p = Pool(100)

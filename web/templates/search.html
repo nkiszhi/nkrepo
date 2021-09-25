@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+<<<<<<< HEAD
     <title>恶意代码样本查询</title>
     <!--<link rel="stylesheet" href="{{url_for('static', filename='css/search.css')}}">-->
     <link rel="shortcut icon" href="../static/shield-check.svg" type="image/x-icon">
@@ -89,9 +90,37 @@
             <input type="text" class="form-control" id="category" placeholder="Any" value="Any" required="" name="category">
             <div class="invalid-feedback">
                 需要提供有效的病毒类型信息，或者输入Any
+=======
+    <title>SHA256查询</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/search.css')}}">
+    <link rel="shortcut icon" href="../static/baidu.png" type="image/x-icon">
+</head>
+
+<body>
+    <div id="app">
+        <!-- 提示信息 -->
+        <transition>
+            <p v-if="isInfo" v-text="infoText" class="info" v-cloak></p>
+        </transition>
+    
+        <!-- 搜索框 -->
+        <section class="searchBox">
+            <div class="clock">
+                <p id="year"></p>/
+                <p id="month"></p>/
+                <p id="day"></p>--
+                <p id="hour"></p>
+                <p id="minute"></p>
+                <p id="second"></p>
+            </div>
+            <div class="inputBox">
+                <input type="text" placeholder="Search SHA256" id="searchInput" v-model.trim="queryString" v-on:keyup.enter="search">
+                <img src="../static/search.png" alt="" @click="search">
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
             </div>
         </div>
     </div>
+<<<<<<< HEAD
 
     <!-- 第二行 -->
     <div class="row">
@@ -181,5 +210,89 @@
 
 </div>
 </body>
+=======
+</body>
+
+<script>
+    window.onload = function(){
+        // 时钟代码
+        let year_text = document.getElementById("year");
+        let month_text = document.getElementById("month");
+        let day_text = document.getElementById("day");
+        let hour_text = document.getElementById("hour");
+        let minute_text = document.getElementById("minute");
+        let second_text = document.getElementById("second");
+        let timer = setInterval(function(){
+            let date = new Date();
+            let year = date.getFullYear();
+            let month = date.getMonth();
+            let day = date.getDate();
+            let hour = date.getHours();
+            let minute = date.getMinutes();
+            let second = date.getSeconds();
+            year_text.innerHTML = year;
+            month_text.innerHTML = (month + 1);
+            day_text.innerHTML = day;
+            hour_text.innerHTML = hour + ":";
+            minute_text.innerHTML = minute + ":";
+            second_text.innerHTML = second;
+        }, 100);
+
+        // 设置input框自动获取焦点
+        let searchInput = document.getElementById("searchInput");
+        searchInput.focus();
+    };
+</script>
+
+<script src="{{url_for('static', filename='js/vue.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/vue-resource.js')}}"></script>
+
+
+<script>
+    const vm = new Vue({ // 创建Vue示例
+        el:"#app", // 挂载到一个DOM元素上
+        data:{
+            queryString:"", // 查询字符串
+            isInfo:false, // 是否显示提示信息
+            infoText:"", // 要显示的提示信息
+        },
+        mounted() {
+            
+        },
+        methods: {
+            // 按下enter键或点击搜索图标进行搜索
+            search:function(){
+	    	let reg = /[A-Fa-f0-9]{64}/;
+                if(this.queryString === ""){  
+                    this.infoText = "输入内容不能为空！";                  
+                    this.isInfo = true;
+                    let that = this;
+                    // 1200毫秒之后关闭提示信息
+                    setTimeout(function(){
+                        that.isInfo = false;
+                    }, 1200);
+                }
+		else if(!reg.test(this.queryString)){  
+                    this.infoText = "输出正确的SHA256！";                  
+                    this.isInfo = true;
+                    let that = this;
+                    // 1200毫秒之后关闭提示信息
+                    setTimeout(function(){
+                        that.isInfo = false;
+                    }, 1200);
+                }
+	        else{
+                    this.$http.post('/search_data', this.queryString, { emulateJSON: true }).then(result => {
+                        console.log(result.status)
+                        if(parseInt(result.status) === 200){
+                            window.location.href = 'detail'
+                        }
+                    })
+                }
+            }
+        },
+    });
+</script>
+>>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
 
 </html>
