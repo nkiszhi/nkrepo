@@ -36,7 +36,7 @@ az_unzip
 *.tmp
 *.swp
 .DS_Store
-temp
+temp*
 samples
 
 # pic
@@ -56,3 +56,12 @@ html.txt
 html_.txt
 stats.json
 url_list.txt
+
+# nkaz
+latest*
+nohup.out
+
+# nkvt
+keys.txt
+
+
