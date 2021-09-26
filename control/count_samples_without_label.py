@@ -6,6 +6,8 @@ from __future__ import print_function
 from multiprocessing import Pool
 import os
 
+DIR_DATA = "../DATA/sha256/"
+
 def greet():
     print("\t\t******************************************")
     print("\t\t**                                      **")
@@ -34,17 +36,18 @@ def main():
     list_dir = []
     hex_string = "0123456789abcdef"
     p = Pool(200)
-    print("\n\t\tCounting samples without label using 200 processes.\n")
+    print("\n\t\tCounting samples without scan result using 200 processes.\n")
     _count = []
     
     for i in hex_string:
         for j in hex_string:
             for k in hex_string:
                 for l in hex_string:
-                    folder = "./DATA/sha256/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
+                    folder = DIR_DATA + i + "/"+ j + "/"+ k+ "/" + l + "/"
+                    folder = os.path.abspath(folder)
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
-    print("\t\tThere are {} samples without label.".format(sum(_count)))
+    print("\t\tThere are {} samples without scan results.".format(sum(_count)))
     print()
     print()
 
