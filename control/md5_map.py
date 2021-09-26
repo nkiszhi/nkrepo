@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import hashlib, os
+from greet import greet
 from multiprocessing import Pool
 
 HEXSTRING = "0123456789abcdef"
@@ -80,6 +81,7 @@ def worker(folder):
     print("[o]: {} ## {}".format(folder, _n))
 
 def main():
+    greet()
     #init_md5_repo() # Initialize MD5 4-tier storage structure
     create_md5_files() # Create md5 files according to sha256 files
 

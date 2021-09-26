@@ -7,8 +7,9 @@ __license__ = "GPL"
 
 """Count the number of VirusTotal json files in the repo."""
 
-from multiprocessing import Pool
 import os
+from greet import greet
+from multiprocessing import Pool
 
 DIR_REPO = "../DATA/sha256/" # The repo storing json files
 
@@ -22,6 +23,7 @@ def worker(folder):
     return _n
 
 def main():
+    greet()
     list_dir = []
     hex_string = "0123456789abcdef"
     p = Pool(200)

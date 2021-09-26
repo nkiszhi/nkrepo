@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """Count the number of all malware samples in the repo."""
 
+__author__ = "NKAMG"
+__copyright__ = "Copyright (c) 2016 NKAMG"
+__license__ = "GPL"
+
+
 import os
-import datetime
+from time import gmtime, strftime
+from greet import greet
 from multiprocessing import Pool
 
 DIR_DATA = "../DATA/sha256/"
-
-def greet():
-    print("\t******************************************")
-    print("\t**                                      **")
-    print("\t**           计算机病毒样本库           **")
-    print("\t**                NKAMG                 **")
-    print("\t**                                      **")
-    print("\t******************************************")
 
 def worker(folder):
     _n = 0
@@ -40,8 +39,8 @@ def main():
                     folder = os.path.abspath(folder)
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
-    print("\t\t计算机病毒样本库有样本 {} 个.".format(sum(_count)))
-    print(datetime.datetime.now())
+    print("计算机病毒样本库有样本 {} 个.".format(sum(_count)))
+    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     print()
 
 
