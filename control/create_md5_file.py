@@ -8,8 +8,6 @@ from greet import greet
 from multiprocessing import Pool
 
 HEXSTRING = "0123456789abcdef"
-MD5_DIR = "/nkrepo/DATA/md5/"
-SHA256_DIR = "/nkrepo/DATA/sha256/"
 DIR_SHA256 = "../DATA/sha256/"
 DIR_MD5 = "../DATA/md5/"
 DIR_TEMP = "./TEMP/"
@@ -50,7 +48,7 @@ def create_md5_file_by_json():
                             response_code = dict_json["response_code"] 
 
                         #### 6. Move error json files to temp folder 
-                        if not response_code:
+                        if response_code != 1:
                             print("[!] Response Code is O: {}".format(f_json))
                             n_error = n_error + 1
                             dst_json =  DIR_TEMP + file_name 
@@ -59,6 +57,7 @@ def create_md5_file_by_json():
                             continue
                         
                         #### 7. Get SHA256 and MD5 value 
+                        print(f_json)
                         if len(dict_json.keys()) == 2:
                             sha256 = dict_json["results"]["sha256"]
                             md5 = dict_json["results"]["md5"]
