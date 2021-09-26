@@ -6,6 +6,9 @@ import shutil
 import argparse
 import hashlib
 
+DIR_MD5 = "../DATA/md5/"
+DIR_SHA256 = "../DATA/sha256/"
+
 md5_folder = "./DATA/md5/"
 sha256_folder = "./DATA/sha256/"
 list_samples = []
@@ -14,7 +17,8 @@ list_samples = []
 def greet():
    print("\t**********************************************************")
    print("\t**                                                      **")
-   print("\t**           Cyber攻击代码库样本检索工具                **")
+   print("\t**           The Repo of Malware Samples                **")
+   print("\t**                    by NKAMG                          **")
    print("\t**                                                      **")
    print("\t**********************************************************")
 
@@ -23,31 +27,26 @@ def delete(filename):
     n_del = 0
     n_non = 0
     with open(filename,"r") as f:
-        for line in f:
-            if len(line.strip('\n')) == 64:
-                sha256 = line.strip('\n')
-                dst_path = md5_folder + "{}/{}/{}/{}/{}".format(sha256[0],sha256[1],sha256[2],sha256[3],sha256)
-                if os.path.isfile(dst_path):
-                    os.remove(dst_path)
-                    n_del = n_del + 1
-                    print("{} : 删除样本  {}".format(n_del,  dst_path))
-                else:
-                    n_non = n_non + 1
-                    print("样本不存在  {}".format( dst_path))
+        lines = f.readlines()
+        lines = [x.strip() for x in lines]
 
-                dst_path = sha256_folder + "{}/{}/{}/{}/{}".format(sha256[0],sha256[1],sha256[2],sha256[3],sha256)
-                if os.path.isfile(dst_path):
-                    os.remove(dst_path)
-                    n_del = n_del + 1
-                    print("{} : 删除样本  {}".format(n_del,  dst_path))
-                else:
-                    n_non = n_non + 1
-                    print("样本不存在  {}".format( dst_path))
+    for line in lines:
+        if len(line) != 64:
+            continue
+        sha256 = line
+        f_sha256 = DIR_SHA256 + "{}/{}/{}/{}/{}".format(sha256[0],sha256[1],sha256[2],sha256[3],sha256)
+        if os.path.isfile(f_sha256):
+            os.remove(f_sha256)
+            n_del = n_del + 1
+            print("{} : 删除样本  {}".format(n_del,  f_sha256))
+        else:
+            n_non = n_non + 1
+            print("样本不存在  {}".format(f_sha256))
 
     print()
     greet()
-    print("一共删除 {} Cyber攻击样本".format(n_del))
-    print("{} Cyber攻击样本不存在".format(n_non))
+    print("一共删除 {} 恶意代码样本".format(n_del))
+    print("{} 恶意代码样本不存在".format(n_non))
     print()
     print()
 

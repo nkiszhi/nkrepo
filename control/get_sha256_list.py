@@ -10,11 +10,7 @@ __license__ = "GPL"
 
 import os
 
-<<<<<<< HEAD
-DIR_REPO = "/home/RaidDisk/nkrepo/DATA/sha256/0/"
-=======
-DIR_REPO = "/nkrepo/DATA/sha256/0/"
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
+DIR_REPO = "../DATA/sha256/0/"
 FILE_SHA256 = "list_sha256.txt"
 
 def main():
@@ -27,6 +23,7 @@ def main():
             for k in hex_string:
                 #for l in hex_string:
                 folder = DIR_REPO + i + "/"+ j + "/"+ k + "/"
+                folder = os.path.abspath(folder)
                 print(folder)
                 list_all = os.listdir(folder)
                 for f in list_all:
