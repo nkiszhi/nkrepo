@@ -15,6 +15,8 @@ import string
 from search import get_info_by_sha256 
 from search import get_info_by_md5 
 from search import get_info_all
+from web_download import get_torrent_file
+from web_download import get_tgz_file
 
 HOST_IP = "0.0.0.0"
 PORT = 5000
@@ -220,13 +222,17 @@ def download_sha256(sha256):
     print(path)
     return send_file(path, as_attachment=True)
 
-@app.route('/tgz/<tgz>')
-def download_tgz(f_tgz):
-    pass
+@app.route('/tgz/<sha256>')
+def download_tgz(sha256):
+    f_tgz = get_tgz_file(sha256)
+    print("[Web] Get tgz file {}".format(f_tgz))
+    return send_file(f_tgz, as_attachment=True)
 
-@app.route('/torrent/<torrent>')
-def download_torrent(f_torrent):
-    pass
+@app.route('/torrent/<sha256>')
+def download_torrent(sha256):
+    f_torrent = get_torrent_file(sha256)
+    print("[Web] Get torrent file {}".format(f_torrent))
+    return send_file(f_torrent, as_attachment=True)
 
 @app.route('/search_data', methods=['POST', 'GET'])
 def search_data():

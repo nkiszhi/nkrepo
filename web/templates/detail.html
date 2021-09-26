@@ -66,18 +66,36 @@
 	        <td class="text-danger">{{value['result']}}</td>
 	    {% endif %}
         </tr>
-        {% endfor %} 
+        {% endfor %}
     </tbody>
 </table>
+<!-- End of scan result container -->
+</div>
 
-<p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.download_sha256', sha256=scan_sha256)}}">下载样本</a> </p>
+<!-- Start of download container -->
+<div class="container">
+<div class="row">
+    <div class="col-sm">
+        <p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.download_sha256', sha256=scan_sha256)}}">下载样本</a> </p>
+    </div>
+    <div class="col-sm">
+        <p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.download_tgz', sha256=scan_sha256)}}">下载tgz压缩文件</a> </p>
+    </div>
+    <div class="col-sm">
+        <p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.download_torrent', sha256=scan_sha256)}}">下载torrent文件</a> </p>
+    </div>
+    <div class="col-sm">
+        <p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.show_index')}}">返回</a> </p>
+    </div>
+</div>
+<!-- End of download container -->
+</div>
+
 </div>
 
 <!-- Add footer -->
 {% include "footer.html" %}
 
 
-<!-- End of container -->
-</div>
 </body>
 </html>
