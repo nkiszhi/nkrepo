@@ -6,20 +6,15 @@ import os
 import datetime
 from multiprocessing import Pool
 
+DIR_DATA = "../DATA/sha256/"
+
 def greet():
-<<<<<<< HEAD:control/count_samples.py
-    print("\t\t**********************************************************")
-    print("\t\t**                                                      **")
-    print("\t\t**           Cyber攻击代码样本库                        **")
-    print("\t\t**                                                      **")
-    print("\t\t**********************************************************")
-=======
     print("\t******************************************")
     print("\t**                                      **")
     print("\t**           计算机病毒样本库           **")
+    print("\t**                NKAMG                 **")
     print("\t**                                      **")
     print("\t******************************************")
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce:control/count_samples.py
 
 def worker(folder):
     _n = 0
@@ -41,15 +36,12 @@ def main():
         for j in hex_string:
             for k in hex_string:
                 for l in hex_string:
-                    folder = "/nkrepo/DATA/sha256/" + i + "/"+ j + "/"+ k+ "/" + l + "/"
+                    folder = DIR_DATA + i + "/"+ j + "/"+ k+ "/" + l + "/"
+                    folder = os.path.abspath(folder)
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
-<<<<<<< HEAD:control/count_samples.py
-    print("Cyber 攻击代码样本库有样本 {} 个.".format(sum(_count)))
-=======
     print("\t\t计算机病毒样本库有样本 {} 个.".format(sum(_count)))
     print(datetime.datetime.now())
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce:control/count_samples.py
     print()
 
 
