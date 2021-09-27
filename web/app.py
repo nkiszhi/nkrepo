@@ -6,6 +6,7 @@ __copyright__ = "Copyright (c) 2016 NKAMG"
 __license__ = "GPL"
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
+#from flask_paginate import Pagination, get_page_args
 import json
 import pandas as pd
 import sys
@@ -20,6 +21,7 @@ from web_download import get_tgz_file
 
 HOST_IP = "0.0.0.0"
 PORT = 5000
+ROW_PER_PAGE = 20
 
 imp.reload(sys)
 
@@ -32,12 +34,18 @@ slabels = None
 scontents = None
 title = None
 
+list_info = []
+
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, int):
             return int(obj)
         if isinstance(obj, str):
             return str(obj)
+
+
+def get_page_info(list_info, offset=0, per_page=ROW_PER_PAGE):
+    return list_info[offset: offset + per_page]
 
 @app.route('/search_all', methods=['POST'])
 def search_all():
@@ -58,9 +66,27 @@ def search_all():
     # 2. Get matched sha256 list
     list_info = get_info_all(platform, category, family, scan_result, year, feature)
 
-    # 3. Use list.html template to show search results
+    # 3. Check match list 
+    if not len(list_info):
+        return render_template('error.html', \
+                title = "没有找到符合条件的恶意代码样本",\
+                scan_sha256 = "")
+    # 4. Use list.html template to show search results
     return render_template('list.html', \
-            list_info = list_info) 
+            list_info = list_info)
+
+#    # 3. Pagination
+#    page, per_page, offset = get_page_args(page_parameter='page', per_page_parameter='per_page')
+#    total = len(list_info)
+#    pagination_list_info = get_page_info(list_info, offset=offset, per_page=per_page)
+#    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap4')
+#
+#    # 3. Use list.html template to show search results
+#    return render_template('list.html', \
+#            list_info = pagination_list_info,\
+#            page=page,\
+#            per_page=per_page,\
+#            pagination=pagination) 
 
 
 # Click sha256 to see detail information

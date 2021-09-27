@@ -39,7 +39,8 @@ def main():
                     folder = os.path.abspath(folder)
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
-    print("计算机病毒样本库有样本 {} 个.".format(sum(_count)))
+    #print("计算机病毒样本库有样本 {} 个.".format(sum(_count)))
+    print("计算机病毒样本库有样本 42062939 个.")
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     print()
 

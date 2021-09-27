@@ -1,3 +1,4 @@
 yara-python
 flask
 pandas
+flask-paginate
