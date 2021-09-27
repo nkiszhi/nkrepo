@@ -17,6 +17,7 @@ import time, datetime
 import json
 
 CSV_INFO = "info.csv"
+CSV_INFO_FEAT = "info_feat.csv"
 
 def help():
     print("")
@@ -543,14 +544,14 @@ def get_info_all(platform, category, family, scan_result, year, feature):
         feature = ""
 
     # 2. read info.csv
-    with open(CSV_INFO, "r") as info:
+    with open(CSV_INFO_FEAT, "r") as info:
         lines = info.readlines()
 
     # 3. match 
     list_match_result = []
     n = 0
     for l in lines:
-        (md5, sha256, s_category, s_platform, s_family, s_scan_result, s_year) = l.strip().split(",")
+        (md5, sha256, s_category, s_platform, s_family, s_scan_result, s_year, feat1, feat2, feat3, feat4, feat5) = l.strip().split(",")
         md5 = md5.strip().lower()
         sha256 = sha256.strip().lower()
         s_category = s_category.strip().lower()
@@ -558,6 +559,12 @@ def get_info_all(platform, category, family, scan_result, year, feature):
         s_family = s_family.strip().lower()
         s_scan_result = s_scan_result.strip().lower()
         s_year = s_year.strip().lower()
+        feat1 = feat1.strip().lower()
+        feat2 = feat2.strip().lower()
+        feat3 = feat3.strip().lower()
+        feat4 = feat4.strip().lower()
+        feat5 = feat5.strip().lower()
+        list_feat = [feat1, feat2, feat3, feat4, feat5]
 
         #print("1. Platform：{}".format(s_platform))
         #print("2. Category：{}".format(s_category))
@@ -589,6 +596,10 @@ def get_info_all(platform, category, family, scan_result, year, feature):
         if year:
             if year != s_year:
                 #print("Not match!")
+                continue
+        # 3.6 match feature
+        if feature:
+            if feature not in list_feat:
                 continue
         n = n + 1
         print("{} Match: {}".format(n, l))

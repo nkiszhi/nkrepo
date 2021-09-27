@@ -159,14 +159,29 @@ def search_sha256():
             continue 
         d[key] = {'result':value['result'], 'version':value['version']}
 
-    for key, value in d.items():
-        print("{}: {}".format(key, value))
+    kav_result = d["Kaspersky"]["result"]
+    if ":" in kav_result:
+        kav_result = kav_result.split(":")[1]
+    print(kav_result)
+    # AdWare.MSIL.Ocna.aps
+    list_kav = kav_result.split(".")
+    category = list_kav[0]
+    platform = list_kav[1]
+    family = list_kav[2]
+    
+
+
+    #for key, value in d.items():
+    #    print("{}: {}".format(key, value))
 
     return render_template('detail.html', \
             title = title,\
             scans = d,\
             scan_sha256 = sha256,\
-            scan_md5 = md5)
+            scan_md5 = md5,\
+            platform = platform,\
+            category = category,\
+            family = family)
 
 
 # Search MD5
