@@ -3,18 +3,11 @@
 """Count the number of all malware samples in the repo."""
 
 import os
-import datetime
+from time import gmtime, strftime
 from multiprocessing import Pool
+from greet import greet
 
 DIR_DATA = "../DATA/md5/"
-
-def greet():
-    print("\t******************************************")
-    print("\t**                                      **")
-    print("\t**           计算机病毒样本库           **")
-    print("\t**                NKAMG                 **")
-    print("\t**                                      **")
-    print("\t******************************************")
 
 def worker(folder):
     _n = 0
@@ -41,7 +34,7 @@ def main():
                     list_dir.append(folder)
     _count = p.map(worker, list_dir)
     print("\t\t计算机病毒样本库有样本 {} 个.".format(sum(_count)))
-    print(datetime.datetime.now())
+    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     print()
 
 
