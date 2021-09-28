@@ -167,9 +167,13 @@ def search_sha256():
 
     d = {}
     for key, value in scans.items():
-        if not value['detected']: # Only show detected results
-            continue 
-        d[key] = {'result':value['result'], 'version':value['version']}
+        if value['detected']:
+            d[key] = {'result':value['result'], 'version':value['version']}
+        else:
+            d[key] = {'result':"CLEAN", 'version':value['version']}
+        #if not value['detected']: # Only show detected results
+        #    continue 
+        #d[key] = {'result':value['result'], 'version':value['version']}
 
     kav_result = d["Kaspersky"]["result"]
     if ":" in kav_result:
@@ -234,16 +238,33 @@ def search_md5():
         sha256 = dict_json["sha256"]
     d = {}
     for key, value in scans.items():
-        if not value['detected']: # Only show detected results
-            continue 
-        d[key] = {'result':value['result'], 'version':value['version']}
+        if value['detected']:
+            d[key] = {'result':value['result'], 'version':value['version']}
+        else:
+            d[key] = {'result':"CLEAN", 'version':value['version']}
 
+        #if not value['detected']: # Only show detected results
+        #    continue 
+        #d[key] = {'result':value['result'], 'version':value['version']}
+
+    kav_result = d["Kaspersky"]["result"]
+    if ":" in kav_result:
+        kav_result = kav_result.split(":")[1]
+    print(kav_result)
+    # AdWare.MSIL.Ocna.aps
+    list_kav = kav_result.split(".")
+    category = list_kav[0]
+    platform = list_kav[1]
+    family = list_kav[2]
 
     return render_template('detail.html', \
             title = title,\
             scans = d,\
             scan_md5 = md5,\
-            scan_sha256 = sha256)
+            scan_sha256 = sha256,\
+            platform = platform,\
+            category = category,\
+            family = family)
 
 @app.route('/detail')
 def detail():
