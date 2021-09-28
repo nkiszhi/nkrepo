@@ -18,6 +18,8 @@ from search import get_info_by_md5
 from search import get_info_all
 from web_download import get_torrent_file
 from web_download import get_tgz_file
+from web_download import get_torrent_files
+from web_download import get_tgz_files
 
 HOST_IP = "0.0.0.0"
 PORT = 5050
@@ -33,6 +35,7 @@ contents = None
 slabels = None
 scontents = None
 title = None
+list_sha256 = []
 
 list_info = []
 
@@ -49,6 +52,7 @@ def get_page_info(list_info, offset=0, per_page=ROW_PER_PAGE):
 
 @app.route('/search_all', methods=['POST'])
 def search_all():
+    global list_sha256
     # 0. test form data
     #print('search all\n\n')
     #for k, v in request.form.items():
@@ -71,6 +75,14 @@ def search_all():
         return render_template('error.html', \
                 title = "没有找到符合条件的恶意代码样本",\
                 scan_sha256 = "")
+    list_sha256 = []
+    for i in list_info:
+        list_sha256.append(i["sha256"])
+
+    print(len(list_sha256))
+    print(list_sha256[0])
+
+    print(len(list_sha256))
     # 4. Use list.html template to show search results
     return render_template('list.html', \
             list_info = list_info)
@@ -272,6 +284,22 @@ def download_tgz(sha256):
 @app.route('/torrent/<sha256>')
 def download_torrent(sha256):
     f_torrent = get_torrent_file(sha256)
+    print("[Web] Get torrent file {}".format(f_torrent))
+    return send_file(f_torrent, as_attachment=True)
+
+@app.route('/tgz_list/')
+def download_tgz_list():
+    global list_sha256
+    print(list_sha256[0])
+    f_tgz = get_tgz_files(list_sha256)
+    print(f_tgz)
+    print("[Web] Get tgz file {}".format(f_tgz))
+    return send_file(f_tgz, as_attachment=True)
+
+@app.route('/torrent_list/')
+def download_torrent_list():
+    global list_sha256
+    f_torrent = get_torrent_files(list_sha256)
     print("[Web] Get torrent file {}".format(f_torrent))
     return send_file(f_torrent, as_attachment=True)
 
