@@ -57,7 +57,7 @@ def create_md5_file_by_json():
                             continue
                         
                         #### 7. Get SHA256 and MD5 value 
-                        print(f_json)
+                        #print(f_json)
                         if len(dict_json.keys()) == 2:
                             sha256 = dict_json["results"]["sha256"]
                             md5 = dict_json["results"]["md5"]
@@ -78,15 +78,12 @@ def create_md5_file_by_json():
                         n_created = n_created + 1
                         print("{}:\n SHA256 {}\n MD5 {}".format(f_md5, sha256, md5)) 
                         print()
-                        print("{} json file.\n{} json files with 0 as response code \n{} md5 files are created\n".format(n_json, n_error, n_created))
+                        print("{} json file.\n{} json files without 1 as response code \n{} md5 files are created\n".format(n_json, n_error, n_created))
 
 
 def main():
     greet()
-    #init_md5_repo() # Initialize MD5 4-tier storage structure
     create_md5_file_by_json()
-    #create_md5_files() # Create md5 files according to sha256 files
-
 
 if __name__=="__main__":
     main()
