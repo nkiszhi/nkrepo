@@ -38,7 +38,7 @@ def search(y, f, c, p, s):
     n = 0
 
     for l in lines:
-        (sha256, category, platform, family, scan_result, year) = l.strip().split(",")
+        (md5, sha256, category, platform, family, scan_result, year) = l.strip().split(",")
         #print(sha256)
         #print(category)
         #print(platform)

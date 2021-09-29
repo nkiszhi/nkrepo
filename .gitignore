@@ -58,12 +58,10 @@ web1
 old_web
 match_result.txt
 scan_result.csv
-info.csv
 
 
 
 #yara
-file_type.jar
 network
 mal_trainset
 yararules
@@ -82,8 +80,6 @@ torrents
 DATA
 transmission.log
 url_list.txt
-html.txt
-html_.txt
 stats.json
 url_list.txt
 

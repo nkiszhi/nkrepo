@@ -49,7 +49,7 @@ def create_md5_file_by_json():
 
                         #### 6. Move error json files to temp folder 
                         if response_code != 1:
-                            print("[!] Response Code is O: {}".format(f_json))
+                            print("[!] Response Code is not 1: {}".format(f_json))
                             n_error = n_error + 1
                             dst_json =  DIR_TEMP + file_name 
                             dst_jsonn = os.path.abspath(dst_json)

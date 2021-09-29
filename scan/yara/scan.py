@@ -7,15 +7,12 @@ __license__ = "GPL"
 
 import yara
 import os
-<<<<<<< HEAD
-
-DIR_SCAN = "/nkrepo/temp_json/"
-=======
 import argparse
+#DIR_SCAN = "/nkrepo/temp_json/"
 
-DIR_SCAN = "/home/RaidDisk/new/nkrepo/DATA/"
-YARA_RULE = "file_type.yar"
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
+DIR_SCAN = "../../web/samples/"
+FILE_YARA = "file_type.yar"
+FILE_RESULT = "scan_result.txt"
 YARA_RULE_TEST = """
 rule IsPE {
     condition:
@@ -31,21 +28,15 @@ rule IsAPK {
 }
 """
 
-<<<<<<< HEAD
 def scan(rule=YARA_RULE_TEST):
+
+    n_sample = 0
+    n_match = 0
+    list_match = []
+
     r = yara.compile(source=rule) # Complie text yara rule
     for f in os.listdir(DIR_SCAN): # Search all files in specified folder
-=======
-def scan(f_yara=YARA_RULE, d=DIR_SCAN):
-    # f_yara is a file containing yara rules
-    # d is a directory containing samples to scan
-    with open(f_yara, "r") as f: # Open yara file
-        r_yara = f.read() # read yara rules
-       
-    i = 0 
-    r = yara.compile(source=r_yara) # Complie text yara rule
-    for f in os.listdir(d): # Search all files in specified folder
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
+        n_sample = n_sample + 1
         if len(f) != 64: # Only scan malware samples, not json files
             continue
         f_scan = DIR_SCAN + f # Get the absolute path of malware samples
@@ -53,28 +44,30 @@ def scan(f_yara=YARA_RULE, d=DIR_SCAN):
         with open(f_scan, "rb") as _f:
             m = r.match(data=_f.read()) # Scan specified file
             if m:
-<<<<<<< HEAD
-                print("{}:{}".format(f_scan, m[0]))
+                n_match = n_match + 1
+                match_info = "{} --> {}".format(f_scan, m[0])
+                print(match_info)
+                list_match.append(match_info)
 
-def main():
-    scan(YARA_RULE_TEST) 
-=======
-                i = i + 1
-                print("{}:{}, {}".format(i, m[0], f_scan))
+    print("\n共扫描了{}个样本文件，Yara规则匹配了{}样本文件".format(n_sample, n_match))
+    with open(FILE_RESULT, "w") as f:
+        for i in list_match:
+            f.write(i + "\n")
 
-def parse_args():
-    parser = argparse.ArgumentParser(description = "Using yara rules to scan.")
-    parser.add_argument("-r", "--rule", help="input yara rules", type=str, default=YARA_RULE)
-    parser.add_argument("-d", "--dir", help="input scan dir", type=str, default=DIR_SCAN)
+def parseargs():
+    parser = argparse.ArgumentParser(description = "Scan samples with yara rules")
+    parser.add_argument("-f", "--file_yara", help="input a file containing yara rules", type=str, default=FILE_YARA, required=True)
     args = parser.parse_args()
     return args
 
-
-
 def main():
-    args = parse_args()
-    scan(args.rule, args.dir) 
->>>>>>> fa646a3001f087b6718606fc6ad03747df0656ce
+    args = parseargs()
+    f_yara = args.file_yara
+    if not os.path.exists(f_yara):
+        print("The yara file is not exist: {}".format(f_yara))
+    with open(f_yara, "r") as f:
+        yara_rule = f.read()
+    scan(yara_rule) 
     
 
 if __name__ == "__main__":
