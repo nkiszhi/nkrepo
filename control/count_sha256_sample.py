@@ -7,7 +7,6 @@ __author__ = "NKAMG"
 __copyright__ = "Copyright (c) 2016 NKAMG"
 __license__ = "GPL"
 
-
 import os
 from time import gmtime, strftime
 from greet import greet
@@ -31,6 +30,8 @@ def main():
     print("\n启动200个进程正在统计样本数量\n")
     _count = []
     
+    with open( 
+
     for i in hex_string:
         for j in hex_string:
             for k in hex_string:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 __author__ = "NKAMG"
@@ -12,6 +12,7 @@ import os
 HEX_STRING = "0123456789abcdef"
 
 list_folder = []
+
 
 
 def main():
@@ -31,3 +32,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
