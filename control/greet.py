@@ -12,7 +12,7 @@ import os
 def greet():
     print("\t******************************************")
     print("\t**                                      **")
-    print("\t**           计算机病毒样本库           **")
+    print("\t**  The Repository of Malware Samples   **")
     print("\t**               by NKAMG               **")
     print("\t**                                      **")
     print("\t******************************************")

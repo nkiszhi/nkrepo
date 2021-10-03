@@ -129,10 +129,6 @@ def create_md5_file_by_json():
 
                         return
 
-
-
-                        
-
 def worker(folder):
     list_all = os.listdir(folder)
     _n = 0
