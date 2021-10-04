@@ -17,7 +17,7 @@ from greet import greet
 DIR_SHA256 = "../DATA/sha256/"
 DIR_MD5 = "../DATA/md5/"
 FILE_LIST_FOLDER = "list_data_folder.txt"
-N_WORKER = 10
+N_WORKER = 2
 
 def get_sha256(f_sample):
     return hashlib.sha256(open(f_sample, "rb").read()).hexdigest()

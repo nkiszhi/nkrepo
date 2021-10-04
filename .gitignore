@@ -34,7 +34,6 @@ todo.txt
 test*
 *.swo
 database_record
-wz
 
 # temp
 *.bak
