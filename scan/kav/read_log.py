@@ -24,16 +24,20 @@ def save_csv(list_scan_result):
 
 def save_result(kav_result):
     # Save Kaspersky scan result into kav file
+    #### 1. Split kav result
     (sha256, algorithm, category, platform, family, result) = kav_result
-    # The file name is sha256 value and extension is ".kav"
+    #### 2. Get kav file name. The file name is sha256 value and extension is ".kav"
     f_kav = DIR_REPO + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256 + ".kav"
-    #if os.path.exists(f_kav):
-    #    return 0
+    f_kav = os.path.abspath(f_kav)
+    #### 3. Check if kav file is existed. If kav file already existed, return for next kav result.
+    if os.path.exists(f_kav):
+        return 0
+    #### 4. Save kav result into a kav file
     t = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     # Write scan result into kav file
     with open(f_kav, "w") as f:
         f.write("{}, {}, {}, {}, {}, {}\n".format(t, result, algorithm, category, platform, family))
-    print(f_kav)
+    print("Save scan result into {}.".format(f_kav))
     return 1
 
 def search_result(line):
@@ -77,27 +81,27 @@ The extracted information is stored in kav_results.txt already.'''
     list_scan_result = [] 
     scan_list = []
     _n = 0
-    # 1. Read results from kav log
+    #### 1. Read results from kav log
     print(f_kav_log)
     with open(f_kav_log, mode = "r", encoding = "utf-8") as f:
         list_result = f.readlines()
     list_result = [x.strip() for x in list_result]
     list_result = list(filter(lambda x: len(x) > 80, list_result))
 
-    # 2. Search SHA256 and scan results
+    #### 2. Search SHA256 and scan results
     list_result = [search_result(x) for x in list_result]
     list_result = list(filter(lambda x: x, list_result))
     list_result = list(set(list_result))
     
-    # 3. Save result into kav file 
+    #### 3. Save result into kav file 
     _l = [save_result(x) for x in list_result]
-    print(sum(_l))
+    print("In total, {} kav scan results are saved.".format(sum(_l)))
 
-    # 4. Save result into csv file
-    #save_csv(list_result)
+    #### 4. Save result into csv file
+    save_csv(list_result)
 
 def parseargs():
-    parser = argparse.ArgumentParser(desription = "Read and save Kaspersky scan results.")
+    parser = argparse.ArgumentParser(description = "Read and save Kaspersky scan results.")
     parser.add_argument("-l", "--log", help="The Kaspersky log file.", type=str, default=KAV_LOG)
     args = parser.parse_args()
     return args

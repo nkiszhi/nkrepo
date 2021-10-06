@@ -18,6 +18,7 @@ DIR_SHA256 = "../DATA/sha256/"
 DIR_MD5 = "../DATA/md5/"
 FILE_LIST_FOLDER = "list_data_folder.txt"
 N_WORKER = 2
+FILE_FINISHED = "finished.txt"
 
 def get_sha256(f_sample):
     return hashlib.sha256(open(f_sample, "rb").read()).hexdigest()
@@ -89,11 +90,20 @@ def worker_json(folder):
     # 3. Create md5 files
     #print(folder)
     list_add = list(map(create_md5_file_by_json, list_json))
+    
+    # 4. Save finished folder
+    with open(FILE_FINISHED, "a+") as f:
+        f.write("{}\n".format(folder))
     return sum(list_add)
 
 
 def worker_sha256(folder):
+
     print("[i] {}".format(folder))
+    #### 0. Save finished folder
+    with open(FILE_FINISHED, "a+") as f:
+        f.write("{}\n".format(folder))
+
     _n = 0
     # 1. Get all files in the folder
     list_all = os.listdir(folder)
@@ -124,6 +134,7 @@ def worker_sha256(folder):
     # 6. Create md5 files
     list_add = list(map(create_md5_file_by_sha256, list_zip))
     print("[i] {}: {}".format(folder, sum(list_add)))
+
     return sum(list_add)
 
 def parseargs():
