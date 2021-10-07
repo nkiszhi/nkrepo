@@ -11,8 +11,8 @@ import os
 import pefile
 import peutils
 import argparse
+import string
 from greet import greet
-
 
 def is_pe(file_name):
     try:
@@ -22,6 +22,35 @@ def is_pe(file_name):
         return False
 
 
+# Extract strings from PE file
+def extract_string(file_name):
+
+    printable_chars = set(string.printable)
+    list_string = []
+
+    with open(file_name, "rb") as f:
+        data = f.read()
+
+    str_found = ""
+    for char in data:
+        char = chr(char)
+        if char in printable_chars:
+            str_found += char
+            continue 
+        if len(str_found) >= 4:
+            list_string.append(str_found)
+            print(str_found)
+            str_found = ""
+            continue
+        str_found = ""
+
+    print(len(list_string))
+    for s in list_string:
+        print(s)
+    return list_string
+            
+
+            
 # Entropy
 def get_sectionsalert(filename):
     pe = pefile.PE(filename)
@@ -39,11 +68,11 @@ def get_sectionsalert(filename):
         return False
 
 def get_suspicious():
-    print "Suspicious API Functions:"
+    print("Suspicious API Functions:")
     get_apialert()
-    print "\nSuspicious API Anti-Debug:"
+    print("\nSuspicious API Anti-Debug:")
     get_apiantidbg(1)
-    print "\nSuspicious Sections:"
+    print("\nSuspicious Sections:")
     get_sectionsalert()
 
 def parseargs():
@@ -59,6 +88,12 @@ def main():
     print(f_pe)
     if not is_pe(f_pe):
         print("[!] It is not a PE file.")
+    else:
+        print("It is a PE file")
+    printable = set(string.printable)
+    print(printable)
+    print(len(printable))
+    extract_string(f_pe)
 
 if __name__ == "__main__":
     main()
