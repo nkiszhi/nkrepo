@@ -1,30 +1,10 @@
-# folders
-0
-1
-2
-3
-4
-5
-6
-7
-8
-9
-a
-b
-c
-d
-e
-f
-
 __pycache__/
 *.npy
 *.py[cod]
 *.ipynb
-*$py.class
 *.exe
 *.apk
 *.db
-sha256*
 json.txt
 DATA
 kefan_script
@@ -34,8 +14,6 @@ todo.txt
 test*
 *.swo
 database_record
-
-# temp
 *.bak
 *.tmp
 *.swp
@@ -49,7 +27,6 @@ informationOfSamples
 bhy
 nkrepo
 nkrepo_2021
-*sha256.txt
 jianwen
 chengkai
 *.rar
@@ -60,8 +37,6 @@ old_web
 match_result.txt
 scan_result.csv
 ServerScript
-
-
 
 #yara
 network
@@ -80,13 +55,11 @@ norm_trainset
 # nkvs
 resume
 torrents
-DATA
 transmission.log
 url_list.txt
 stats.json
 url_list.txt
 config
-html*.txt
 
 # nkaz
 latest*

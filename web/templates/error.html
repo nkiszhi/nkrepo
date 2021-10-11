@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="{{url_for('static', filename='css/detail.css')}}"  rel="stylesheet",type="text/css">
+    <!-- Bootstrap CSS -->
+    <link href="{{url_for('static', filename='css/bootstrap.min.css')}}"  rel="stylesheet",type="text/css">
+    <style>
+       .first {
+           float: left;
+           width: 150%;
+           height: 200px;
+           border: 1px solid #3B6273;
+       }
+       .second {
+           float:left;
+           width: 150%;
+           height: 200px;
+           border: 1px solid #3B6273;
+       }
+    </style>
+    <title>恶意代码样本库查询结果</title>
+</head>
+
+
+
+<body class="bg-light">
+<div class="container">
+
+<!-- 杀毒软件检测结果 -->
+<div class="py-5 text-center">
+    <img class="d-block mx-auto mb-4 animated-gif" src="{{url_for('static', filename='protect.gif')}}" alt="" width="72" height="72">
+    <h2> {{title}} </h2>
+    {% if scan_sha256 %} 
+    <p class="lead text-info"> 查询的<b>SHA256</b>值: {{scan_sha256}} </p>
+    {% endif %}
+
+    {% if scan_md5 %} 
+    <p class="lead text-info"> 查询的<b>MD5</b>值: {{scan_md5}} </p>
+    {% endif %}
+</div>
+
+
+<p> <a class="btn btn-primary btn-lg btn-block" href="{{url_for('.show_index')}}">返回</a> </p>
+</div>
+
+<!-- Add footer -->
+{% include "footer.html" %}
+
+
+<!-- End of container -->
+</div>
+</body>
+</html>
