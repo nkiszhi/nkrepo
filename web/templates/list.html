@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>恶意代码样本查询</title>
+    <!--<link rel="stylesheet" href="{{url_for('static', filename='css/search.css')}}">-->
+    <link rel="shortcut icon" href="../static/shield-check.svg" type="image/x-icon">
+    <!-- Bootstrap core CSS -->
+    <link href="{{url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">
+    <!-- Custom styles for form -->
+    <link href="{{url_for('static', filename='css/form-validation.css')}}" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container">
+    <div class="py-5 text-center">
+	    <img class="d-block mx-auto mb-4 animated-gif" src="{{url_for('static', filename='protect.gif')}}" alt="" width="72" height="72">
+        <h2 class="text-primary">恶意代码样本查询</h2>
+	<p class="text-muted text-secondary">恶意代码样本查询支持基于样本<b>哈希值</b>的快速查询、样本创建<b>时间</b>查询、恶意代码<b>家族</b>信息查询、恶意代码<b>类型</b>信息查询、恶意代码<b>特征点</b>查询、杀毒软件检测<b>结果</b>查询，<b>yara</b>规则查询，以及多种查询条件的<b>综合</b>样本查询。
+    </div>
+
+    <div class="table-responsive">
+    <table class="table table-striped">
+        <thead> <!-- 表头 -->
+	    <tr>
+                <th scope="col">#</th>
+	        <th scope="col">样本MD5值</th>
+	        <th scope="col">样本SHA256值</th>
+	        <th scope="col">样本发现年份</th>
+	    </tr>
+	</thead>
+	<tbody>
+	    {% for info in list_info %}
+	    <tr>
+	        <th scope="row">{{loop.index}}</th>
+		<!--
+	        <td class="text-primary">
+
+		    <button type="button" class="btn btn-link"> {{sha256}}</button>
+		</td>
+		-->
+		<td class="text-primary">{{info['md5']}}</td>
+		<td class="text-secondary">{{info['sha256']}}</td>
+		<td class="text-secondary">{{info['year']}}</td>
+            </tr>
+            {% endfor %}
+	</tbody>
+    </table>
+    </div>
+</div>
+
+
+<!-- Start of download container -->
+<div class="container">
+<div class="row">
+    <div class="col-sm">
+        <p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.download_tgz_list', sha256=scan_sha256)}}">下载tgz压缩文件</a> </p>
+    </div>
+    <div class="col-sm">
+        <p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.download_torrent_list', sha256=scan_sha256)}}">下载torrent文件</a> </p>
+    </div>
+    <div class="col-sm">
+        <p> <a class="btn btn-primary btn-lg btn-block" href="{{ url_for('.show_index')}}">返回</a> </p>
+    </div>
+</div>
+<!-- End of download container -->
+</div>
+
+
+<!--
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1">Previous</a>
+        </li>
+        <li class="page-item"><a class="page-link" href="#">1</a></li>
+        <li class="page-item"><a class="page-link" href="#">2</a></li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item">
+            <a class="page-link" href="#">Next</a>
+        </li>
+    </ul>
+</nav>
+-->
+
+{% include "footer.html"  %}
+
+</body>
+
+</html>
