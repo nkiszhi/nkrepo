@@ -1,91 +1,168 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import hashlib, os
-import json
-import shutil
-from greet import greet
-from multiprocessing import Pool
+__author__ = "NKAMG"
+__copyright__ = "Copyright (c) 2016 NKAMG"
+__license__ = "GPL"
+__email__ = "zwang@nankai.edu.cn"
 
-HEXSTRING = "0123456789abcdef"
+import os
+import shutil
+import argparse
+import hashlib
+import json
+from multiprocessing import Pool
+from greet import greet
+
 DIR_SHA256 = "../DATA/sha256/"
 DIR_MD5 = "../DATA/md5/"
-DIR_TEMP = "./TEMP/"
+FILE_LIST_FOLDER = "list_data_folder.txt"
+N_WORKER = 2
+FILE_FINISHED = "finished.txt"
 
+def get_sha256(f_sample):
+    return hashlib.sha256(open(f_sample, "rb").read()).hexdigest()
+
+def get_md5(f_sample):
+    return hashlib.md5(open(f_sample, "rb").read()).hexdigest()
+
+def get_md5_file(md5):
+    f_md5 = DIR_MD5 + md5[0] + "/" + md5[1] + "/" + md5[2] + "/" + md5[3] + "/" + md5
+    return os.path.abspath(f_md5)
+
+def create_md5_file_by_json(f_json):
+    # 1. Read json file
+    with open(f_json, "r") as f:
+        dict_json = json.load(f)
+
+    # 2. Get md5 and sha256 from json
+    if len(dict_json.keys()) == 2:
+        response_code = dict_json["results"]["response_code"]
+        if response_code != 1:
+            print("[i] Response code is not 1: {}".format(f_json))
+            return 0
+        md5 = dict_json["results"]["md5"]
+        sha256 = dict_json["results"]["sha256"]
+    else:
+        response_code = dict_json["response_code"]
+        if response_code != 1:
+            print("[i] Response code is not 1: {}".format(f_json))
+            return 0
+        md5 = dict_json["md5"]
+        sha256 = dict_json["sha256"]
+
+    # 3. Create md5 file
+    f_md5 = get_md5_file(md5)
+    if os.path.exists(f_md5):
+        return 0
+    with open(f_md5, "w") as f:
+        f.write("{}\n".format(sha256))
+    return 1
+
+
+def create_md5_file_by_sha256(x):
+    f_md5 = x[0]
+    sha256 = x[1]
+
+    with open(f_md5, "w") as f:
+        f.write("{}\n".format(sha256))
+    #print(f_md5)
+    return 1
+
+
+def worker_json(folder):
+    _n = 0
+    # 1. Get all files in the folder
+    list_all = os.listdir(folder)
+    _n = len(list_all)
+    if not _n:
+        return _n
+
+    # 2. Filter no json files
+    list_json = list(filter(lambda x:x[64:] == ".json", list_all))
+    _n = len(list_json)
+    if not _n:
+        return _n
+
+    # 3. Get json file path
+    list_json = [os.path.abspath(folder + x) for x in list_json]
+
+    # 3. Create md5 files
+    #print(folder)
+    list_add = list(map(create_md5_file_by_json, list_json))
     
-def create_md5_file_by_json():
-    n_json = 0     # The number of json files 
-    n_error = 0    # The number of json files whose response code is 0 
-    n_created = 0  # The number of created md5 files
-    for i in HEXSTRING:
-        for j in HEXSTRING:
-            for k in HEXSTRING:
-                for l in HEXSTRING:
-                    #### 1. Get folder
-                    folder = DIR_SHA256 + "/" + i + "/" + j + "/" + k + "/" + l + "/"
-                    folder = os.path.abspath(folder) + "/"
+    # 4. Save finished folder
+    with open(FILE_FINISHED, "a+") as f:
+        f.write("{}\n".format(folder))
+    return sum(list_add)
 
-                    #### 2. Iterate folder 
-                    list_all = os.listdir(folder)
-                    for f in list_all:
-                        #### 3. Find json file
-                        if f[-5:] != ".json":
-                            continue
-                        file_name = f
-                        n_json = n_json + 1
-                        #print(f)
-                        f_json = folder + f 
-                        f_json = os.path.abspath(f_json)
-                        #print(f_json)
-                        #### 4. Read json file
-                        with open(f_json, "r") as f:
-                            dict_json = json.load(f)
 
-                        #### 5. Check response code
-                        if len(dict_json.keys()) == 2:
-                            response_code = dict_json["results"]["response_code"] 
-                        else:
-                            response_code = dict_json["response_code"] 
+def worker_sha256(folder):
 
-                        #### 6. Move error json files to temp folder 
-                        if response_code != 1:
-                            print("[!] Response Code is not 1: {}".format(f_json))
-                            n_error = n_error + 1
-                            dst_json =  DIR_TEMP + file_name 
-                            dst_jsonn = os.path.abspath(dst_json)
-                            shutil.move(f_json, dst_json) 
-                            continue
-                        
-                        #### 7. Get SHA256 and MD5 value 
-                        #print(f_json)
-                        if len(dict_json.keys()) == 2:
-                            sha256 = dict_json["results"]["sha256"]
-                            md5 = dict_json["results"]["md5"]
-                        else:
-                            sha256 = dict_json["sha256"]
-                            md5 = dict_json["md5"]
+    print("[i] {}".format(folder))
+    #### 0. Save finished folder
+    with open(FILE_FINISHED, "a+") as f:
+        f.write("{}\n".format(folder))
 
-                        #### 8. Check md5 file existence 
-                        f_md5 = DIR_MD5 + md5[0] + "/" + md5[1] + "/"  + md5[2] + "/" + md5[3] + "/" + md5 
-                        if os.path.exists(f_md5):
-                            continue
+    _n = 0
+    # 1. Get all files in the folder
+    list_all = os.listdir(folder)
+    _n = len(list_all)
+    if not _n:
+        return _n
 
-                        #### 9. Create md5 file
-                        f_md5 = os.path.abspath(f_md5)
-                        with open(f_md5, "w") as f:
-                            f.write(sha256)
+    # 2. Filter no sha256 files
+    list_sha256 = list(filter(lambda x:len(x) == 64, list_all))
+    _n = len(list_sha256)
+    if not _n:
+        return _n
+    #print(folder)
 
-                        n_created = n_created + 1
-                        print("{}:\n SHA256 {}\n MD5 {}".format(f_md5, sha256, md5)) 
-                        print("{} json file.\n{} json files with 0 as response code \n{} md5 files are created\n".format(n_json, n_error, n_created))
+    # 3. Get md5 values
+    list_sha256_file = [folder + x for x in list_all]
+    list_md5 = [get_md5(x) for x in list_sha256_file]
 
+    # 4. Get md5 files
+    list_md5_file = [get_md5_file(x) for x in list_md5]
+    list_zip = zip(list_md5_file, list_sha256)
+
+    # 5. Filter existed md5 files
+    list_zip = list(filter(lambda x: not os.path.exists(x[0]), list_zip))
+    if not len(list_zip):
+        return 0
+
+    # 6. Create md5 files
+    list_add = list(map(create_md5_file_by_sha256, list_zip))
+    print("[i] {}: {}".format(folder, sum(list_add)))
+
+    return sum(list_add)
+
+def parseargs():
+    parser = argparse.ArgumentParser(description = "Add samples into NKAMG malware repo.")
+    parser.add_argument("-t", "--type", help="Create md5 files by sha256 or json", type=str, choices="sha256, json", default="json")
+    args = parser.parse_args()
+    return args
 
 def main():
+    list_folder = [] # List of folders in the malware repo
+    _count = [] 
+    p = Pool(N_WORKER)
+
     greet()
-    #init_md5_repo() # Initialize MD5 4-tier storage structure
-    create_md5_file_by_json()
-    #create_md5_files() # Create md5 files according to sha256 files
+    args = parseargs()
 
+    with open(FILE_LIST_FOLDER, "r") as f:
+        list_folder = f.readlines()
+    list_folder = [os.path.abspath(DIR_SHA256 + x.strip()) + "/" for x in list_folder]
+    
+    n = 0
+    if args.type == "json":
+        _count = p.map(worker_json, list_folder)
+    elif args.type == "sha256":
+        _count = p.map(worker_sha256, list_folder)
 
-if __name__=="__main__":
+    print("{} md5 files are created.".format(sum(_count)))
+
+if __name__ == '__main__':
     main()
+

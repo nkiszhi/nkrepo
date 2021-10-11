@@ -1,20 +1,13 @@
 # NKAMG Malware Dataset Control Components
 
-## Count SHA256 samples
-count_sha256_sample.py counts the number of all samples in SHA256 dataset.
+## Count samples
+count.py is used to count the number of files with specified file type. The
+supported file types include sha256, md5, vt(VirusTotal scan results),
+kav(Kaspersky scan results) and nolabel(files without vt nor kav results)
 
-## Count MD5 samples
-count_md5_sample.py counts the number of all samples in MD5 dataset.
+## Add new samples
+add_sample.py is used to add samples into repository. The default folder containing new samples is TEMP.
 
-## Count samples with VirusTotal scan result
-count_vt_label.py counts the samples with VirusTotal scan results. The VirusTotal scan results are stored in the json files.
-
-## Count samples with Kaspersky scan result
-count_kav_label.py counts the samples with Kaspersky scan results. The Kaspersky scan results are stored in the kav files.
-
-## Count samples without VirusTotal nor Kasperseky scan results.
-count_sample_without_label.py counts the samples without VirusTotal nor Kaspersky scan results.
-
-
-
+## Delete samples
+del_sample.py is used to delete samples based on file SHA256 values.
 

@@ -33,6 +33,7 @@ az_unzip
 todo.txt
 test*
 *.swo
+database_record
 
 # temp
 *.bak
@@ -53,11 +54,12 @@ jianwen
 chengkai
 *.rar
 
-# web
+# web folder
 web1
 old_web
 match_result.txt
 scan_result.csv
+ServerScript
 
 
 
@@ -70,9 +72,10 @@ norm_trainset
 # pic
 *.graffle
 
-# scan
+# scan folder
 *log.txt
 *result.txt
+*/kav/*.txt
 
 # nkvs
 resume
@@ -82,10 +85,13 @@ transmission.log
 url_list.txt
 stats.json
 url_list.txt
+config
+html*.txt
 
 # nkaz
 latest*
 nohup.out
+old
 
 # nkvt
 keys.txt
@@ -93,3 +99,7 @@ keys.txt
 json_files
 log
 keys.txt
+
+# control folder
+t.py
+tt.py

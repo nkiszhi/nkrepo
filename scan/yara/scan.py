@@ -4,6 +4,7 @@
 __author__ = "NKAMG"
 __copyright__ = " Copyright (c) 2016 NKAMG"
 __license__ = "GPL"
+__contact__ = "zwang@nankai.edu.cn"
 
 import yara
 import os
