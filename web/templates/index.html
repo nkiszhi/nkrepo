@@ -11,10 +11,14 @@
     <link href="{{url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">
     <!-- Custom styles for form -->
     <link href="{{url_for('static', filename='css/form-validation.css')}}" rel="stylesheet">
+
 </head>
 
 <body class="bg-light">
-
+<!-- 页面公共头部 导航栏 -->
+<div id="headerpage">
+    {% include "header.html" %}
+</div>
 <div class="container">
     <div class="py-5 text-center">
 	    <img class="d-block mx-auto mb-4 animated-gif" src="{{url_for('static', filename='protect.gif')}}" alt="" width="72" height="72">
@@ -177,18 +181,12 @@
     <button type="submit" class="btn btn-primary btn-block">样本查询</button>
 
     </form>
-
-
 </div>
 
-<footer class="page-footer font-small blue pt-4">
-    <!-- Copyright -->
-    <div class="footer-copyright text-center py-3">© 2021 Copyright:
-        <a href="http://159.226.223.210:5000/">NKAMG</a>
-    </div>
-    <!-- Copyright -->
-</footer>
-
+<!--页脚-->
+<div id="footerpage">
+    {%  include 'footer.html' %}
+</div>
 </body>
 
 </html>

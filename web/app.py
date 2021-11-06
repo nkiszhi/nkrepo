@@ -287,7 +287,11 @@ def detail():
 
 @app.route('/')
 def show_index():
-    return render_template('index.html')
+    return render_template('index.html', element=1)
+
+@app.route('/tmp')
+def show_tmp():
+    return render_template("tmp.html", element=2)
 
 @app.route('/sha256/<sha256>')
 def download_sha256(sha256):
