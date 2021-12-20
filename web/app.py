@@ -362,42 +362,6 @@ def detect_url():
     return render_template("malware_url_result.html", status=200, url=url_str, base_result=base_result,
                            result=result, element=2)
 
-    # lstm_score, lstm_pro = LSTM_clf.predict_singleDN(url_str)
-    # lstm_pro = format(lstm_pro, '.4f')
-    # xgboost_score, xgboost_pro = XGBoost_clf.predict_singleDN(url_str)
-    # xgboost_pro = format(xgboost_pro, '.4f')
-    # brf_score, brf_pro = RF_clf.predict_singleDN(url_str)
-    # brf_pro = format(brf_pro, '.4f')
-    # svm_score, svm_pro = SVM_clf.predict_singleDN(url_str)
-    # svm_pro = format(svm_pro, '.4f')
-    #
-    # # 4. get final result
-    # score = lstm_score + xgboost_score + brf_score + svm_score
-    # print(score)
-    # result = 0  # 1-正常，2-可疑，3-恶意
-    # if score >= 3:
-    #     result = 3
-    # elif (score >= 1 and score <=2):
-    #     result = 2
-    # else:
-    #     result = 1
-    #
-    # # 5. return result
-    # return render_template("malware_url_result.html",
-    #                        element=2, status=200, url=url_str,
-    #                        xgboost_score=xgboost_score, xgboost_pro=xgboost_pro,
-    #                        brf_score=brf_score, brf_pro=brf_pro,
-    #                        svm_score=svm_score, svm_pro=svm_pro,
-    #                        lstm_score=lstm_score, lstm_pro=lstm_pro,
-    #                        result=result)
-    # # return render_template("malware_url_result.html",
-    # #                        element=2, status=200, url=url_str,
-    # #                        xgboost_score=1, xgboost_pro=1,
-    # #                        brf_score=1, brf_pro=1,
-    # #                        svm_score=1, svm_pro=1,
-    # #                        lstm_score=1, lstm_pro=1,
-    # #                        result=1)
-
 
 @app.route('/sha256/<sha256>')
 def download_sha256(sha256):
@@ -483,7 +447,6 @@ SVM_clf = SVM_classifier()
 SVM_clf.load(model_folder)
 LSTM_clf = LSTM_classifier()
 LSTM_clf.load(LSTM_model_add, LSTM_model_weight)
-print("done")
 
 if __name__ == '__main__':
     # debug=True, , threaded=True
