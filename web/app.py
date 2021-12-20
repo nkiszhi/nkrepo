@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # -*-coding: utf-8 -*-
-
+'''
 __author__ = "NKAMG"
 __copyright__ = "Copyright (c) 2016 NKAMG"
 __license__ = "GPL"
+__contact__ = "liying_china@163.com"
+'''
+
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
 #from flask_paginate import Pagination, get_page_args
@@ -11,6 +14,7 @@ import json
 import pandas as pd
 import sys
 import imp
+import re
 import os
 import string
 from search import get_info_by_sha256 
@@ -20,9 +24,10 @@ from web_download import get_torrent_file
 from web_download import get_tgz_file
 from web_download import get_torrent_files
 from web_download import get_tgz_files
+from DGA_detection import LSTM_classifier, XGBoost_classifier, RF_classifier, SVM_classifier
 
 HOST_IP = "0.0.0.0"
-PORT = 5050
+PORT = 5002
 ROW_PER_PAGE = 20
 
 imp.reload(sys)
@@ -184,8 +189,6 @@ def search_sha256():
     category = list_kav[0]
     platform = list_kav[1]
     family = list_kav[2]
-    
-
 
     #for key, value in d.items():
     #    print("{}: {}".format(key, value))
@@ -289,9 +292,112 @@ def detail():
 def show_index():
     return render_template('index.html', element=1)
 
-@app.route('/tmp')
-def show_tmp():
-    return render_template("tmp.html", element=2)
+@app.route('/malware_url')
+def show_malUrl():
+    return render_template("malware_url_query.html", element=2)
+
+@app.route('/malware_reuslt', methods=["POST"])
+def detect_url():
+    # 1. get url string
+    url_str = request.form["url"].strip()
+    # 2. validate string
+    if url_str == '':
+        return render_template("malware_url_result.html",
+                           element=2, status=400, url=url_str,
+                           message="域名不可为空!!")
+    validate = re.match(r"^[A-Za-z0-9._\-]*$", url_str)
+    if validate == None:
+        return render_template("malware_url_result.html",
+                               element=2, status=401, url=url_str,
+                               message="域名格式不正确，请输入正确域名！！",
+                               message2="（域名中只能包含下划线、短横线、点、字母、数字）")
+    # 3. detect the str with models
+    SVM = SVM_clf.predict_singleDN(model_folder, url_str)
+    BRF = RF_clf.predict_singleDN(model_folder, url_str)
+    XGBOOST = XGBoost_clf.predict_singleDN(model_folder, url_str)
+    LSTM = LSTM_clf.predict_singleDN(url_str)
+
+    base_result = {}
+    result = -1
+    base_result["SVM"] = [SVM[0], format(SVM[1], '.4f'), SVM[2]]
+    base_result["B-RF"] = [BRF[0], format(BRF[1], '.4f'), BRF[2]]
+    base_result["XGBOOST"] = [XGBOOST[0], format(XGBOOST[1], '.4f'), XGBOOST[2]]
+    base_result["LSTM"] = [LSTM[0], format(LSTM[1], '.4f'), LSTM[2]]
+
+    ## 4.p
+    SVM = SVM if SVM[2] > 0.01 else (2, SVM[1], SVM[2])
+    BRF = BRF if BRF[2] > 0.01 else (2, BRF[1], BRF[2])
+    XGBOOST = XGBOOST if XGBOOST[2] > 0.01 else (2, XGBOOST[1], XGBOOST[2])
+    LSTM = LSTM if LSTM[2] > 0.01 else (2, LSTM[1], LSTM[2])
+
+    base_resultT = {"SVM": SVM, "B-RF": BRF, "XGBOOST": XGBOOST, "LSTM": LSTM}
+
+    ## 5.result
+    rs_list = []
+    for item in base_resultT:
+        rs_list.append(base_resultT[item][0])
+    if len(set(rs_list)) == 1:
+        if LSTM[0] != 2:
+            result = LSTM[0]
+            return render_template("malware_url_result.html", status=200, url=url_str, base_result=base_result,
+                                   result=result, element=2)
+        elif LSTM[0] == 2:  # 所有模型都表现很差
+            sort_result = sorted(base_resultT.items(), key=lambda base_resultT: base_resultT[1][2], reverse=True)
+            if (sort_result[0][1][2] <= 0.5):
+                result = 2
+            else:
+                result = sort_result[0][1][0]
+            return render_template("malware_url_result.html", status=200, url=url_str, base_result=base_result,
+                                   result=result, element=2)
+
+    new_result = {}
+    for item in base_resultT:
+        if base_resultT[item][0] != 2:
+            new_result[item] = base_resultT[item]
+    sort_result = sorted(new_result.items(), key=lambda new_result: new_result[1][2], reverse=True)
+    if (sort_result[0][1][2] <= 0.5):
+        result = 2
+    else:
+        result = sort_result[0][1][0]
+    return render_template("malware_url_result.html", status=200, url=url_str, base_result=base_result,
+                           result=result, element=2)
+
+    # lstm_score, lstm_pro = LSTM_clf.predict_singleDN(url_str)
+    # lstm_pro = format(lstm_pro, '.4f')
+    # xgboost_score, xgboost_pro = XGBoost_clf.predict_singleDN(url_str)
+    # xgboost_pro = format(xgboost_pro, '.4f')
+    # brf_score, brf_pro = RF_clf.predict_singleDN(url_str)
+    # brf_pro = format(brf_pro, '.4f')
+    # svm_score, svm_pro = SVM_clf.predict_singleDN(url_str)
+    # svm_pro = format(svm_pro, '.4f')
+    #
+    # # 4. get final result
+    # score = lstm_score + xgboost_score + brf_score + svm_score
+    # print(score)
+    # result = 0  # 1-正常，2-可疑，3-恶意
+    # if score >= 3:
+    #     result = 3
+    # elif (score >= 1 and score <=2):
+    #     result = 2
+    # else:
+    #     result = 1
+    #
+    # # 5. return result
+    # return render_template("malware_url_result.html",
+    #                        element=2, status=200, url=url_str,
+    #                        xgboost_score=xgboost_score, xgboost_pro=xgboost_pro,
+    #                        brf_score=brf_score, brf_pro=brf_pro,
+    #                        svm_score=svm_score, svm_pro=svm_pro,
+    #                        lstm_score=lstm_score, lstm_pro=lstm_pro,
+    #                        result=result)
+    # # return render_template("malware_url_result.html",
+    # #                        element=2, status=200, url=url_str,
+    # #                        xgboost_score=1, xgboost_pro=1,
+    # #                        brf_score=1, brf_pro=1,
+    # #                        svm_score=1, svm_pro=1,
+    # #                        lstm_score=1, lstm_pro=1,
+    # #                        result=1)
+
 
 @app.route('/sha256/<sha256>')
 def download_sha256(sha256):
@@ -364,6 +470,22 @@ def search_data():
 
     return jsonify({ title:title })
 
+
+LSTM_model_add = r"./data/model/LSTM_model.json"
+LSTM_model_weight = r"./data/model/LSTM_model.h5"
+
+model_folder = r"./data/model"
+XGBoost_clf = XGBoost_classifier()
+XGBoost_clf.load(model_folder)
+RF_clf = RF_classifier()
+RF_clf.load(model_folder)
+SVM_clf = SVM_classifier()
+SVM_clf.load(model_folder)
+LSTM_clf = LSTM_classifier()
+LSTM_clf.load(LSTM_model_add, LSTM_model_weight)
+print("done")
+
 if __name__ == '__main__':
-    app.run(host=HOST_IP, port=PORT, debug=True)
+    # debug=True, , threaded=True
+    app.run(host=HOST_IP, port=PORT)
 
