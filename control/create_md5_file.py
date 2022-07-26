@@ -27,7 +27,7 @@ def get_md5(f_sample):
     return hashlib.md5(open(f_sample, "rb").read()).hexdigest()
 
 def get_md5_file(md5):
-    f_md5 = DIR_MD5 + md5[0] + "/" + md5[1] + "/" + md5[2] + "/" + md5[3] + "/" + md5
+    f_md5 = DIR_MD5 + md5[0] + "/" + md5[1] + "/" + md5[2] + "/" + md5[3] + "/" + md5[4] + "/" +md5
     return os.path.abspath(f_md5)
 
 def create_md5_file_by_json(f_json):

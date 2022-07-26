@@ -53,7 +53,7 @@ def add_sample(input_folder):
         f_src = list_file[i]
         sha256 = list_sha256[i]
         md5 = list_md5[i]
-        f_dst = DIR_SHA256 + sha256[0] + "/" +  sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256 
+        f_dst = DIR_SHA256 + sha256[0] + "/" +  sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" +  sha256[4] + "/" +sha256 
         f_dst = os.path.abspath(f_dst)
         #print(f_dst)
         if os.path.exists(f_dst):
@@ -63,7 +63,7 @@ def add_sample(input_folder):
         print("[i] Added file \"{}\".".format(f_dst))
         n = n + 1
     # 6. Create md5 file 
-        f_md5 = DIR_MD5 + md5[0] + "/" +  md5[1] + "/" + md5[2] + "/" + md5[3] + "/" + md5 
+        f_md5 = DIR_MD5 + md5[0] + "/" +  md5[1] + "/" + md5[2] + "/" + md5[3] + "/" + md5[4] + "/" + md5 
         f_md5 = os.path.abspath(f_md5)
         print("[i] Added file \"{}\".".format(f_md5))
         with open(f_md5, "w") as f:

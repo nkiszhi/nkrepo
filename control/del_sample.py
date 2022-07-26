@@ -23,10 +23,10 @@ def get_md5(file_name):
     return hashlib.md5(open(file_name, "rb").read()).hexdigest()
 
 def get_abspath_sha256(sha256):
-    return os.path.abspath("{}/{}/{}/{}/{}/{}".format(DIR_SHA256, sha256[0], sha256[1], sha256[2], sha256[3], sha256))
+    return os.path.abspath("{}/{}/{}/{}/{}/{}/{}".format(DIR_SHA256, sha256[0], sha256[1], sha256[2], sha256[3], sha256[4], sha256))
 
 def get_abspath_md5(md5):
-    return os.path.abspath("{}/{}/{}/{}/{}/{}".format(DIR_MD5, md5[0], md5[1], md5[2], md5[3], md5))
+    return os.path.abspath("{}/{}/{}/{}/{}/{}/{}".format(DIR_MD5, md5[0], md5[1], md5[2], md5[3], md5[4], md5))
 
 def del_file(file_name):
     #print(file_name)

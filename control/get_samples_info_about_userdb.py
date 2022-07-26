@@ -64,13 +64,14 @@ def get_all():
         for j in hex_string:
             for k in hex_string:
                 for l in hex_string:
-                    f = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/f_pack_info.csv"
-                    if os.path.isfile(f):
-                        df1 = pd.read_csv(f,header=None,names=['sha256','pack'])
-                        df = pd.concat([df,df1], ignore_index=True)
-                        n +=1
-                        print(n)
-                    print(df)
+                    for m in hex_string:
+                        f = "../DATA/" + i + "/" + j + "/" + k + "/" + l + "/" + m + "/f_pack_info.csv"
+                        if os.path.isfile(f):
+                            df1 = pd.read_csv(f,header=None,names=['sha256','pack'])
+                            df = pd.concat([df,df1], ignore_index=True)
+                            n +=1
+                            print(n)
+                        print(df)
     df.to_csv("pack_info.csv")
 
 #############################################
@@ -103,13 +104,14 @@ def main():
         for j in hex_string:
             for k in hex_string:
                 for l in hex_string:
-                    folder = "./DATA/" + i + "/"+ j + "/"+ k+ "/" + l + "/"#构造文件名
-                    f_csv = folder + "f_pack_info.csv"
-                    if os.path.isfile(f_csv):
-                        continue
-                    n = n + 1#标记数据集最后一层文件夹中中不存在f_pack_info.csv文件的数量
-                    print("{} : {}".format(n, folder))
-                    list_dir.append(folder)
+                    for m in hex_string:
+                        folder = "../DATA/" + i + "/" + j + "/" + k + "/" + l + "/" + m + "/"#构造文件名
+                        f_csv = folder + "f_pack_info.csv"
+                        if os.path.isfile(f_csv):
+                            continue
+                        n = n + 1#标记数据集最后一层文件夹中中不存在f_pack_info.csv文件的数量
+                        print("{} : {}".format(n, folder))
+                        list_dir.append(folder)
     _count = p.map(worker, list_dir)
     print(_count)
     #print(_packcount)
