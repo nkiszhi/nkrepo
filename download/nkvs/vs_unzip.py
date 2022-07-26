@@ -4,8 +4,8 @@
 import os
 from multiprocessing import Pool
 
-ZIP_FILE = "/nkrepo/zip.txt"
-ZIP_DIR = "/nkrepo/download/nkvs/DATA/tmp/"
+ZIP_FILE = "../../zip.txt"
+ZIP_DIR = "./DATA/tmp/"
 
 
 def worker(zip_name):

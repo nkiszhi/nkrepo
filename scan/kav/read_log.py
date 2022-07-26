@@ -12,9 +12,10 @@ import time
 import argparse
 from greet import greet
 
-KAV_LOG = "kav.log" # Raw log file
+KAV_LOG = "kav.log"  # Raw log file
 DIR_REPO = "../../DATA/sha256/"
 CSV_RESULT = "./scan_result.csv"
+
 
 def save_csv(list_scan_result):
     with open(CSV_RESULT, "w") as f:
@@ -27,7 +28,7 @@ def save_result(kav_result):
     #### 1. Split kav result
     (sha256, algorithm, category, platform, family, result) = kav_result
     #### 2. Get kav file name. The file name is sha256 value and extension is ".kav"
-    f_kav = DIR_REPO + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256 + ".kav"
+    f_kav = DIR_REPO + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256[4] + "/" + sha256 + ".kav"
     f_kav = os.path.abspath(f_kav)
     #### 3. Check if kav file is existed. If kav file already existed, return for next kav result.
     if os.path.exists(f_kav):
@@ -40,6 +41,7 @@ def save_result(kav_result):
     print("Save scan result into {}.".format(f_kav))
     return 1
 
+
 def search_result(line):
     # Search kav scan results from kav log
     #### 1. Regular expression for sha256
@@ -51,14 +53,14 @@ def search_result(line):
     if not sha256:
         # If no sha256 string found, continue to next kav log
         return
-    sha256 =  sha256.group()
+    sha256 = sha256.group()
     #### 4. Search scan result
     result = re.search(pattern_result, line)
     if not result:
         # If no Kaspersky result is found, continue to next kav log
         return
     #### 5. Split result
-    if result.group(1): 
+    if result.group(1):
         algorithm = result.group(1)
     else:
         algorithm = ""
@@ -66,24 +68,25 @@ def search_result(line):
     category = result.group(2)
     # malware running platform, such as Win32, Script, ...
     platform = result.group(3)
-    # malware family  
+    # malware family
     family = result.group(4)
     # malware variant information
-    #mal_variant = result.group(5)
+    # mal_variant = result.group(5)
     # detection result: Algorithm:Class.Platform.Family.Variant
     result = result.group()
     return (sha256, algorithm, category, platform, family, result)
+
 
 def read_log(f_kav_log):
     ''' Read Kaspersky raw scan log file and extract samples detection information.
 The extracted information is stored in kav_results.txt already.'''
 
-    list_scan_result = [] 
+    list_scan_result = []
     scan_list = []
     _n = 0
     #### 1. Read results from kav log
     print(f_kav_log)
-    with open(f_kav_log, mode = "r", encoding = "utf-8") as f:
+    with open(f_kav_log, mode="r", encoding="utf-8") as f:
         list_result = f.readlines()
     list_result = [x.strip() for x in list_result]
     list_result = list(filter(lambda x: len(x) > 80, list_result))
@@ -92,20 +95,22 @@ The extracted information is stored in kav_results.txt already.'''
     list_result = [search_result(x) for x in list_result]
     list_result = list(filter(lambda x: x, list_result))
     list_result = list(set(list_result))
-    
-    #### 3. Save result into kav file 
+
+    #### 3. Save result into kav file
     _l = [save_result(x) for x in list_result]
     print("In total, {} kav scan results are saved.".format(sum(_l)))
 
     #### 4. Save result into csv file
     save_csv(list_result)
 
+
 def parseargs():
-    parser = argparse.ArgumentParser(description = "Read and save Kaspersky scan results.")
+    parser = argparse.ArgumentParser(description="Read and save Kaspersky scan results.")
     parser.add_argument("-l", "--log", help="The Kaspersky log file.", type=str, default=KAV_LOG)
     args = parser.parse_args()
     return args
- 
+
+
 def main():
     greet()
     args = parseargs()
@@ -115,6 +120,6 @@ def main():
 
     read_log(f_kav_log)
 
-    
+
 if __name__ == "__main__":
     main()
