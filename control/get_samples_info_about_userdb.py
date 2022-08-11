@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#changed
 """Count the number of all malware samples in the repo."""
 
 from __future__ import print_function
@@ -65,7 +66,7 @@ def get_all():
             for k in hex_string:
                 for l in hex_string:
                     for m in hex_string:
-                        f = "../DATA/" + i + "/" + j + "/" + k + "/" + l + "/" + m + "/f_pack_info.csv"
+                        f = "../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m + "/f_pack_info.csv"
                         if os.path.isfile(f):
                             df1 = pd.read_csv(f,header=None,names=['sha256','pack'])
                             df = pd.concat([df,df1], ignore_index=True)
@@ -93,25 +94,24 @@ def get_all_userdb():
     print(df)
     df.to_csv("pack.csv")
 
+N = 0
+def bothdo2(folder):
+    global N
+    N = N + 1
+    print("{} : {}".format(N, folder))
+    return folder
+    
 def main():
     list_dir = []
     hex_string = "0123456789abcdef"
     p = Pool(200)
     _count = []
-    n = 0
     
-    for i in hex_string:
-        for j in hex_string:
-            for k in hex_string:
-                for l in hex_string:
-                    for m in hex_string:
-                        folder = "../DATA/" + i + "/" + j + "/" + k + "/" + l + "/" + m + "/"#构造文件名
-                        f_csv = folder + "f_pack_info.csv"
-                        if os.path.isfile(f_csv):
-                            continue
-                        n = n + 1#标记数据集最后一层文件夹中中不存在f_pack_info.csv文件的数量
-                        print("{} : {}".format(n, folder))
-                        list_dir.append(folder)
+    list_dir = [bothdo2("../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m + "/") for i in hex_string for j in
+                hex_string for k in hex_string for l in hex_string for m in hex_string if
+                not os.path.isfile("../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m + "/" + "f_pack_info.csv")]
+    # here ↑
+
     _count = p.map(worker, list_dir)
     print(_count)
     #print(_packcount)

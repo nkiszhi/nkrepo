@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+#changed
 import os
 import json
 import shutil
@@ -87,8 +87,7 @@ def get_keys() -> list:
 
     with open(KEY_FILE, "r") as t:
         key_list = t.readlines()
-        for i in range(len(key_list)):
-            key_list[i] = key_list[i].replace("\n", "")
+        key_list = [key_list[i].replace("\n", "") for i in range(len(key_list))]
     return key_list
 
 
@@ -96,14 +95,8 @@ def get_todo_list() -> list:
     # get todo_list and return for virustotal to scan
     todo_list = []
     folder_list = []
-
-    for i in HEXSTRING:
-        for j in HEXSTRING:
-            for k in HEXSTRING:
-                for l in HEXSTRING:
-                    for m in HEXSTRING:
-                        folder_list.append(SAMPLE_DIR + i + "/" + j + "/" + k + "/" + l + "/" + m + "/")
-
+    folder_list = [SAMPLE_DIR + i + "/" + j + "/" + k + "/" + l + "/" + m + "/" for i in HEXSTRING for j in HEXSTRING for k in HEXSTRING for l in HEXSTRING for m in HEXSTRING]
+    
     for folder in folder_list:
         file_list = os.listdir(folder)
         for f in file_list:

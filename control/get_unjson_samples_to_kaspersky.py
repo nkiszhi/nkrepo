@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+#changed
 import os, shutil
 from multiprocessing import Pool
 
@@ -18,36 +18,16 @@ folder_list_0 = []
 folder_list_4 = []
 folder_list_8 = []
 folder_list_c = []
-for i in hexstring:
-    for j in hexstring:
-        for k in hexstring:
-            for l in hexstring:
-                for m in hexstring:
-                    folder_list.append("../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m)
-for i in hexstring_0:
-    for j in hexstring:
-        for k in hexstring:
-            for l in hexstring:
-                for m in hexstring:
-                    folder_list_0.append("../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m)
-for i in hexstring_4:
-    for j in hexstring:
-        for k in hexstring:
-            for l in hexstring:
-                for m in hexstring:
-                    folder_list_4.append("../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m)
-for i in hexstring_8:
-    for j in hexstring:
-        for k in hexstring:
-            for l in hexstring:
-                for m in hexstring:
-                    folder_list_8.append("../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m)
-for i in hexstring_c:
-    for j in hexstring:
-        for k in hexstring:
-            for l in hexstring:
-                for m in hexstring:
-                    folder_list_c.append("../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m)
+folder_list =   ["../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m for i in hex_string for j in
+              hex_string for k in hex_string for l in hex_string for m in hex_string]
+folder_list_0 = ["../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m for i in hexstring_0 for j in
+              hex_string for k in hex_string for l in hex_string for m in hex_string]
+folder_list_4 = ["../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m for i in hexstring_4 for j in
+              hex_string for k in hex_string for l in hex_string for m in hex_string]
+folder_list_8 = ["../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m for i in hexstring_8 for j in
+              hex_string for k in hex_string for l in hex_string for m in hex_string]
+folder_list_c = ["../DATA/sha256/" + i + "/" + j + "/" + k + "/" + l + "/" + m for i in hexstring_c for j in
+              hex_string for k in hex_string for l in hex_string for m in hex_string]
 
 print("folder finish")
 

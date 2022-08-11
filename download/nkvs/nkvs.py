@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*- 
 # Nankai University Anti-Virus Group
 # Zhi Wang zwang@nankai.edu.cn
-
+#changed
+from multiprocessing import Pool
 from __future__ import print_function
 import argparse
 import requests
@@ -70,24 +71,33 @@ def check_update(html):
                 f.write("%s\n" % item)
         return url_list
 
+def replace(cp):
+    u = cp[0]
+    torrent_dir = cp[1]
+    u = u.strip()
+    torrent_file = os.path.join(torrent_dir, u.split('?')[0].split('/')[-1])
+    requests.adapters.DEFAULT_RETRIES = 5
+    s = requests.session()
+    s.keep_alive = False
+    r = requests.get(u, verify=False)
+    #print(r.status_code)
+    if r.status_code == 200:
+        print("[o]: Download {} successfully!".format(torrent_file))
+        with open(torrent_file,'wb') as f:
+            f.write(r.content)
+    else:
+        print("[!]: Download {} failed!".format(torrent_file))
+
 def download_torrent_file(url_list, torrent_dir):
 
     if not os.path.exists(torrent_dir):
         os.makedirs(torrent_dir)
-    for u in url_list:
-        u = u.strip()
-        torrent_file = os.path.join(torrent_dir, u.split('?')[0].split('/')[-1])
-        requests.adapters.DEFAULT_RETRIES = 5
-        s = requests.session()
-        s.keep_alive = False
-        r = requests.get(u, verify=False)
-        #print(r.status_code)
-        if r.status_code == 200:
-            print("[o]: Download {} successfully!".format(torrent_file))
-            with open(torrent_file,'wb') as f:
-                f.write(r.content)
-        else:
-            print("[!]: Download {} failed!".format(torrent_file))
+    
+    p = Pool()
+    td = [torrent_dir] * len(url_list)
+    url_list = list(zip(url_list,td))
+    p.map(replace, url_list)
+
 
 def main():
     parser = argparse.ArgumentParser(prog="nkvs", description='Download shared malware samples from VirusShare.com.')

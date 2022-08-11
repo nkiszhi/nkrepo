@@ -7,7 +7,7 @@ import numpy as np
 def transform(x):
     if pd.isnull(x):
         x='unknow'
-        return x;
+        return x
     if x == 0:
         x='benign'
         return x

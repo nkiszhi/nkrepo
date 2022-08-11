@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+#changed
 """Init DATA folder with 5 levels subfolders."""
 
 import os
@@ -12,14 +12,7 @@ DIR_MD5 = ""
 
 
 def create_list_data_folder():
-    list_folder = []
-    for i in HEX_STRING:
-        for j in HEX_STRING:
-            for k in HEX_STRING:
-                for l in HEX_STRING:
-                    for m in HEX_STRING:
-                        folder = i + "/" + j + "/" + k + "/" + l + "/" + m + "/"
-                        list_folder.append(folder)
+    list_folder = [ i + "/" + j + "/" + k + "/" + l + "/" + m + "/" for i in HEX_STRING for j in HEX_STRING for k in HEX_STRING for l in HEX_STRING for m in HEX_STRING]
     with open(LIST_DATA_FOLDER, "w") as f:
         for folder in list_folder:
             f.write(folder + "\n")

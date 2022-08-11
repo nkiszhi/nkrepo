@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+#changed
 __author__ = "NKAMG"
 __copyright__ = "Copyright (c) 2016 NKAMG"
 __license__ = "GPL"
@@ -11,6 +11,7 @@ import shutil
 import argparse
 import hashlib
 from greet import greet
+from multiprocessing import Pool
 
 DIR_SHA256 = "../DATA/sha256/"
 DIR_MD5 = "../DATA/md5/"
@@ -24,7 +25,27 @@ def get_sha256(f_sample):
 def get_md5(f_sample):
     return hashlib.md5(open(f_sample, "rb").read()).hexdigest()
 
+def replace56(ls):
+    f_src = ls[0]
+    sha256 = ls[1]
+    md5 = ls[2]
+    f_dst = DIR_SHA256 + sha256[0] + "/" +  sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" +  sha256[4] + "/" +sha256 
+    f_dst = os.path.abspath(f_dst)
+    if os.path.exists(f_dst):
+        print("[i] Already existed \"{}\".".format(f_dst))
+        return 0
+    shutil.copy(f_src, f_dst)
+    print("[i] Added file \"{}\".".format(f_dst))
+
+    f_md5 = DIR_MD5 + md5[0] + "/" +  md5[1] + "/" + md5[2] + "/" + md5[3] + "/" + md5[4] + "/" + md5 
+    f_md5 = os.path.abspath(f_md5)
+    print("[i] Added file \"{}\".".format(f_md5))
+    with open(f_md5, "w") as f:
+        f.write(sha256)
+    return 1
+
 def add_sample(input_folder):
+
     # 1. Check folder existence
     if not os.path.exists(input_folder):
         print("[i]: The folder \"{}\" is not exist".format(input_folder)) 
@@ -45,34 +66,11 @@ def add_sample(input_folder):
     with open(FILE_LIST_MD5, "w") as f:
         for i in list_md5:
             f.write("{}\n".format(i))
-
-    # 5. Copy samples into sha256 repo
     n = 0
-    for i in range(len(list_file)):
-        #print(i)
-        f_src = list_file[i]
-        sha256 = list_sha256[i]
-        md5 = list_md5[i]
-        f_dst = DIR_SHA256 + sha256[0] + "/" +  sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" +  sha256[4] + "/" +sha256 
-        f_dst = os.path.abspath(f_dst)
-        #print(f_dst)
-        if os.path.exists(f_dst):
-            print("[i] Already existed \"{}\".".format(f_dst))
-            continue
-        shutil.copy(f_src, f_dst)
-        print("[i] Added file \"{}\".".format(f_dst))
-        n = n + 1
-    # 6. Create md5 file 
-        f_md5 = DIR_MD5 + md5[0] + "/" +  md5[1] + "/" + md5[2] + "/" + md5[3] + "/" + md5[4] + "/" + md5 
-        f_md5 = os.path.abspath(f_md5)
-        print("[i] Added file \"{}\".".format(f_md5))
-        with open(f_md5, "w") as f:
-            f.write(sha256)
-        #print(i)
-        #print(list_file[i])
-        #print(list_sha256[i])
-        #print(list_md5[i])
-
+    p = Pool()
+    zipped = list(zip(list_file, list_sha256, list_md5))
+    _n = p.map(replace56, zipped)
+    n = sum(_n)
     print("[i] In total, {} samples are added.\n".format(n))
     return n
 

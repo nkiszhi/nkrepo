@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#changed
 import argparse
 import hashlib, os, shutil
 from multiprocessing import Pool
@@ -49,7 +50,7 @@ def mov_sha256(folder):
             continue
         sha256 = get_sha256(folder + item)
         src_f = folder + item
-        dst_f = REPO_PATH+sha256[0]+"/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256[4] + "/" + sha256
+        dst_f = REPO_PATH + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256[4] + "/" + sha256
         shutil.move(src_f, dst_f)
         print("\tMove {} to {}".format(src_f, dst_f))
         _n = _n + 1
@@ -70,8 +71,7 @@ def main():
     dir_list = os.listdir(ROOT_PATH)
     mov_list = []
     _n = 0
-    for item in dir_list:
-        mov_list.append(ROOT_PATH + item + "/")
+    mov_list = [ROOT_PATH + item + "/" for item in dir_list]
 
     p = Pool(100)
     _n = p.map(mov_sha256, mov_list)
