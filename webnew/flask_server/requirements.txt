@@ -1,0 +1,10 @@
+flask==1.1.2
+pandas==1.0.5
+tensorflow==2.2.0
+keras==2.4.3
+scikit-learn==0.22
+tld==0.12.2
+xgboost==1.1.1
+wordfreq==2.3.2
+pefile==2021.9.3
+torrentool==1.1.1
