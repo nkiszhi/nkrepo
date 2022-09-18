@@ -1,6 +1,6 @@
 flask==1.1.2
 pandas==1.0.5
-tensorflow==2.2.0
+tensorflow==2.7.2
 keras==2.4.3
 scikit-learn==0.22
 tld==0.12.2
