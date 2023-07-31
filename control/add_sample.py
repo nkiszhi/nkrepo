@@ -21,7 +21,7 @@ def worker(file_sample):
     sha256 = get_sha256(file_sample)
     file_dst = DIR_SHA256 + "/" + sha256[0] + "/" +  sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" +  sha256[4] + "/" +sha256 
     if os.path.exists(file_dst):
-        print("[!] Already existed \"{}\".".format(file_dst))
+        print("[X] Already existed \"{}\".".format(file_dst))
         return 0
     shutil.copy(file_src, file_dst)
     print("[OK] Added sample: \"{}\".".format(file_dst))
@@ -41,7 +41,7 @@ def add_sample(input_folder):
     p = Pool(N_WORKER)
     n = []
     n = p.map(worker, list_file)
-    print(sum(n)) 
+    print("[i] Added {} samples.".format(sum(n))) 
     return n
 
 def parseargs():
