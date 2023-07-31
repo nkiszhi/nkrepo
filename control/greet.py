@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-__author__ = "NKAMG"
-__copyright__ = "Copyright (c) 2016 NKAMG"
-__license__ = "GPL"
-
-"""Count the number of all malware samples in the repo."""
+# greet.py: NKREPO greeting 
+# location: nkrepo/control/greet.py
 
 import os
 

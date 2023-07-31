@@ -14,7 +14,7 @@ ZIP_FILE = "zip.txt"
 
 def get_hash(file_path: str, hash_method) -> str:
     if not os.path.exists(file_path):
-        print("[!] File does not exist: " + file_path)
+        print("[X] File does not exist: " + file_path)
         return ''
     h = hash_method()
 
@@ -35,15 +35,15 @@ def mov_sha256(folder):
     list_file = os.listdir(folder)
     n = len(list_file)
     if not n:
-        print("[!] {} is empty.\n".format(folder))
+        print("[X] {} is empty.\n".format(folder))
         return 0
 
     for item in list_file:
         # file name(43 characters): VirusShare_ffffe93aa825a99da6a7ac80e45f0209
         if len(item) != 43:
             continue
-        sha256 = get_sha256(folder + item)
-        src_f = folder + item
+        sha256 = get_sha256(folder + "/" + item)
+        src_f = folder + "/" + item
         # five-level folder
         dst_f = REPO_DATA + "/" + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256[4] + "/" + sha256
         shutil.move(src_f, dst_f)

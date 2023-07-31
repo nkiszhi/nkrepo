@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#changed
-__author__ = "NKAMG"
-__copyright__ = "Copyright (c) 2016 NKAMG"
-__license__ = "GPL"
-__email__ = "zwang@nankai.edu.cn"
+# add_sample.py : add a new sample into repo
+# location: nkrepo/control/add_sample.py
 
 import os
 import shutil
@@ -13,65 +10,38 @@ import hashlib
 from greet import greet
 from multiprocessing import Pool
 
-DIR_SHA256 = "../DATA/sha256/"
-DIR_MD5 = "../DATA/md5/"
-DIR_TEMP = "./TEMP/"
-FILE_LIST_SHA256 = "./list_sha256.txt"
-FILE_LIST_MD5 = "./list_md5.txt"
+DIR_SHA256 = os.path.abspath("../DATA/sha256/")
+N_WORKER = 10
 
-def get_sha256(f_sample):
-    return hashlib.sha256(open(f_sample, "rb").read()).hexdigest()
+def get_sha256(file_sample):
+    return hashlib.sha256(open(file_sample, "rb").read()).hexdigest()
 
-def get_md5(f_sample):
-    return hashlib.md5(open(f_sample, "rb").read()).hexdigest()
-
-def replace56(ls):
-    f_src = ls[0]
-    sha256 = ls[1]
-    md5 = ls[2]
-    f_dst = DIR_SHA256 + sha256[0] + "/" +  sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" +  sha256[4] + "/" +sha256 
-    f_dst = os.path.abspath(f_dst)
-    if os.path.exists(f_dst):
-        print("[i] Already existed \"{}\".".format(f_dst))
+def worker(file_sample):
+    file_src = file_sample
+    sha256 = get_sha256(file_sample)
+    file_dst = DIR_SHA256 + "/" + sha256[0] + "/" +  sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" +  sha256[4] + "/" +sha256 
+    if os.path.exists(file_dst):
+        print("[!] Already existed \"{}\".".format(file_dst))
         return 0
-    shutil.copy(f_src, f_dst)
-    print("[i] Added file \"{}\".".format(f_dst))
-
-    f_md5 = DIR_MD5 + md5[0] + "/" +  md5[1] + "/" + md5[2] + "/" + md5[3] + "/" + md5[4] + "/" + md5 
-    f_md5 = os.path.abspath(f_md5)
-    print("[i] Added file \"{}\".".format(f_md5))
-    with open(f_md5, "w") as f:
-        f.write(sha256)
+    shutil.copy(file_src, file_dst)
+    print("[OK] Added sample: \"{}\".".format(file_dst))
     return 1
 
 def add_sample(input_folder):
 
-    # 1. Check folder existence
+    input_folder = os.path.abspath(input_folder)
     if not os.path.exists(input_folder):
-        print("[i]: The folder \"{}\" is not exist".format(input_folder)) 
+        print("[X]: The folder \"{}\" is not exist".format(input_folder)) 
         return
 
-    # 2. Iterate folder
     list_file = os.listdir(input_folder)
-    list_file = [os.path.abspath(input_folder + "/" + x) for x in list_file]
-
-    # 3. Get SHA256 and MD5 of samples
+    list_file = [input_folder + "/" + x for x in list_file]
     list_sha256 = [get_sha256(x) for x in list_file]
-    list_md5 = [get_md5(x) for x in list_file]
     
-    # 4. Save SHA256 and MD5 into files
-    with open(FILE_LIST_SHA256, "w") as f:
-        for i in list_sha256:
-            f.write("{}\n".format(i))
-    with open(FILE_LIST_MD5, "w") as f:
-        for i in list_md5:
-            f.write("{}\n".format(i))
-    n = 0
-    p = Pool()
-    zipped = list(zip(list_file, list_sha256, list_md5))
-    _n = p.map(replace56, zipped)
-    n = sum(_n)
-    print("[i] In total, {} samples are added.\n".format(n))
+    p = Pool(N_WORKER)
+    n = []
+    n = p.map(worker, list_file)
+    print(sum(n)) 
     return n
 
 def parseargs():
@@ -83,7 +53,6 @@ def parseargs():
 def main():
     greet()
     args = parseargs()
-    #print(args.dir)
     n = add_sample(args.dir)
 
 if __name__ == '__main__':
