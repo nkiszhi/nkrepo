@@ -43,11 +43,11 @@ def mov_sha256(folder):
         if len(item) != 43:
             continue
         sha256 = get_sha256(folder + "/" + item)
-        src_f = folder + "/" + item
+        file_src = folder + "/" + item
         # five-level folder
-        dst_f = REPO_DATA + "/" + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256[4] + "/" + sha256
-        shutil.move(src_f, dst_f)
-        print("\tMove {} to {}".format(src_f, dst_f))
+        file_dst = REPO_DATA + "/" + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256[4] + "/" + sha256
+        shutil.move(file_src, file_dst)
+        print("\tMove {} to {}".format(file_src, file_dst))
 
 def main():
     list_folder = []
