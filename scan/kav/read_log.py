@@ -1,49 +1,42 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-__author__ = "NKAMG"
-__copyright__ = "Copyright (c) 2016 NKAMG"
-__license__ = "GPL"
-__email__ = "zwang@nankai.edu.cn"
+# read_log.py: extract scan results from Kaspersky log file and saves results into nkrepo. 
+# location: nkrepo/scan/kav/read_log.py
 
 import os
 import re
 import time
 import argparse
-from greet import greet
 
 KAV_LOG = "kav.log"  # Raw log file
-DIR_REPO = "../../DATA/sha256/"
-CSV_RESULT = "./scan_result.csv"
+DIR_REPO = os.path.abspath("../../DATA/sha256/")
+CSV_RESULT = os.path.abspath("./scan_result.csv")
 
-
-def save_csv(list_scan_result):
+def save_csv(list_result):
     with open(CSV_RESULT, "w") as f:
-        for r in list_scan_result:
+        for r in list_result:
             f.write("{}\n".format(r))
-
 
 def save_result(kav_result):
     # Save Kaspersky scan result into kav file
     #### 1. Split kav result
     (sha256, algorithm, category, platform, family, result) = kav_result
     #### 2. Get kav file name. The file name is sha256 value and extension is ".kav"
-    f_kav = DIR_REPO + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256[4] + "/" + sha256 + ".kav"
-    f_kav = os.path.abspath(f_kav)
+    file_kav = DIR_REPO + "/" + sha256[0] + "/" + sha256[1] + "/" + sha256[2] + "/" + sha256[3] + "/" + sha256[4] + "/" + sha256 + ".kav"
     #### 3. Check if kav file is existed. If kav file already existed, return for next kav result.
-    if os.path.exists(f_kav):
+    if os.path.exists(file_kav):
         return 0
     #### 4. Save kav result into a kav file
     t = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     # Write scan result into kav file
-    with open(f_kav, "w") as f:
+    with open(file_kav, "w") as f:
         f.write("{}, {}, {}, {}, {}, {}\n".format(t, result, algorithm, category, platform, family))
-    print("Save scan result into {}.".format(f_kav))
+    print("Save scan result into {}.".format(file_kav))
     return 1
 
 
 def search_result(line):
-    # Search kav scan results from kav log
+    # Search scan results from kav log
     #### 1. Regular expression for sha256
     pattern_sha256 = r'[a-f0-9]{64}'
     #### 2. Regular expression to match Algorithm:Class.Platform.Famliy.Variant
@@ -77,16 +70,15 @@ def search_result(line):
     return (sha256, algorithm, category, platform, family, result)
 
 
-def read_log(f_kav_log):
-    ''' Read Kaspersky raw scan log file and extract samples detection information.
+def read_log(file_log):
+    ''' Read Kaspersky log file and extract samples detection information.
 The extracted information is stored in kav_results.txt already.'''
 
-    list_scan_result = []
-    scan_list = []
-    _n = 0
-    #### 1. Read results from kav log
-    print(f_kav_log)
-    with open(f_kav_log, mode="r", encoding="utf-8") as f:
+    list_result = []
+    _n = []
+    #### 1. Read log file
+    print("[!] {}".format(file_log))
+    with open(file_log, mode="r", encoding="utf-8") as f:
         list_result = f.readlines()
     list_result = [x.strip() for x in list_result]
     list_result = list(filter(lambda x: len(x) > 80, list_result))
@@ -94,11 +86,12 @@ The extracted information is stored in kav_results.txt already.'''
     #### 2. Search SHA256 and scan results
     list_result = [search_result(x) for x in list_result]
     list_result = list(filter(lambda x: x, list_result))
+    # remove duplicated results
     list_result = list(set(list_result))
 
     #### 3. Save result into kav file
-    _l = [save_result(x) for x in list_result]
-    print("In total, {} kav scan results are saved.".format(sum(_l)))
+    _n = [save_result(x) for x in list_result]
+    print("[!] {} scan results are saved.".format(sum(_n)))
 
     #### 4. Save result into csv file
     save_csv(list_result)
@@ -112,13 +105,12 @@ def parseargs():
 
 
 def main():
-    greet()
     args = parseargs()
-    f_kav_log = args.log
-    if not os.path.exists(f_kav_log):
-        print("[i] The\"{}\" is not existed.\n".format(f_kav_log))
+    file_log = args.log
+    if not os.path.exists(file_log):
+        print("[X] \"{}\" is not existed.\n".format(file_log))
 
-    read_log(f_kav_log)
+    read_log(file_log)
 
 
 if __name__ == "__main__":
