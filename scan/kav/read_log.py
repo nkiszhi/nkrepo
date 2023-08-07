@@ -17,12 +17,10 @@ FILE_LOG = os.path.abspath("./kav.log")  # Raw log file
 #DIR_REPO = os.path.abspath("../../DATA/sha256/")
 CSV_RESULT = os.path.abspath("./scan_result.csv")
 
-
 def save_csv(list_result):
     with open(CSV_RESULT, "w") as f:
         for r in list_result:
             f.write("{}\n".format(r))
-
 
 #def save_result(kav_result):
 #    # Save Kaspersky scan result into kav file
@@ -44,7 +42,7 @@ def save_csv(list_result):
 #
 
 def search_result(line):
-    # Search kav scan results from kav log
+    # Search scan results from kav log
     #### 1. Regular expression for sha256
     #pattern_sha256 = r'[a-f0-9]{64}'
     pattern_vs = r'VirusShare_[a-f0-9]{32}'
@@ -84,8 +82,7 @@ def search_result(line):
     return (file_vs, category, platform, family, result)
 
 def read_log(file_log):
-    ''' Read Kaspersky log file and extract scan result.
-The extracted information is stored in kav_results.txt.'''
+    ''' Read Kaspersky log file and extract scan result.'''
 
     list_result = []
     _n = 0
