@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding: utf-8 -*-
-'''
-__author__ = "NKAMG"
-__copyright__ = "Copyright (c) 2016 NKAMG"
-__license__ = "GPL"
-__contact__ = "liying_china@163.com"
-'''
-
+# app.py: web server
+# location: nkrepo/web/app.py
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
 #from flask_paginate import Pagination, get_page_args
@@ -31,7 +26,6 @@ PORT = 5002
 ROW_PER_PAGE = 20
 
 imp.reload(sys)
-
 
 app = Flask(__name__)
 
