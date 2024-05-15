@@ -1,6 +1,6 @@
 # nkrepo: Malware repository
 #### NKAMG，Nankai Anti-Malware Group
 
-#### ![nkrepo](images/nkrepo.png)
+#### ![nkrepo](docs/nkrepo.png)
 
 
