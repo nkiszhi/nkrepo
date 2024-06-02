@@ -8,7 +8,7 @@ import argparse
 from greet import greet
 from multiprocessing import Pool
 
-DIR_SHA256 = os.path.abspath("../data/sample/") # The repo storing json files
+DIR_SHA256 = os.path.abspath("../data/samples/") # The repo storing json files
 STRING_HEX = "0123456789abcdef"
 N_WORKER = 10
 
