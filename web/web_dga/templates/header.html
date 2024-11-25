@@ -1,0 +1,96 @@
+<link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/headers/">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
+<link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+      .bi {
+        vertical-align: -.125em;
+        fill: currentColor;
+      }
+
+    </style>
+
+  <body>    
+<header class="p-3 bg-dark">  
+<style>  
+  /* 初始状态的链接文本颜色 */  
+  .nav-link {  
+    color: white; /* 默认颜色 */  
+  }  
+  
+  /* 鼠标悬停时的链接文本颜色 */  
+  .nav-link:hover {  
+    color: blue; /* 悬停时的颜色 */  
+  }  
+</style>  
+    <div >  
+      <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center"> 
+        <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">  
+          <img src="../static/Shield.png" alt="Description of PNG Image" class="bi me-2">  
+        </a>  
+  
+        <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-start nav-margin-left:10px;"> 
+            <li><a href="#" class="nav-link px-2 " onclick="navigateToPage1()">基于可信度评估的多模型恶意代码检测系统</a></li>   
+            <li><a href="#" class="nav-link px-2 " onclick="navigateToPage4()">VS扫描</a></li>
+            <li><a href="#" class="nav-link px-2 " onclick="navigateToPage5()">恶意域名统计</a></li>  
+            <li><a href="#" class="nav-link px-2 " onclick="navigateToPage6()">恶意样本统计</a></li>  
+        </ul>  
+      </div>  
+      <div class="d-flex justify-content-end">    
+        <div class="d-flex">  
+         {% if not session.logged_in %}  <!-- 如果未登录，显示登录和注册按钮 --> 
+         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-start nav-margin-left:10px;"> 
+          <li><span class="nav-link px-3"style="color: white;">欢迎您!</span></li> 
+          <li><a href="#" class="nav-link px-3 " onclick="navigateToPage7()">登录</a></li>
+         </ul>  
+         
+         {% else %} <!-- 如果已登录，显示用户名并隐藏登录和注册按钮 --> 
+          <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-start nav-margin-left:10px;"> 
+            <li><span class="nav-link px-3"style="color: white;">您好,{{ session.username }}!</span></li>
+            <li><a href="#" class="nav-link px-3 " onclick="navigateToPage8()">退出</a></li>  
+          </ul>  
+         {% endif %} 
+           
+        </div>  
+      </div>  
+    </div>  
+  </div>  
+</header>
+
+    
+</header>
+<script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
+
+    </body>
+    <script>  
+        function navigateToPage4() {  
+          window.location.href = "vsscan";   
+        }  
+      </script>
+      <script>  
+        function navigateToPage1() {  
+          window.location.href = "/";   
+        }  
+      </script>
+      <script>  
+        function navigateToPage5() {  
+          window.location.href = "/statistics_url";   
+        }  
+      </script>
+      <script>  
+        function navigateToPage6() {  
+          window.location.href = "/statistics_file";   
+        }  
+      </script>
+      <script>  
+        function navigateToPage7() {  
+          window.location.href = "login";   
+        }  
+      </script>
+      <script>  
+        function navigateToPage8() {  
+          window.location.href = "logout";   
+        }  
+      </script>

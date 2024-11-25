@@ -1,0 +1,323 @@
+<!DOCTYPE html>  
+<html lang="en" style="height: 100%">  
+<head>  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>基于可信度评估的多模型恶意代码检测系统</title>
+    <!--<link rel="stylesheet" href="{{url_for('static', filename='css/search.css')}}">-->
+    <link rel="shortcut icon" href="../static/shield-check.svg" type="image/x-icon">
+    <!-- Bootstrap core CSS -->
+    <link href="{{url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">
+    <!-- Custom styles for form -->
+    <link href="{{url_for('static', filename='css/form-validation.css')}}" rel="stylesheet">
+    <!--jquery-->
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <!-- echart js-->
+    <script type="text/javascript" src="{{url_for('static', filename='js/echarts.min.js') }}"></script>
+ 
+</head>  
+
+
+<body class="bg-light">  
+  <div id="headerpage">
+    {% include "header.html" %}
+  </div>
+  <div style="text-align: center;"> 
+    <h2 style="display: block; margin: auto; width: 50%; margin-top: 30px;">恶意域名统计</h2> 
+  </div>
+  
+      <div id="container" style="display: flex; justify-content: space-between; align-items: flex-start; height: 100% ;width: 70%; margin-top: 50px;margin-left: 15%;">
+       <div id="container1" style="width: 33%; height: 400px; "></div>  
+       <div id="container2" style="width: 33%; height: 400px; "></div>  
+       <div id="container3" style="width: 33%; height: 400px; "></div>
+      </div>
+      <div id="container" style="display: flex; justify-content: space-between; align-items: flex-start; height: 100%;width: 70%; margin-top: 50px;margin-left: 15%;">  
+        <div id="chart1" style="width: 33%; height: 400px;"></div>  
+        <div id="chart2" style="width: 33%; height: 400px;"></div>  
+        <div id="chart3" style="width: 33%; height: 400px;"></div>  
+    </div>
+  <div id="footerpage">
+    {%  include 'footer.html' %}
+  </div>
+  
+<!--  饼图设置-->
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js"></script>  
+  <script type="text/javascript">  
+    // 初始化第一个饼图  
+    var dom1 = document.getElementById('container1');  
+    var myChart1 = echarts.init(dom1);  
+      
+    // 初始化第二个饼图  
+    var dom2 = document.getElementById('container2');  
+    var myChart2 = echarts.init(dom2);  
+     // 初始化第三个饼图  
+    var dom3 = document.getElementById('container3');  
+    var myChart3 = echarts.init(dom3);  
+    // 饼图的配置选项  
+    var option1;
+option1 = {
+title: {
+text: '恶意域名类型统计（月）',
+subtext:'样本总量：24472362',
+left: 'center'
+},
+tooltip: {
+trigger: 'item'
+},
+
+series: [
+{
+  name: 'url_categoty',
+  type: 'pie',
+  radius: '50%',
+  data: [
+    { value: 12535808, name: 'others' },
+    { value: 2852438, name: 'apt' },
+    { value: 2011326, name: 'elf' },
+    { value: 1979987, name: 'android' },
+    { value: 1761371, name: 'malware' },
+    { value: 961145, name: 'bad' },
+    { value: 654752, name: 'browser' },
+    { value: 632444, name: 'cobaltstrike-2' },
+    { value: 542934, name: 'mass' },
+    { value: 540157, name: 'emotet' }
+  ],
+      emphasis: {
+      itemStyle: {
+      shadowBlur: 10,
+      shadowOffsetX: 0,
+      shadowColor: 'rgba(0, 0, 0, 0.5)'
+   }
+  }
+}
+]
+};
+
+var option2;
+option2 = {
+title: {
+text: '恶意域名类型统计（周）',
+subtext:'样本总量：5588222',
+left: 'center'
+},
+tooltip: {
+trigger: 'item'
+},
+series: [
+{
+  name: 'url_categoty',
+  type: 'pie',
+  radius: '50%',
+  data: [
+    { value: 2866176, name: 'others' },
+    { value: 655534, name: 'apt' },
+    { value: 458536, name: 'elf' },
+    { value: 456378, name: 'android' },
+    { value: 390620, name: 'malware' },
+    { value: 218205, name: 'bad' },
+    { value: 147854, name: 'browser' },
+    { value: 146576, name: 'cobaltstrike-2' },
+    { value: 125745, name: 'emotet' },
+    { value: 122598, name: 'mass' }
+  ],
+  emphasis: {
+    itemStyle: {
+      shadowBlur: 10,
+      shadowOffsetX: 0,
+      shadowColor: 'rgba(0, 0, 0, 0.5)'
+    }
+  }
+}
+]
+};
+
+var option3;
+option3 = {
+title: {
+text: '恶意域名类型统计（日）',
+subtext:'样本总量：807508',
+left: 'center'
+},
+tooltip: {
+trigger: 'item'
+},
+
+series: [
+{
+  name: 'url_categoty',
+  type: 'pie',
+  radius: '50%',
+  data: [
+    { value: 411389, name: 'others' },
+    { value: 93821, name: 'apt' },
+    { value: 65796, name: 'elf' },
+    { value: 65266, name: 'android' },
+    { value: 60294, name: 'malware' },
+    { value: 31184, name: 'bad' },
+    { value: 21122, name: 'browser' },
+    { value: 20941, name: 'cobaltstrike-2' },
+    { value: 20181, name: 'emotet' },
+    { value: 17514, name: 'mass' }
+  ],
+  emphasis: {
+    itemStyle: {
+      shadowBlur: 10,
+      shadowOffsetX: 0,
+      shadowColor: 'rgba(0, 0, 0, 0.5)'
+    }
+  }
+}
+]
+};
+      
+    // 应用配置选项到第一个和第二个图表实例  
+    myChart1.setOption(option1);  
+    myChart2.setOption(option2);  
+    myChart3.setOption(option3); 
+      
+    // 监听窗口大小变化事件，调整图表大小  
+    window.addEventListener('resize', function() {  
+      myChart1.resize();  
+      myChart2.resize();  
+      myChart3.resize();
+    });  
+  </script>
+<!--  柱状图设置-->
+    <script type="text/javascript">  
+        var chart1 = echarts.init(document.getElementById('chart1'));  
+        var chart2 = echarts.init(document.getElementById('chart2'));  
+        var chart3 = echarts.init(document.getElementById('chart3'));  
+  
+        var option1 = {  
+          title: {
+             text: '恶意域名来源统计（月Top10）',
+             left: 'center'
+
+                 },
+          tooltip: {
+              trigger: 'item'
+               },
+
+          
+            xAxis: {  
+                type: 'category',  
+                data: ["cybercrime-tracker","abuse","github","viriback","abuseipdb","ip.blackhole.monster","blocklist","openphish","emergingthreats","binarydefense"]  
+            ,
+            axisLabel: {  
+              show: true, // 控制标签是否显示  
+              textStyle: {  
+              fontSize: 8},
+             rotate: 30, // 设置标签旋转 45 度  
+             interval: 0 // 设置标签显示间隔为 0，即显示所有标签  
+        } 
+              },  
+            yAxis: {  
+                type: 'value',
+                axisLabel:{
+                textStyle: {fontSize: 10},
+                  margin: 1}   
+            },  
+            series: [{  
+                data: [962067,833339,264072,232529,207573,109741,26214,15350,7491,4871],  
+                type: 'bar'  
+            }]  
+        };  
+  
+        var option2 = {  
+          title: {
+             text: '恶意域名来源统计（周Top10）',
+             left: 'center'
+
+                 },
+          tooltip: {
+              trigger: 'item'
+               },
+
+          
+            xAxis: {  
+                type: 'category',  
+                data: ["cybercrime-tracker.net","abuse.ch","github.com","viriback.com","abuseipdb.com","ip.blackhole.monster","blocklist.de","openphish.com","binarydefense.com","emergingthreats.net"]  
+            ,
+            axisLabel: {  
+              show: true, // 控制标签是否显示  
+              textStyle: {  
+              fontSize: 8},
+             rotate: 30, // 设置标签旋转 45 度  
+             interval: 0 // 设置标签显示间隔为 0，即显示所有标签  
+        } 
+              },  
+            yAxis: {  
+                type: 'value',
+                axisLabel:{
+                textStyle: {fontSize: 10},
+                  margin: 1}   
+            },  
+            series: [{  
+                data: [216745,181601,66010,52579,47669,33728,5309,3468,2904,1687],  
+                type: 'bar'  
+            }]  
+        };  
+        var option3 = {  
+          title: {
+             text: '恶意域名来源统计（日Top10）',
+             left: 'center'
+
+                 },
+          tooltip: {
+              trigger: 'item'
+               },
+
+          
+            xAxis: {  
+                type: 'category',  
+                data: ["abuse.ch","cybercrime-tracker.net","github.com","ip.blackhole.monster","viriback.com","blocklist.de","binarydefense.com","openphish.com",
+"emergingthreats.net","socks-proxy.net"]  
+            ,
+            axisLabel: {  
+              show: true, // 控制标签是否显示  
+              textStyle: {  
+              fontSize: 8},
+             rotate: 30, // 设置标签旋转 45 度  
+             interval: 0 // 设置标签显示间隔为 0，即显示所有标签  
+        } 
+              },  
+            yAxis: {  
+                type: 'value',
+                axisLabel:{
+                textStyle: {fontSize: 10},
+                  margin: 1}   
+            },  
+            series: [{  
+                data: [711520,30736,30665,13202,9989,7468,1642,948,495,241,132],  
+                type: 'bar'  
+            }]  
+        };  
+  
+        chart1.setOption(option1);  
+        chart2.setOption(option2);  
+        chart3.setOption(option3);  
+  
+        window.addEventListener('resize', function () {  
+            chart1.resize();  
+            chart2.resize();  
+            chart3.resize();  
+        });  
+    </script>    
+</body>  
+</html>
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+
+   

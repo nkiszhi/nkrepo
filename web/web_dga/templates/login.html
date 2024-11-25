@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+<head>  
+    <script src="../static/js/color-modes.js"></script>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">  
+    <title>基于可信度评估的多模型恶意代码检测系统</title>  
+    <link rel="shortcut icon" href="../static/shield-check.svg" type="image/x-icon">  
+    <!-- Bootstrap core CSS -->  
+    <link href="{{url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">  
+    <!-- Custom styles for form -->  
+    <link href="{{url_for('static', filename='css/form-validation.css')}}" rel="stylesheet">  
+    <link href="../static/css/sign-in.css" rel="stylesheet">  
+  
+    <style>  
+    /* 假设CSS样式在<style>标签内或外部CSS文件中 */  
+  
+    .container {  
+  display: flex;  
+  justify-content: flex-start; /* 容器内容靠右对齐 */  
+  align-items: center; /* 容器内容垂直居中 */  
+  height: 100vh; /* 容器高度设置为视口的100% */  
+  padding: 10px; /* 容器内边距 */  
+}  
+  .form-spacing {  
+  margin-top: 10px; /* 或者使用 padding-top，根据您的需求 */  
+}
+  
+    .form-signin {  
+  border: 1px solid #ccc; /* 表单边框 */  
+  border-radius: 5px; /* 边框圆角 */  
+  padding: 20px; /* 表单内边距 */  
+  background-color:rgba(255, 255, 255, 0.5); /* 表单背景色 */                           
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* 表单阴影 */  
+  max-width: 400px; /* 表单最大宽度 */  
+}
+      body, html {  
+        height: 100%;  
+        margin: 0;  
+      } 
+      .bg-image {  
+        /* 使用相对路径或URL引用背景图像 */  
+        background-image: url('/static/backgroud3_login.jpg'); 
+        background-position: center;  
+        background-repeat: no-repeat;  
+        background-size: cover;  
+      }  
+      .bg-image::before {  
+    content: ""; /* 伪元素需要内容，但这里我们不需要显示任何内容，所以使用空字符串 */  
+    position: absolute; /* 绝对定位，相对于最近的定位祖先元素，这里是.bg-image */  
+    top: 0;  
+    right: 0;  
+    bottom: 0;  
+    left: 0;  
+    background-color: rgba(255, 255, 255, 0.3); /* 设置半透明白色层 */  
+    z-index: -1; /* 将这个层放在背景图像之下 */  
+  }  
+      .login-container {  
+        position: relative;  
+        top: 50%;  
+        transform: translateY(-50%);  
+        width: 300px;  
+        padding: 16px;  
+        background-color: #fff;  
+        margin: 0 auto;  
+        border-radius: 4px;  
+      }  
+    </style>  
+  </head>  
+  <body class="bg-image">  
+
+
+  
+  <div class="container">  
+
+  <main class="form-signin w-auto">  
+   <form  action="{{'\login'}}", method="POST">
+<!--    <img class="mb-4" src="../assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">-->
+   
+    <div style="text-align: center;"> 
+     <h3 style="mt-5 mb-3 display: block; margin: auto; margin-top: 30px;">Welcome</h3> 
+    </div>
+
+    <div class="form-floating">
+      <input type="text" class="form-control" id="username" name="username"placeholder="username">
+      <label for="floatingInput">用户名</label>
+    </div>
+    <div class="form-floating form-spacing">
+      <input type="password" class="form-control" id="password" name="password" placeholder="password">
+      <label for="floatingPassword">密码</label>
+    </div>
+
+    <div class="form-check text-start my-3">
+      <input class="form-check-input" type="checkbox" value="remember-me" id="flexCheckDefault">
+      <label class="form-check-label" for="flexCheckDefault">
+        记住密码
+      </label>
+    </div>
+    <button class="btn btn-primary w-100 py-2" type="submit">登陆</button>
+      {% if error %}  
+        <p class="text-danger">{{ error }}</p>  
+      {% endif %}  
+    <p class="mt-5 mb-3 text-body-secondary" style="font-size: 12px;">&copy; 2024 Copyright: 南开大学反病毒实验室 (NKAMG)</p>
+   </form>
+  </main>  
+  </div>
+
+
+  <script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
+
+ </body>
+</html>

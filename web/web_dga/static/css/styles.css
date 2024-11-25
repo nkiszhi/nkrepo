@@ -1,0 +1,34 @@
+.nav-bar {    
+    display: flex; /* 使用flex布局 */    
+    align-items: center; /* 垂直居中对齐 */    
+    padding: 0 10px; /* 添加一些内边距，但不要太多 */    
+    background-color: #f8f9fa; /* 导航条背景色 */    
+    border-bottom: 4px solid rgba(21, 21, 21, 0.688); /* 底部边框 */    
+    width: 100%; /* 导航条占据父容器的全部宽度 */    
+  }    
+      
+  /* 样式化导航链接 */    
+.nav-bar li a {    
+    display: block; /* 确保链接占据整个li元素的空间 */    
+    padding: 10px 185px; /* 调整链接的上下和左右内边距 */    
+    text-decoration: none; /* 移除链接的下划线 */    
+    color: #2131ded6; /* 链接默认文本颜色 */    
+    position: relative; /* 为了能够定位伪元素 */    
+    font-size: 20px;    
+    transition: color 0.3s ease, background-color 0.3s ease; /* 添加过渡效果 */    
+  }    
+      
+  /* 悬停状态的样式 */    
+.nav-bar li a:hover {    
+    background-color: #e0e0e0; /* 鼠标悬停时的背景色 */    
+    color: #2131ded6; /* 鼠标悬停时的文本颜色 */    
+  }       
+      
+  /* 可选：移除列表项的默认样式 */    
+.nav-bar li {    
+    list-style: none; /* 移除列表项前面的点或数字 */    
+    margin: 0; /* 移除列表项的外边距 */    
+  }
+.frame {  
+    padding: 7% 0; /* 添加内边距 */   
+}  

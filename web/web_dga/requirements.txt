@@ -1,0 +1,13 @@
+flask
+pandas
+keras
+tld
+xgboost
+wordfreq
+pymysql
+opencv-python
+torch
+torchvision
+torchaudio
+python-lightning
+scikit-learn
