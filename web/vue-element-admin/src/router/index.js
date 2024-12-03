@@ -68,6 +68,12 @@ export const constantRoutes = [
         component: () => import('@/views/dashboard/domain'),
         name: 'domain',
         meta: { title: '恶意域名样本数据展示',affix: true }
+      },
+      {
+        path: 'domain-map',
+        component: () => import('@/views/dashboard/domain-map'),
+        name: 'domain-map',
+        meta: { title: '恶意域名样本数据展示-地图',affix: true }
       }
     ]
   },
@@ -115,6 +121,12 @@ export const asyncRoutes = [
         component: () => import('@/views/detect/domain'),
         name: 'detect_domain',
         meta: { title: '恶意域名检测' }
+      },
+      {
+        path: 'domain-map',
+        component: () => import('@/views/detect/domain-map'),
+        name: 'detect_domain',
+        meta: { title: '恶意域名检测-地图' }
       },
       {
         path: 'model',
