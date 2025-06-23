@@ -1,0 +1,12 @@
+<svg viewBox="0 0 256 256" width="128" xmlns="http://www.w3.org/2000/svg" id="图标层-轮廓化" height="128" style="font-size: 128px; color: rgb(19, 150, 219);">
+    <defs style="fill: rgb(19, 150, 219);">
+        <style style="fill: rgb(19, 150, 219);">.cls-1{fill:#4d4d4d;}.cls-2{fill:#5f9df9;}</style>
+    </defs>
+    <title style="fill: rgb(19, 150, 219);">论文检测</title>
+    <g transform="matrix(0.32932446,0,0,0.32932446,-36.14336,-36.88434)" style="fill: rgb(19, 150, 219);">
+        <path d="M877.81,848.37,730.13,700.68a352.39,352.39,0,0,0,89.31-235C819.44,270.37,661.07,112,465.72,112,270.53,112,112,270.52,112,465.72S270.37,819.44,465.72,819.44a352.34,352.34,0,0,0,230.16-85.12l148,148a24,24,0,0,0,33.94,0h0A24,24,0,0,0,877.81,848.37ZM465.72,771.44a304.72,304.72,0,1,1,119-24A303.78,303.78,0,0,1,465.72,771.44Z" class="cls-1" style="fill: rgb(19, 150, 219);"></path>
+        <rect x="318" width="300.51" class="cls-2" rx="24" y="304.78" height="48" style="fill: rgb(19, 150, 219);"></rect>
+        <rect x="318" width="300.51" class="cls-2" rx="24" y="448" height="48" style="fill: rgb(19, 150, 219);"></rect>
+        <rect x="318" width="200.88" class="cls-2" rx="24" y="567.43" height="48" style="fill: rgb(19, 150, 219);"></rect>
+    </g>
+</svg>
