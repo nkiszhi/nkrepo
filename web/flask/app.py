@@ -9,12 +9,12 @@ import numpy as np
 import json
 import os 
 import socket
-from FLASK_MYSQL import Databaseoperation
+from flask_mysql import Databaseoperation
 from file_detect import EXEDetection
 from ensemble_predict import run_ensemble_prediction
 import pymysql
 import subprocess
-from API_VT import VTAPI
+from api_vt import VTAPI
 import logging
 import netifaces
 from datetime import datetime
