@@ -65,18 +65,68 @@ export default {
       searchQuery: '',  
       isLoading: false,  
       searchResults: [], 
+      apiBaseUrl: 'http://xxxx2:5005' // 默认API地址
     };  
   },
+  
+  created() {
+    // 组件创建时加载配置文件
+    this.loadConfig();
+  },
+  
   components: {
     Pie1Chart,
   },  
   methods: {  
+    // 加载配置文件获取API地址
+    async loadConfig() {
+      try {
+        // 与其他页面保持一致的路径解析逻辑
+        const response = await axios.get('/config.ini', {
+          responseType: 'text'
+        });
+        
+        // 解析INI格式内容
+        const configContent = response.data;
+        const lines = configContent.split('\n');
+        let inApiSection = false;
+        
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          // 查找[api]部分
+          if (trimmedLine === '[api]') {
+            inApiSection = true;
+            continue;
+          }
+          
+          // 在[api]部分下查找baseUrl配置
+          if (inApiSection && trimmedLine.startsWith('baseUrl')) {
+            const parts = trimmedLine.split('=');
+            if (parts.length >= 2) {
+              this.apiBaseUrl = parts[1].trim();
+              console.log('从配置文件加载API地址:', this.apiBaseUrl);
+              break;
+            }
+          }
+          
+          // 遇到其他部分则退出查找
+          if (inApiSection && trimmedLine.startsWith('[')) {
+            break;
+          }
+        }
+      } catch (error) {
+        console.warn('加载配置文件失败，使用默认API地址:', error.message);
+        // 继续使用默认地址
+      }
+    },
+
     searchVirus() {  
       if (!this.tableName) return;
       this.isLoading = true;  
       this.searchResults = [];
       
-      axios.post('http://10.134.2.27:5005/query_category', { tableName: this.tableName })  
+      // 使用从配置文件读取的API地址
+      axios.post(`${this.apiBaseUrl}/query_category`, { tableName: this.tableName })  
         .then(response => {  
           this.searchResults = response.data.sha256s; // 假设后端返回的数据中包含一个名为sha256s的数组  
           this.isLoading = false;
@@ -88,15 +138,12 @@ export default {
         if (error.response.status === 500) {  
           // 显示服务器内部错误的自定义消息  
           alert('样本库未查询到');  
-          // 如果需要，你还可以显示后端返回的具体错误信息  
-          // alert('服务器内部错误: ' + error.response.data.error);  
         } else {  
           // 处理其他HTTP错误  
           alert('HTTP错误: ' + error.response.status);  
         }  
       } else if (error.request) {  
         // 请求已发出，但没有收到响应  
-        // 这通常发生在请求超时或网络错误时  
         alert('请求已发出但未收到响应');  
       } else {  
         // 一些其他错误发生了  
@@ -109,7 +156,9 @@ export default {
 
     toggleDetails(sha256) {  
      this.$set(this.showDetails, sha256, !this.showDetails[sha256]); 
-     axios.get(`http://10.134.2.27:5005/detail_category/${sha256}`) 
+     
+     // 使用从配置文件读取的API地址
+     axios.get(`${this.apiBaseUrl}/detail_category/${sha256}`) 
          .then(response => {  
            const result = response.data.query_result; 
            this.details[sha256] = result;
@@ -124,16 +173,16 @@ export default {
     
     
     downloadFile(sha256) {  
-      // 构造下载链接  
-      const downloadUrl = `http://10.134.2.27:5005/download_category/${sha256}`;  
+      // 构造下载链接，使用从配置文件读取的API地址
+      const downloadUrl = `${this.apiBaseUrl}/download_category/${sha256}`;  
     
-    // 创建一个新的a标签  
+      // 创建一个新的a标签  
       const link = document.createElement('a');  
       link.href = downloadUrl;  
       link.setAttribute('download', ''); // 触发下载行为  
       this.$forceUpdate();
     
-    // 触发点击事件  
+      // 触发点击事件  
       document.body.appendChild(link);  
       link.click();  
       document.body.removeChild(link); // 清理创建的a标签
@@ -236,8 +285,4 @@ export default {
   color: #007BFF; /* 字体颜色示例 */ 
   text-align: center; 
 }  
-  
-
-  
 </style>
-

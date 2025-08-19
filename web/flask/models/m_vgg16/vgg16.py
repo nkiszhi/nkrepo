@@ -11,7 +11,7 @@ from models.m_vgg16.extract_feature import scan_load_samples, scan_load_predicti
 
 # 全局变量
 TRAINING_SAMPLE_DIR = r"E:\Experimental data\dr_data"
-MODEL_PATH = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_vgg16/saved/trained_vgg16_model.pth"
+MODEL_PATH = "./models/m_vgg16/saved/trained_vgg16_model.pth"
 
 
 def pe_to_image(file_path, image_size=(224, 224)):

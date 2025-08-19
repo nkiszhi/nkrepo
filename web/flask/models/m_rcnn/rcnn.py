@@ -148,7 +148,7 @@ def running_training():
 
 def run_prediction(file_path):
     predict_SAMPLES_DIR = file_path
-    MODEL_PATH = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_rcnn/saved/rcnn_model.pth"
+    MODEL_PATH = "./models/m_rcnn/saved/rcnn_model.pth"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = RCNN(

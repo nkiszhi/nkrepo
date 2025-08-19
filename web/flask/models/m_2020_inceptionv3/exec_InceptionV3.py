@@ -73,7 +73,7 @@ def run_prediction(file_path):
 
     model = InceptionV3Model()
     try:
-        state_dict = torch.load('/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2020_inceptionv3/saved/inceptionv3_malware_model.pth', weights_only=True,map_location=torch.device('cpu'))
+        state_dict = torch.load('./models/m_2020_inceptionv3/saved/inceptionv3_malware_model.pth', weights_only=True,map_location=torch.device('cpu'))
         # 过滤掉辅助分类器的权重
         filtered_state_dict = {k: v for k, v in state_dict.items() if 'AuxLogits' not in k}
         model.load_state_dict(filtered_state_dict, strict=False)

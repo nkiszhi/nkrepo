@@ -94,7 +94,7 @@ def run_prediction(file_path):
     device = 'cpu'  # 强制使用 CPU
     input_channels = 1
     model = OneD_CNN(input_channels, NUM_CLASSES)
-    model_path = '/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2019_1d_cnn/saved/1d_cnn_model.pth'  # 实际模型路径
+    model_path = './models/m_2019_1d_cnn/saved/1d_cnn_model.pth'  # 实际模型路径
 
     # 1. **安全加载模型（关键修正：显式设置 weights_only=True）**
     if not os.path.exists(model_path):

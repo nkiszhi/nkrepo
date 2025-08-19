@@ -1,11 +1,9 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-
-Vue.use(Router)
-
-/* Layout */
+import store from '@/store'
 import Layout from '@/layout'
 
+Vue.use(Router)
 
 export const constantRoutes = [
   {
@@ -25,8 +23,8 @@ export const constantRoutes = [
     hidden: true
   },
   {
-    path: '/auth-redirect',
-    component: () => import('@/views/login/auth-redirect'),
+    path: '/register',
+    component: () => import('@/views/login/register'),
     hidden: true
   },
   {
@@ -35,45 +33,24 @@ export const constantRoutes = [
     hidden: true
   },
   {
-    path: '/401',
-    component: () => import('@/views/error-page/401'),
-    hidden: true
-  },
-  {
     path: '/',
     component: Layout,
     redirect: '/sample',
     alwaysShow: true,
     name: 'Dashboard',
-    meta: {
-      title: '样本库',
-      icon: 'dashboard',
-      roles: ['admin', 'editor'] // you can set roles in root nav
-    },
+    meta: { title: '样本库', icon: 'dashboard' },
     children: [
-      // {
-      //   path: 'dashboard',
-      //   component: () => import('@/views/dashboard/index'),
-      //   name: 'Dashboard',
-      //   meta: { title: 'Dashboard', affix: true }
-      // },
       {
         path: 'sample',
         component: () => import('@/views/dashboard/sample'),
-        name: 'sample',
-        meta: { title: '恶意文件样本数据展示',affix: true }
+        name: 'Sample',
+        meta: { title: '恶意文件样本数据展示', affix: true }
       },
-     // {
-     //   path: 'domain',
-      //  component: () => import('@/views/dashboard/domain'),
-      //  name: 'domain',
-      //  meta: { title: '恶意域名样本数据展示',affix: true }
-    //  },
       {
         path: 'domain-map',
         component: () => import('@/views/dashboard/domain-map'),
-        name: 'domain-map',
-        meta: { title: '恶意域名样本数据展示',affix: true }
+        name: 'DomainMap',
+        meta: { title: '恶意域名样本数据展示', affix: true }
       }
     ]
   },
@@ -87,103 +64,120 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/profile/index'),
         name: 'Profile',
-        meta: { title: 'Profile', icon: 'user', noCache: true }
+        meta: { title: '个人中心', icon: 'user', noCache: true }
       }
     ]
   }
 ]
 
-
 export const asyncRoutes = [
-/**
- * asyncRoutes
- * the routes that need to be dynamically loaded based on user roles
- */
   {
     path: '/detect',
     component: Layout,
     redirect: '/detect/sample',
-    name: 'Dashboard',
-    meta: {
-      title: '样本检测',
-      icon: 'detect'
-    },
+    name: 'Detect',
+    meta: { title: '样本检测', icon: 'detect' },
     children: [
-//      {
-//        path: 'sample',
-//        component: () => import('@/views/detect/sample'),
-//        name: 'detect_sample',
-//        meta: { title: '恶意文件检测' }
-//      },
-     {
-     path: 'sample-vt',
-     component: () => import('@/views/detect/sample-vt'),
-     name: 'detect_sample-vt',
-     meta: { title: '恶意文件检测' }
-     },
-     
+      {
+        path: 'sample-vt',
+        component: () => import('@/views/detect/sample-vt'),
+        name: 'SampleVt',
+        meta: { title: '恶意文件检测' }
+      },
       {
         path: 'domain',
         component: () => import('@/views/detect/domain'),
-        name: 'detect_domain',
+        name: 'DomainDetect',
         meta: { title: '恶意域名检测' }
-      },
+      }
     ]
   },
-  
   {
     path: '/file_search',
     component: Layout,
     redirect: '/file_search/category',
-    name: 'Dashboard',
-    meta: {
-      title: '样本检索',
-      icon: 'search'
-    },
+    name: 'FileSearch',
+    meta: { title: '样本检索', icon: 'search' },
     children: [
-      {//
+      {
         path: 'SHA256',
         component: () => import('@/views/file_search/SHA256'),
-        name: 'SHA256',
-        meta: { title: 'SHA256' }
+        name: 'SHA256Search',
+        meta: { title: 'SHA256检索' }
       },
       {
         path: 'category',
         component: () => import('@/views/file_search/category'),
-        name: 'category',
+        name: 'CategorySearch',
         meta: { title: '类型检索' }
       },
       {
         path: 'family',
         component: () => import('@/views/file_search/family'),
-        name: 'family',
+        name: 'FamilySearch',
         meta: { title: '家族检索' }
       },
       {
         path: 'platform',
         component: () => import('@/views/file_search/platform'),
-        name: 'platform',
+        name: 'PlatformSearch',
         meta: { title: '平台检索' }
       }
     ]
   },
-
-  // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
 ]
 
-const createRouter = () => new Router({
-  // mode: 'history', // require service support
+const router = new Router({
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
 })
 
-const router = createRouter()
-
-// Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
 export function resetRouter() {
-  const newRouter = createRouter()
-  router.matcher = newRouter.matcher // reset router
+  const newRouter = new Router({
+    scrollBehavior: () => ({ y: 0 }),
+    routes: constantRoutes
+  })
+  router.matcher = newRouter.matcher
 }
+
+
+router.beforeEach((to, from, next) => {
+  console.log('路由守卫触发:', from.path, '->', to.path)
+  
+  // 从Vuex或本地存储获取登录状态
+  const hasToken = store.getters.token || localStorage.getItem('token') || sessionStorage.getItem('token')
+  
+  // 关键修复：直接允许访问/register，忽略所有查询参数
+  if (to.path === '/register') {
+    console.log('允许直接访问注册页，忽略查询参数')
+    next()
+    return
+  }
+
+  if (hasToken) {
+    console.log('用户已登录，token存在')
+    
+    if (to.path === '/login' || to.path === '/register') {
+      // 已登录时访问登录页或注册页，重定向到首页
+      console.log('已登录，重定向到首页')
+      next({ path: '/' })
+    } else {
+      // 允许访问其他页面
+      next()
+    }
+  } else {
+    console.log('用户未登录，token不存在')
+    
+    if (to.path === '/login' || to.path === '/register') {
+      // 允许访问登录页和注册页
+      next()
+    } else {
+      // 重定向到登录页，并携带原目标路径参数
+      console.log('未登录，重定向到登录页，原路径:', to.fullPath)
+      next(`/login?redirect=${to.fullPath}`)
+    }
+  }
+})
 
 export default router

@@ -80,7 +80,7 @@ def run_prediction():
     """
     预测流程
     """
-    model_path = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2018_ember/saved/ember_model.pth"
+    model_path = "./models/m_2018_ember/saved/ember_model.pth"
     sample_path = r"../yucedata/2dbb5d05211fd4990685d9373c906eafa900b11603d4701c0c347876e820a197"
     print("Loading model...")
     model = Ember(input_dim=2381, num_trees=10, tree_depth=3, output_dim=1)
@@ -102,7 +102,7 @@ def run_prediction(file_path):
     # 定义设备和模型参数
     device = 'cpu'  # 强制使用CPU
     model = Ember(input_dim=2381, num_trees=10, tree_depth=3, output_dim=1)
-    model_path = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2018_ember/saved/ember_model.pth" 
+    model_path = "./models/m_2018_ember/saved/ember_model.pth" 
     
     # 加载模型权重
     if not os.path.exists(model_path):
@@ -124,7 +124,7 @@ def run_prediction(file_path):
     features, _ = extract_features_ember(sample_bytes)  
     
     # 标准化特征
-    scaler = joblib.load('/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2018_ember/saved/scaler.pkl')
+    scaler = joblib.load('./models/m_2018_ember/saved/scaler.pkl')
     sample_features = scaler.transform(features.reshape(1, -1))
     
     # 模型预测

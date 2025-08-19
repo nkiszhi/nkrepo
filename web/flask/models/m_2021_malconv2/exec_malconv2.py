@@ -226,7 +226,7 @@ def run_prediction(file_path):
         ).to(device)
 
         # 加载训练好的模型
-        model_path = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2021_malconv2/saved/malconv_gct_epoch_29.pth"
+        model_path = "./models/m_2021_malconv2/saved/malconv_gct_epoch_29.pth"
         # 指定 map_location=torch.device('cpu')
         checkpoint = torch.load(model_path, map_location=torch.device('cpu'), weights_only=False)
         model.load_state_dict(checkpoint['model_state_dict'])

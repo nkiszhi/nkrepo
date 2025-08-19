@@ -62,7 +62,7 @@ def run_training():
     logger.info(f"Model saved to {model_save_path}")
 
 def run_prediction(file_path):
-    model_path = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2021_rcnf/saved/rcnf_model.pth"
+    model_path = "./models/m_2021_rcnf/saved/rcnf_model.pth"
     img_size = 224
 
     # 1. 加载测试样本
