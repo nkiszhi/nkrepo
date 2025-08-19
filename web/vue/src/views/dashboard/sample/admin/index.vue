@@ -1,6 +1,5 @@
 <template>
   <div class="dashboard-editor-container">
-
     <panel-group @handleSetLineChartData="handleSetLineChartData" />
 
     <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
@@ -10,21 +9,20 @@
     <el-row :gutter="32">
       <el-col :xs="24" :sm="24" :lg="8">
         <div class="chart-wrapper">
-          <pie1-chart />
+          <pie1-chart /> <!-- 可展示category数据 -->
         </div>
       </el-col>
       <el-col :xs="24" :sm="24" :lg="8">
         <div class="chart-wrapper">
-          <pie-chart />
+          <pie-chart /> <!-- 可展示family数据 -->
         </div>
       </el-col>
       <el-col :xs="24" :sm="24" :lg="8">
         <div class="chart-wrapper">
-          <bar-chart />
+          <bar-chart /> <!-- 可展示platform数据 -->
         </div>
       </el-col>
     </el-row>
-
   </div>
 </template>
 
@@ -32,25 +30,12 @@
 import GithubCorner from '@/components/GithubCorner'
 import PanelGroup from './components/PanelGroup'
 import LineChart from './components/LineChart'
-import RaddarChart from './components/RaddarChart'
 import PieChart from './components/PieChart'
 import Pie1Chart from './components/Pie1Chart'
 import BarChart from './components/BarChart'
-import TransactionTable from './components/TransactionTable'
-import TodoList from './components/TodoList'
-import BoxCard from './components/BoxCard'
 
-const lineChartData = {
-  total_amount: {
-    date_data: ["2012年","2013年","2014年","2015年","2016年","2017年","2018年","2019年","2020年","2021年","2022年","2023年","2024年"],
-    amount_data: [353.9,1140.3,419.4,445.7,412.9,209.7,255.6,176.9,190.1,13.1,334.2,203.2,19.7 ]
-  },
-  year_amount: {
-    date_data: ["2024年01月","2024年02月","2024年03月","2024年04月","2024年05月","2024年06月","2024年07月","2024年08月","2024年09月","2024年10月","2024年11月","2024年12月"],
-    amount_data: [0,13.1,0,0,0,0,0,0,0,6.6,0,0 ]
-  }
-
-}
+// 导入生成的JS数据文件（核心修改）
+import chartData from '@/data/chart_data.js'
 
 export default {
   name: 'DashboardAdmin',
@@ -58,25 +43,29 @@ export default {
     GithubCorner,
     PanelGroup,
     LineChart,
-    RaddarChart,
     PieChart,
     Pie1Chart,
     BarChart
   },
   data() {
     return {
-      lineChartData: lineChartData.total_amount
+      // 从JS文件中读取折线图数据（默认显示总年份数据）
+      lineChartData: chartData.lineChartData.total_amount,
+      // 可将饼图数据通过props传递给子组件（按需使用）
+      pieData: chartData.pieTop10Data
     }
   },
   methods: {
+    // 切换折线图数据（从JS文件中读取）
     handleSetLineChartData(type) {
-      this.lineChartData = lineChartData[type]
+      this.lineChartData = chartData.lineChartData[type]
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+/* 样式保持不变 */
 .dashboard-editor-container {
   padding: 32px;
   background-color: rgb(240, 242, 245);

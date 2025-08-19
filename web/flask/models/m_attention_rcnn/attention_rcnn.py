@@ -117,7 +117,7 @@ def running_training():
 
 def run_prediction(file_path):
     sample_folder = file_path
-    MODEL_PATH = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_attention_rcnn/saved/attention_rcnn_model.pth"
+    MODEL_PATH = "./models/m_attention_rcnn/saved/attention_rcnn_model.pth"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = AttentionRCNN(

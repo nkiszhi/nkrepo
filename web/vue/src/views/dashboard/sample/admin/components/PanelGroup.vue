@@ -8,11 +8,17 @@
         <div class="card-panel-description">
           <div class="card-panel-info flex-container">  
             <span class="card-panel-text">总数量：</span>  
-            <count-to :start-val="0" :end-val="4174.7" :duration="2600" class="card-panel-num" />  
+            <!-- 动态显示总数量（转换为万条） -->
+            <count-to 
+              :start-val="0" 
+              :end-val="totalCount" 
+              :duration="2600" 
+              class="card-panel-num" 
+            />  
             <span class="card-panel-text">万条</span>  
           </div>  
           <div class="card-panel-text">
-            统计日期：2012年6月-2024年12月
+            统计日期：{{ dateRange.total }}
           </div>
         </div>
       </div>
@@ -25,11 +31,17 @@
         <div class="card-panel-description">
           <div class="card-panel-info flex-container">  
             <span class="card-panel-text">近一年数量：</span>  
-            <count-to :start-val="0" :end-val="19.7" :duration="2600" class="card-panel-num" />  
+            <!-- 动态显示近一年数量（转换为万条） -->
+            <count-to 
+              :start-val="0" 
+              :end-val="recentCount" 
+              :duration="2600" 
+              class="card-panel-num" 
+            />  
             <span class="card-panel-text">万条</span>  
           </div>  
           <div class="card-panel-text">
-            统计日期：2024年1月-2024年12月
+            统计日期：{{ dateRange.recent }}
           </div>
         </div>
       </div>
@@ -39,10 +51,44 @@
 
 <script>
 import CountTo from 'vue-count-to'
+// 导入生成的JS数据文件
+import chartData from '@/data/chart_data.js'
 
 export default {
   components: {
     CountTo
+  },
+  data() {
+    return {
+      // 从JS数据中获取统计信息
+      summary: chartData.summary,
+      // 年份数据（用于计算日期范围）
+      yearData: chartData.lineChartData.total_amount.date_data
+    }
+  },
+  computed: {
+    // 总数量（转换为万条，保留1位小数）
+    totalCount() {
+      return (this.summary.total_samples / 10000).toFixed(1)
+    },
+    // 近一年数量（转换为万条，保留1位小数）
+    recentCount() {
+      return (this.summary.recent_year_samples / 10000).toFixed(1)
+    },
+    // 日期范围计算
+    dateRange() {
+      // 总日期范围：取年份数据的第一个和最后一个
+      const firstYear = this.yearData[0]?.replace('年', '') || ''
+      const lastYear = this.yearData[this.yearData.length - 1]?.replace('年', '') || ''
+      
+      // 近一年日期范围：当前年份的1月到12月
+      const currentYear = this.summary.current_year
+      
+      return {
+        total: firstYear && lastYear ? `${firstYear}年1月-${lastYear}年12月` : '暂无数据',
+        recent: `${currentYear}年1月-${currentYear}年12月`
+      }
+    }
   },
   methods: {
     handleSetLineChartData(type) {
@@ -53,6 +99,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* 样式保持不变 */
 .panel-group {
   margin-top: 18px;
 
@@ -128,8 +175,7 @@ export default {
   .card-panel-num {  
     line-height: 18px;  
     color: rgba(0, 0, 0, 0.45);  
-    /* 使用vw单位设置字体大小，可以根据需要调整基数 */  
-    font-size: 0.8vw; /* 示例值，根据设计需求调整 */  
+    font-size: 0.8vw; /* 保持响应式字体 */  
     margin-bottom: 12px;  
   }  
     }

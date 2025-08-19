@@ -1,22 +1,20 @@
 <template>  
-  <main> <!-- 新的根元素 -->  
+  <main>
     <div class="text-center">  
       <h2 class="text-primary">基于可信度评估的多模型恶意域名检测</h2>  
       <p class="text-muted text-secondary">南开大学反病毒实验室NKAMG</p>  
     </div>  
   
-    <div class="input-container"> <!-- 新的 input 容器 -->  
+    <div class="input-container">
       <input type="text" class="input-text" placeholder="请输入待测域名..." v-model="inputValue" name="url" />  
       <button type="button" class="btn btn-outline-primary" @click="checkInput" name="detect-url">  
-        <!-- 嵌入搜索图标 -->  
         <svg xmlns="http://www.w3.org/2000/svg" width="35px" height="35px" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">  
           <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>  
         </svg>   
       </button>  
     </div>  
 
-    <div class="result" >  
-      
+    <div class="result">  
       <div v-if="isFailed" class="result-failed">  
         <div class="result-content">  
           <svg-icon icon-class="failed" class="result-icon" />  
@@ -28,12 +26,12 @@
       <div v-if="isSuccessed" class="result-success">  
         <div class="result-content">  
           <svg-icon   
-      :icon-class="resultMessage === '危险' ? 'danger' : 'success'"   
-      class="result-icon"   
-    />  
+            :icon-class="resultMessage === '危险' ? 'danger' : 'success'"   
+            class="result-icon"   
+          />  
           <span class="result-status">{{ resultMessage  }}</span>  
         </div>
-		<div class="container"> 
+        <div class="container"> 
           <table class="table table-sm" style="margin-bottom: 0;text-align: center;">  
             <thead>  
               <tr>  
@@ -53,11 +51,10 @@
               </tr>  
             </tbody>  
           </table> 
-          </div>  
+        </div>  
       </div>  
     </div>
-      
-  </main> <!-- 新的根元素结束 -->  
+  </main>
 </template> 
 
 <script>  
@@ -66,15 +63,64 @@ import axios from 'axios';
 export default {  
   data() {  
     return {  
-      inputValue: '', // 绑定输入框的值  
-      resultMessage: '', // 临时保存判断结果，用于判断是否显示结果区域  
-      isFailed: false, // 标记检测是否失败  
+      inputValue: '',  
+      resultMessage: '',  
+      isFailed: false,  
       isSuccessed: false,
-      failureReason: '', // 保存失败的具体原因 
+      failureReason: '', 
       resultData: [],  
+      apiBaseUrl: 'http://xxxx:5005' // 默认地址，防止配置读取失败
     };  
   },  
+  created() {
+    // 在组件创建时读取配置文件
+    this.loadConfig();
+  },
   methods: {  
+    // 加载配置文件
+    async loadConfig() {
+      try {
+        // 相对路径解析：从当前vue文件出发，向上找到new_flask目录下的config.ini
+        // 路径解析：../../..//config.ini
+        // 解释：从domain.vue所在目录(/vue/src/views/detect/)向上返回到项目根目录，再进入new_flask目录
+        const response = await axios.get('/config.ini', {
+          responseType: 'text'
+        });
+        
+        // 解析INI格式内容
+        const configContent = response.data;
+        const lines = configContent.split('\n');
+        let inApiSection = false;
+        
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          // 查找[api]部分
+          if (trimmedLine === '[api]') {
+            inApiSection = true;
+            continue;
+          }
+          
+          // 在[api]部分下查找baseUrl配置
+          if (inApiSection && trimmedLine.startsWith('baseUrl')) {
+            const parts = trimmedLine.split('=');
+            if (parts.length >= 2) {
+              this.apiBaseUrl = parts[1].trim();
+              console.log('从配置文件加载API地址:', this.apiBaseUrl);
+              break;
+            }
+          }
+          
+          // 遇到其他部分则退出查找
+          if (inApiSection && trimmedLine.startsWith('[')) {
+            break;
+          }
+        }
+      } catch (error) {
+        console.warn('加载配置文件失败，使用默认API地址:', error.message);
+        // 继续使用默认地址
+      }
+    },
+    
     checkInput() {  
       // 清除之前的结果  
       this.resultMessage = '';  
@@ -93,30 +139,26 @@ export default {
         this.isFailed = true;  
         this.failureReason = '域名中必须包含至少一个点（.）！';  
       } else {  
-       // 如果输入有效，发送请求到 Flask 后端 
-        
-        axios.post('http://10.134.2.27:5005/api/detect', { url: this.inputValue })  
+        // 使用从配置文件读取的API地址  
+        axios.post(`${this.apiBaseUrl}/api/detect_url`, { url: this.inputValue })  
           .then(response => {  
-            // 处理成功响应  
-          const { status, result } = response.data;  
-          if (status === '1') {  
-            this.isSuccessed = true
-            this.resultMessage = '危险'; // 只需要一个消息提示即可  
-            this.resultData = result; // 保存后端返回的 message 字典数组  
-          } else {  
-            this.isSuccessed = true
-            this.resultMessage = '安全'; // 只需要一个消息提示即可  
-            this.resultData = result; // 保存后端返回的 message 字典数组  
+            const { status, result } = response.data;  
+            if (status === '1') {  
+              this.isSuccessed = true
+              this.resultMessage = '危险';  
+              this.resultData = result;  
+            } else {  
+              this.isSuccessed = true
+              this.resultMessage = '安全';  
+              this.resultData = result;  
             }  
           })  
           .catch(error => {  
-            // 处理请求失败  
             console.error(error);  
             this.isFailed = true;  
             this.failureReason = '请求后端时发生错误：' + error.message;  
           });  
       }  
-  
     }  
   }  
 };   
@@ -124,95 +166,74 @@ export default {
 
 <style scoped>  
 .text-center {  
-  /* 文本居中的样式 */  
   text-align: center;  
 }  
   
 .input-container {  
-  /* 使用Flexbox布局使子元素居中 */  
   display: flex;  
-  justify-content: center; /* 水平居中 */  
-  align-items: center; /* 垂直居中（如果.input-container有高度） */  
-  height: 100px; /* 为垂直居中设置一个高度，或者根据需要调整 */  
-  margin-top: 10px; /* 与上方的元素间隔一些距离 */  
+  justify-content: center;  
+  align-items: center;  
+  height: 100px;  
+  margin-top: 10px;  
 }  
   
 .input-text {  
-  /* 输入框的样式 */  
-  width: 800px; /* 设置输入框的宽度 */  
-  height: 50px; /* 设置输入框的高度 */  
-  padding: 5px; /* 设置内边距 */  
-  border-radius: 5px; /* 设置边框圆角 */  
-  border: 1px solid #ccc; /* 设置边框 */  
+  width: 800px;  
+  height: 50px;  
+  padding: 5px;  
+  border-radius: 5px;  
+  border: 1px solid #ccc;  
 }  
+
 .result-content {  
   display: flex;  
   justify-content: center;
-  align-items: center; /* 垂直居中 */  
+  align-items: center;  
 }  
-.result-inner {  
-  /* 使用Flexbox使图标和文本居中 */  
-  display: flex;  
-  align-items: center; /* 垂直居中 */  
-  justify-content: center;
-}  
-  
+
 .result-icon {  
-  /* 假设你的图标是SVG，并且你想设置它的大小为32x32像素 */  
   width: 40px;  
   height: 40px;  
-  margin-right: 20px; /* 图标和文本之间的间距 */  
+  margin-right: 20px;  
   margin-top:5px;
 }  
 
 .result-status {  
-  /* 状态文本的样式 */  
   font-size: 30px;  
   color: #333;  
   font-weight: bold;  
-  text-justify:center;
 }  
   
 .result-reason {  
-  /* 原因文本的样式 */  
   font-size: 20px;  
   color: #666;  
-  margin-top: 20px; /* 和上面的内容保持一定间距 */  
-  text-align: center; /* 如果需要的话，可以将原因文本左对齐 */  
+  margin-top: 20px;  
+  text-align: center;  
 }  
-.result-reasons {  
-  /* 原因文本的样式 */  
-  font-size: 25px;  
-  color: #13fa22;  
-  margin-top: 10px; 
-  text-align: center; 
-} 
-.table table-sm{
-  text-justify:center;
-}
+
 .container {  
-  /* 这是一个技巧，用于垂直居中 */  
   display: flex;  
-  justify-content: center; /* 水平居中 */  
-  height: 50vh; /* 使用视口高度来确保内容垂直居中 */   
-  padding: 5%; /* 为内容添加一些内边距 */
-  box-sizing: border-box; /* 确保 padding 不会影响到容器的总宽度和高度 */  
+  justify-content: center;  
+  padding: 5%;  
+  box-sizing: border-box;  
 } 
+
 .table {  
   margin-top: 0px;   
-  width: 100%; /* 如果需要，可以设置一个具体的宽度 */  
-  max-width: 800px; /* 限制最大宽度以适应不同屏幕 */  
-  border-collapse: collapse; /* 合并表格边框 */  
-  margin-bottom: 0; /* 继承自你的内联样式 */  
-  text-align: center; /* 继承自你的内联样式 */  
+  width: 100%;  
+  max-width: 800px;  
+  border-collapse: collapse;  
+  margin-bottom: 0;  
+  text-align: center;  
 }
+
 .table th,  
 .table td {  
-  border: 1px solid #ddd; /* 添加边框 */  
-  padding: 8px; /* 添加内边距 */  
+  border: 1px solid #ddd;  
+  padding: 8px;  
 }  
   
 .table th {  
-  background-color: #f2f2f2; /* 添加表头背景色 */  
+  background-color: #f2f2f2;  
 }   
 </style>

@@ -6,6 +6,8 @@
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
+// 导入生成的JS数据文件
+import chartData from '@/data/chart_data.js'
 
 export default {
   mixins: [resize],
@@ -51,7 +53,12 @@ export default {
         },
         legend: {
           left: 'center',
-          bottom: '10'
+          bottom: '10',
+          // 处理标签过多的情况，超出时自动滚动
+          type: 'scroll',
+          pageButtonPosition: 'end',
+          pageIconColor: '#aaa',
+          pageIconInactiveColor: '#ccc'
         },
         series: [
           {
@@ -60,21 +67,22 @@ export default {
             roseType: 'radius',
             radius: [15, 95],
             center: ['50%', '38%'],
-            data: [
-              { value: 189.2, name: 'Generic' },
-              { value: 108.2, name: 'Agent' },
-              { value: 17.7, name: 'IFrame' },
-              { value: 17.2, name: 'Phish' },
-              { value: 13.1, name: 'Redirector' },
-              { value: 11.2, name: 'JScript' },
-              { value: 8.1, name: 'Morstar' },
-              { value: 6.9, name: 'MultiPlug' },
-              { value: 5.9, name: 'LMN' },
-              { value: 5.0, name: 'AntiFW' },
-              { value: 217.6, name: 'Others' }
-            ],
+            // 使用从JS文件中读取的家族Top10+Others数据
+            data: chartData.pieTop10Data.family,
             animationEasing: 'cubicInOut',
-            animationDuration: 2600
+            animationDuration: 2600,
+            // 标签显示优化
+            label: {
+              formatter: '{b}: {d}%',
+              fontSize: 12
+            },
+            // 鼠标悬停时的标签样式
+            emphasis: {
+              label: {
+                fontSize: 14,
+                fontWeight: 'bold'
+              }
+            }
           }
         ]
       })

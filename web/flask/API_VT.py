@@ -1,4 +1,3 @@
-import hashlib  
 import os
 import requests
 import time
@@ -6,119 +5,132 @@ from io import BytesIO
 from requests_toolbelt.multipart import encoder
 import json
 
-
-
 class VTAPI:
+    def __init__(self, api_key):
+        self.api_key = api_key  
 
-    def post_url(self,sample_file_path,api_key):
-    
-        with open(sample_file_path, 'rb') as file:  
-          file_data = file.read()  
-        # 创建一个多部分表单编码器  
-        boundary = '------WebKitFormBoundary7MA4YWxkTrZu0gW'  
-        form_fields = [  
-            ('file', ('file', BytesIO(file_data), 'application/octet-stream'))  
-        ]  
-        multipart_data = encoder.MultipartEncoder(fields=form_fields, boundary=boundary)  
+    def post_url(self, sample_file_path):  
+        if not os.path.exists(sample_file_path):
+            print(f"警告：上传文件不存在 {sample_file_path}，跳过上传")
+            return None
+
+        try:
+            with open(sample_file_path, 'rb') as file:  
+                file_data = file.read()  
+        except Exception as e:
+            print(f"读取上传文件失败: {str(e)}")
+            return None
+
+        form_fields = [('file', ('file', BytesIO(file_data), 'application/octet-stream'))]  
+        multipart_data = encoder.MultipartEncoder(fields=form_fields)
         multipart_header = {  
             'Content-Type': multipart_data.content_type,  
-            'x-apikey': api_key,  
+            'x-apikey': self.api_key,  # 使用实例变量
             'Accept': 'application/json'  
         }  
-   
-        upload_url = 'https://www.virustotal.com/api/v3/files'  
-        response = requests.post(upload_url, data=multipart_data.to_string(), headers=multipart_header)  
-        response.raise_for_status()  
-   
-        upload_response = response.json()  
-        scan_id = upload_response['data']['id']  
-        print(f"Scan ID: {scan_id}")
-        return scan_id
-        
-    
 
-    def get_API_result_detection(self, sha256, api_key, sample_dir_path):
-        vt = VTAPI()
+        upload_url = 'https://www.virustotal.com/api/v3/files'  
+        try:
+            response = requests.post(
+                upload_url, 
+                data=multipart_data, 
+                headers=multipart_header, 
+                timeout=30
+            )  
+            response.raise_for_status()
+            return response.json()['data']['id']
+        except requests.exceptions.RequestException as e:
+            print(f"VT上传失败: {str(e)}")
+            return None
+
+    def get_API_result_detection(self, sha256, sample_dir_path):  
         result_file_path = os.path.join(sample_dir_path, f'{sha256}.json')
-        sample_file_path = os.path.join(sample_dir_path, f'{sha256}')
-    
         if os.path.exists(result_file_path):
             return result_file_path 
-        else:
-            scan_id = vt.post_url(sample_file_path, api_key)
-            url_detection = f'https://www.virustotal.com/api/v3/files/{sha256}'
-            headers = {'x-apikey': api_key, 'Accept': 'application/json'}  
-        
-            while True:  
-                try:  
-                    response = requests.get(url_detection, headers=headers)  
-                    if response.status_code == 200:  
-                        report = response.json()
-                    
-                        if 'data' in report and 'attributes' in report['data']:  
-                            last_analysis_results = report['data']['attributes']['last_analysis_results']  
+
+        url_detection = f'https://www.virustotal.com/api/v3/files/{sha256}'
+        headers = {'x-apikey': self.api_key, 'Accept': 'application/json'} 
+        max_attempts = 20
+        attempts = 0
+
+        while attempts < max_attempts:  
+            try:  
+                response = requests.get(url_detection, headers=headers, timeout=10)  
+                
+                if response.status_code == 200:  
+                    report = response.json()
+                    if 'data' in report and 'attributes' in report['data']:  
+                        last_analysis = report['data']['attributes'].get('last_analysis_results', {})  
                         
-                            if last_analysis_results not in (None, {}):
-                                # 格式化保存 JSON
-                                with open(result_file_path, 'w', encoding='utf-8') as result_file:  
-                                    json.dump(report, result_file, 
-                                            indent=4, 
-                                            ensure_ascii=False,
-                                            sort_keys=False)    
-                                print(f'已格式化保存 {sha256}.json 到 {result_file_path}')  
-                                return result_file_path  
-                            else:  
-                                print("等待扫描完成...")  
-                                time.sleep(10)
+                        if last_analysis:  
+                            os.makedirs(sample_dir_path, exist_ok=True)
+                            with open(result_file_path, 'w', encoding='utf-8') as f:  
+                                json.dump(report, f, indent=4, ensure_ascii=False)  
+                            return result_file_path  
                         else:  
-                            print("无效的 API 响应结构")  
-                            return None
+                            print(f"等待VT扫描结果（{attempts}/{max_attempts}）...")  
+                            time.sleep(8)
+                            attempts += 1
                     else:  
-                        print(f"获取结果失败，状态码：{response.status_code}")  
-                        return None  # 这里应该退出循环
-                except requests.exceptions.RequestException as e:  
-                    print(f'检测发生错误 {sha256}: {e}')  
-                    return {'error': str(e)}
-
-
-            
-    def get_API_result_behaviour(self, sha256, api_key, sample_dir_path):
-        vt = VTAPI()
-        result_file_path = os.path.join(sample_dir_path, f'{sha256}_behaviour_summary.json')
-        sample_file_path = os.path.join(sample_dir_path, f'{sha256}') 
+                        print("VT响应结构无效")  
+                        return None
+                        
+                elif response.status_code == 404:  
+                    print(f"VT无该文件记录: {sha256}")  
+                    return None
+                    
+                else:  
+                    print(f"VT查询失败，状态码: {response.status_code}")  
+                    return None
+                    
+            except Exception as e:  
+                print(f"VT检测查询错误: {str(e)}")  
+                attempts += 1
+                time.sleep(8)
         
+        print(f"超过最大尝试次数，VT扫描未完成")
+        return None
+
+    def get_API_result_behaviour(self, sha256, sample_dir_path):  
+        result_file_path = os.path.join(sample_dir_path, f'{sha256}_behaviour_summary.json')
         if os.path.exists(result_file_path):
             return result_file_path
-        else:
-            scan_id = vt.post_url(sample_file_path,api_key)
-            url_behavuours = f'https://www.virustotal.com/api/v3/files/{sha256}/behaviour_summary' 
-            headers = {'x-apikey': api_key}  
+
+        url = f'https://www.virustotal.com/api/v3/files/{sha256}/behaviour_summary' 
+        headers = {'x-apikey': self.api_key}  # 使用实例变量
+        try:  
+            response = requests.get(url, headers=headers, timeout=10)  
             
-            try:  
-                response = requests.get(url_behavuours, headers=headers)  
-                if response.status_code == 200:  
-                    # 格式化保存行为摘要
-                    behaviour_data = response.json()
-                    with open(result_file_path, 'w', encoding='utf-8') as result_file:
-                        json.dump(behaviour_data, result_file, 
-                                  indent=4, 
-                                  ensure_ascii=False,
-                                  sort_keys=False)
-                    
-                    print(f'已格式化保存 {sha256}_behaviour_summary.json 到 {result_file_path}')  
-                    return result_file_path  
-                else:  
-                    print(f'请求失败，状态码：{response.status_code}')  
-                    return None
-            except requests.exceptions.RequestException as e:  
-                print(f'检测发生错误 {sha256}: {e}')  
-                return {'error': str(e)}
+            if response.status_code == 200:  
+                os.makedirs(sample_dir_path, exist_ok=True)
+                with open(result_file_path, 'w', encoding='utf-8') as f:  
+                    json.dump(response.json(), f, indent=4, ensure_ascii=False)  
+                return result_file_path  
+                
+            elif response.status_code == 404:  
+                print(f"VT无行为报告记录: {sha256}")  
+                return None
+                
+            else:  
+                print(f"行为报告请求失败: {response.status_code}")  
+                return None
+                
+        except Exception as e:  
+            print(f"行为报告查询错误: {str(e)}")  
+            return None
 
-
-
-
-   
-
-
-
-  
+    def get_summary(self, sha256):  
+        try:
+            url = f'https://www.virustotal.com/api/v3/files/{sha256}'
+            headers = {'x-apikey': self.api_key}  # 使用实例变量
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    'last_analysis_stats': data['data']['attributes'].get('last_analysis_stats', {}),
+                    'reputation': data['data']['attributes'].get('reputation', 0)
+                }
+            return None
+        except Exception as e:
+            print(f"获取VT摘要失败: {str(e)}")
+            return None

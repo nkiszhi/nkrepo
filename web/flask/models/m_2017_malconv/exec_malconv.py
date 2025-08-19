@@ -48,7 +48,7 @@ def run_prediction(file_path):
     model = Malconv(max_len=200000, win_size=500, vocab_size=256)
 
     # 模型权重路径
-    model_path = '/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2017_malconv/saved/malconv_best.pth'
+    model_path = './models/m_2017_malconv/saved/malconv_best.pth'
 
     # 检查模型权重文件
     if os.path.exists(model_path):

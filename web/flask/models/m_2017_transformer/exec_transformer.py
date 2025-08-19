@@ -83,7 +83,7 @@ def run_prediction(file_path):
     """Transformer 模型预测函数（单文件版本）"""
     device = 'cpu'  # 强制使用 CPU
     model = TransformerClassifier()
-    model_path = '/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2017_transformer/saved/transformer_classifier.pth'
+    model_path = './models/m_2017_transformer/saved/transformer_classifier.pth'
     
     # 安全加载模型（修正 FutureWarning）
     if not os.path.exists(model_path):

@@ -6,6 +6,8 @@
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
+// 导入生成的JS数据文件
+import chartData from '@/data/chart_data.js'
 
 export default {
   mixins: [resize],
@@ -51,7 +53,15 @@ export default {
         },
         legend: {
           left: 'center',
-          bottom: '10'
+          bottom: '10',
+          // 支持滚动，避免平台类别过多时溢出
+          type: 'scroll',
+          pageButtonPosition: 'end',
+          pageIconColor: '#666',
+          pageIconInactiveColor: '#ccc',
+          pageTextStyle: {
+            color: '#999'
+          }
         },
         series: [
           {
@@ -60,21 +70,28 @@ export default {
             roseType: 'radius',
             radius: [15, 95],
             center: ['50%', '38%'],
-            data: [
-              { value: 279.2, name: 'Win32' },
-              { value: 110.9, name: 'Script' },
-              { value: 53.8, name: 'VBS' },
-              { value: 47.5, name: 'JS' },
-              { value: 34.7, name: 'HTML' },
-              { value: 18.5, name: 'Multi' },
-              { value: 17.6, name: 'PDF' },
-              { value: 10.2, name: 'MSIL' },
-              { value: 5.6, name: 'NSIS' },
-              { value: 4.6, name: 'MSOffice' },
-              { value: 17.2, name: 'Others' }
-            ],
+            // 从JS文件读取platform的Top10+Others数据
+            data: chartData.pieTop10Data.platform,
             animationEasing: 'cubicInOut',
-            animationDuration: 2600
+            animationDuration: 2600,
+            // 平台名称标签优化
+            label: {
+              formatter: '{b}: {d}%',
+              fontSize: 12,
+              // 长名称自动截断
+              overflow: 'truncate',
+              ellipsis: '...',
+              width: 100 // 标签最大宽度
+            },
+            // 鼠标悬停时显示完整名称
+            emphasis: {
+              label: {
+                fontSize: 14,
+                fontWeight: 'bold',
+                overflow: 'none', // 取消截断
+                width: 'auto'
+              }
+            }
           }
         ]
       })
