@@ -1,0 +1,19 @@
+{
+  "generated": "2026-02-01T16:16:59.899370",
+  "statistics": {
+    "downloaded": 1,
+    "failed": 0,
+    "skipped": 23,
+    "total_size": 14911
+  },
+  "categories": {
+    "packers": {
+      "count": 0,
+      "rules": []
+    },
+    "crypters": {
+      "count": 0,
+      "rules": []
+    }
+  }
+}

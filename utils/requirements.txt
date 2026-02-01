@@ -1,0 +1,109 @@
+# ============================================================================
+# NKREPO Malware Analysis Utilities - Requirements
+# ============================================================================
+# Python 3.8+ required
+#
+# Install all:     pip install -r requirements.txt
+# Install minimal: pip install -r requirements.txt --only-binary :all:
+# ============================================================================
+
+# ============================================================================
+# Core PE Analysis (Required for all tools)
+# ============================================================================
+# LIEF - Modern PE parser (packer detector, hash calculator)
+lief>=0.14.0
+
+# pefile - Classic PE parser (hash calculator, imphash support)
+pefile>=2024.8.26
+
+# ============================================================================
+# YARA Integration (Required for YARA scanner)
+# ============================================================================
+# YARA rule engine
+yara-python>=4.3.0
+
+# ============================================================================
+# Hash Calculation (Optional but recommended)
+# ============================================================================
+# SSDEEP - Fuzzy hashing for similarity detection
+# Note: May require Visual C++ Build Tools on Windows
+ssdeep>=3.4
+
+# TLSH - Trend Micro Locality Sensitive Hash
+# More robust than SSDEEP for large files
+py-tlsh>=4.7.2
+
+# ============================================================================
+# Additional Utilities (Optional)
+# ============================================================================
+# Progress bars for batch processing
+tqdm>=4.65.0
+
+# JSON/CSV handling (usually built-in but explicit version)
+# No need to install - uses built-in json and csv modules
+
+# ============================================================================
+# Installation Notes
+# ============================================================================
+#
+# Windows Installation:
+# --------------------
+# Basic tools (no compilation needed):
+#   pip install lief pefile yara-python tqdm
+#
+# SSDEEP on Windows (requires Visual C++ Build Tools):
+#   1. Install Visual C++ Build Tools from:
+#      https://visualstudio.microsoft.com/downloads/
+#   2. pip install ssdeep
+#
+# TLSH on Windows:
+#   pip install py-tlsh
+#
+# Linux Installation:
+# ------------------
+# Ubuntu/Debian:
+#   sudo apt-get install libfuzzy-dev
+#   pip install -r requirements.txt
+#
+# CentOS/RHEL:
+#   sudo yum install ssdeep-devel
+#   pip install -r requirements.txt
+#
+# macOS Installation:
+# ------------------
+#   brew install ssdeep
+#   pip install -r requirements.txt
+#
+# Minimal Installation (no fuzzy hashing):
+# ----------------------------------------
+# If you have issues with ssdeep/tlsh, install without them:
+#   pip install lief pefile yara-python tqdm
+#
+# The tools will work but fuzzy hashing features will be disabled.
+#
+# ============================================================================
+# Tool Requirements Matrix
+# ============================================================================
+#
+# packer_detector.py:
+#   Required: lief
+#   Optional: none
+#
+# windows_packer_scanner.py:
+#   Required: lief
+#   Optional: none
+#
+# yara_packer_scanner.py:
+#   Required: yara-python, lief
+#   Optional: none
+#
+# pe_hash_calculator.py:
+#   Required: none (works with built-in hashlib)
+#   Recommended: pefile (for imphash, authentihash, rich header)
+#   Optional: ssdeep, py-tlsh (for fuzzy hashes)
+#
+# collect_yara_rules.py:
+#   Required: none (uses urllib)
+#   Optional: none
+#
+# ============================================================================
