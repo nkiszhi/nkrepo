@@ -1,16 +1,197 @@
-flask>3.1.1
-flask-cors>6.0.0
+# ============================================================================
+# NKREPO - Malware Repository System
+# Unified Requirements for All Components
+# ============================================================================
+# Python 3.8+ required
+# Ubuntu 22.04 Installation: See INSTALLATION_UBUNTU.md in web/ directory
+#
+# Quick Install:
+#   pip install -r requirements.txt
+#
+# Components Covered:
+#   - Flask Web Backend (web/flask/)
+#   - Malware Analysis Utilities (utils/)
+#   - Machine Learning Models (web/flask/models/)
+#   - Data Processing Scripts (download/, db/)
+# ============================================================================
+
+# ============================================================================
+# Web Framework & API
+# ============================================================================
+flask>=3.1.0
+flask-cors>=5.0.1
 bcrypt==4.3.0
+
+# ============================================================================
+# Database & Data Processing
+# ============================================================================
 PyMySQL==1.1.1
 pandas==2.2.3
 numpy==1.26.3
-matplotlib==3.9.4
-scikit-learn==1.5.2
-scipy==1.13.1
-xgboost==2.1.4
-torch>2.7.1-rc1
+
+# ============================================================================
+# Deep Learning Frameworks
+# ============================================================================
+# PyTorch and related packages
+# Note: torch>2.7.1 is not available yet, using stable 2.5.1
+# For GPU support: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+torch>=2.5.1
 torch-geometric==2.6.1
 torchvision==0.20.1
-requests>2.32.4
+
+# Triton (for optimized PyTorch operations)
+triton==3.1.0
+
+# ============================================================================
+# Machine Learning & Scientific Computing
+# ============================================================================
+scikit-learn==1.5.2
+scipy==1.13.1
+xgboost>=2.1.4
+matplotlib==3.9.4
+h5py==3.12.1
+networkx==3.2.1
+sympy==1.13.1
+joblib==1.4.2
+
+# ============================================================================
+# Malware Analysis & PE File Tools
+# ============================================================================
+# PE file parsing and analysis
+pefile>=2024.8.26
+lief>=0.14.0
+
+# YARA rule scanning
+# Ubuntu: sudo apt install libyara-dev
+# Windows: Download from https://github.com/VirusTotal/yara-python
+yara-python>=4.3.0
+
+# Fuzzy hashing for similarity detection
+# Ubuntu: sudo apt install libfuzzy-dev
+# Windows: May require Visual C++ Build Tools
+ssdeep>=3.4
+
+# TLSH - Trend Micro Locality Sensitive Hash
+py-tlsh>=4.7.2
+
+# ============================================================================
+# HTTP & API Clients
+# ============================================================================
+requests>=2.32.3
 requests-toolbelt==1.0.0
-tqdm==4.67.1
+
+# ============================================================================
+# Image Processing
+# ============================================================================
+Pillow==11.2.1
+
+# ============================================================================
+# Text Analysis & NLP
+# ============================================================================
+# Domain name analysis for DGA detection
+wordfreq
+tld
+
+# ============================================================================
+# Utilities
+# ============================================================================
+tqdm>=4.65.0
+
+# ============================================================================
+# Installation Notes
+# ============================================================================
+#
+# Ubuntu 22.04 Quick Setup:
+# -------------------------
+# 1. Install system dependencies:
+#    sudo apt update
+#    sudo apt install -y python3 python3-pip python3-venv python3-dev \
+#      build-essential libssl-dev libffi-dev \
+#      libmysqlclient-dev pkg-config \
+#      libfuzzy-dev libyara-dev
+#
+# 2. Create virtual environment:
+#    python3 -m venv venv
+#    source venv/bin/activate
+#
+# 3. Install Python packages:
+#    pip install --upgrade pip setuptools wheel
+#    pip install -r requirements.txt
+#
+# Windows Quick Setup:
+# --------------------
+# 1. Install Python 3.8+ from https://www.python.org/
+#
+# 2. Install Visual C++ Build Tools (for ssdeep):
+#    https://visualstudio.microsoft.com/downloads/
+#
+# 3. Create virtual environment:
+#    python -m venv venv
+#    venv\Scripts\activate.bat
+#
+# 4. Install Python packages:
+#    pip install --upgrade pip setuptools wheel
+#    pip install -r requirements.txt
+#
+# GPU Support (Optional):
+# -----------------------
+# For CUDA 12.1 (NVIDIA GPU):
+#    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#
+# For CUDA 11.8:
+#    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+#
+# For CPU only (smaller download):
+#    pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+#
+# Troubleshooting:
+# ----------------
+# If ssdeep installation fails:
+#   Ubuntu: sudo apt install libfuzzy-dev
+#   Windows: Download prebuilt wheel from https://www.lfd.uci.edu/~gohlke/pythonlibs/
+#
+# If yara-python installation fails:
+#   Ubuntu: sudo apt install libyara-dev
+#   Windows: pip install yara-python-wheels
+#
+# If PyMySQL installation fails:
+#   Ubuntu: sudo apt install libmysqlclient-dev python3-dev
+#   Windows: Ensure Visual C++ Build Tools are installed
+#
+# Memory issues during pip install:
+#   export PIP_NO_CACHE_DIR=1
+#   pip install -r requirements.txt --no-cache-dir
+#
+# ============================================================================
+# Component-Specific Requirements
+# ============================================================================
+#
+# Minimum requirements for each component:
+#
+# Flask Web Backend (web/flask/):
+#   flask, flask-cors, PyMySQL, torch, scikit-learn, pandas, numpy,
+#   pefile, lief, yara-python, requests, Pillow
+#
+# Malware Analysis Utilities (utils/):
+#   lief, pefile, yara-python, ssdeep, py-tlsh, tqdm
+#
+# Machine Learning Models (web/flask/models/):
+#   torch, torch-geometric, torchvision, scikit-learn, xgboost,
+#   numpy, pandas, h5py, networkx
+#
+# Database Scripts (db/):
+#   PyMySQL
+#
+# Download Scripts (download/):
+#   requests, tqdm
+#
+# ============================================================================
+# Version Information
+# ============================================================================
+# Last updated: 2026-02-02
+# Compatible with:
+#   - Python 3.8, 3.9, 3.10, 3.11
+#   - Ubuntu 22.04 LTS
+#   - Windows 10/11
+#   - macOS 12+ (limited testing)
+# ============================================================================
