@@ -6,6 +6,10 @@
 # Application-Specific Files
 # ============================================================================
 
+# SUMMARY and GUIDE
+*_SUMMARY.md
+*_GUIDE.md
+
 # Configuration files with sensitive credentials
 web/flask/config.ini
 config.ini
