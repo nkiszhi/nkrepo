@@ -7,6 +7,7 @@
 # ============================================================================
 
 # Claude files, such as CLAUDE, SUMMARY and GUIDE
+.claude
 CLAUDE.md
 *_SUMMARY.md
 *_GUIDE.md
