@@ -6,6 +6,12 @@
 # Application-Specific Files
 # ============================================================================
 
+# Claude files, such as CLAUDE, SUMMARY and GUIDE
+.claude
+CLAUDE.md
+*_SUMMARY.md
+*_GUIDE.md
+
 # Configuration files with sensitive credentials
 web/flask/config.ini
 config.ini
