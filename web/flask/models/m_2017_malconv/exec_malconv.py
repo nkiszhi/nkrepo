@@ -1,6 +1,14 @@
+import os
+from configparser import ConfigParser
 from models.feature_extraction.extract_feature import scan_load_samples
 from models.m_2017_malconv.train import *
 from models.m_2017_malconv.predict import *
+
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
 
 
 def run_training():
@@ -9,7 +17,7 @@ def run_training():
     - 包括特征提取、数据加载、训练和模型保存。
     """
     # 定义路径和参数
-    base_dir = "E:\Experimental data\dr_data"  # 样本根目录
+    base_dir = TRAINING_DATA  # 样本根目录
     h5_path = "malconv_features.h5"  # HDF5 文件路径
     max_len = 200000  # 最大样本长度
     batch_size = 64  # 批量大小
@@ -48,7 +56,7 @@ def run_prediction(file_path):
     model = Malconv(max_len=200000, win_size=500, vocab_size=256)
 
     # 模型权重路径
-    model_path = '/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2017_malconv/saved/malconv_best.pth'
+    model_path = os.path.join(MODEL_PATH, 'm_2017_malconv', 'saved', 'malconv_best.pth')
 
     # 检查模型权重文件
     if os.path.exists(model_path):

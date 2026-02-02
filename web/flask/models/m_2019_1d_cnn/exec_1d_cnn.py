@@ -4,14 +4,21 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+from configparser import ConfigParser
 from models.m_2019_1d_cnn.feature_extraction.extract_feature import extract_features_1d_cnn, scan_load_samples
 from models.m_2019_1d_cnn.one_d_cnn import OneD_CNN
+
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
 
 # 统一设置 num_classes
 NUM_CLASSES = 2
 
 def run_training():
-    base_dir = r"E:\Experimental data\dr_data"
+    base_dir = TRAINING_DATA
     train_samples = scan_load_samples(base_dir)
     num_epochs = 10
     batch_size = 32
@@ -94,7 +101,7 @@ def run_prediction(file_path):
     device = 'cpu'  # 强制使用 CPU
     input_channels = 1
     model = OneD_CNN(input_channels, NUM_CLASSES)
-    model_path = '/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2019_1d_cnn/saved/1d_cnn_model.pth'  # 实际模型路径
+    model_path = os.path.join(MODEL_PATH, 'm_2019_1d_cnn', 'saved', '1d_cnn_model.pth')  # 实际模型路径
 
     # 1. **安全加载模型（关键修正：显式设置 weights_only=True）**
     if not os.path.exists(model_path):

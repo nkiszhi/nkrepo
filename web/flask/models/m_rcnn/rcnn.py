@@ -1,7 +1,15 @@
+import os
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+from configparser import ConfigParser
 from models.m_rcnn.extract_feature import scan_load_samples, scan_load_prediction_samples, extract_features_rcnn
+
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
 
 
 class RCNN(nn.Module):
@@ -58,7 +66,7 @@ class RCNN(nn.Module):
 
 
 def running_training():
-    SAMPLES_DIR = r"E:\Experimental data\dr_data"
+    SAMPLES_DIR = TRAINING_DATA
     EPOCHS = 10
     LR = 0.001
     BATCH_SIZE = 32
@@ -148,7 +156,7 @@ def running_training():
 
 def run_prediction(file_path):
     predict_SAMPLES_DIR = file_path
-    MODEL_PATH = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_rcnn/saved/rcnn_model.pth"
+    model_file_path = os.path.join(MODEL_PATH, 'm_rcnn', 'saved', 'rcnn_model.pth')
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = RCNN(
@@ -162,9 +170,9 @@ def run_prediction(file_path):
         residual=True
     ).to(device)
     try:
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu'), weights_only=True))
+        model.load_state_dict(torch.load(model_file_path, map_location=torch.device('cpu'), weights_only=True))
     except FileNotFoundError:
-        print(f"Model file {MODEL_PATH} not found. Please train the model first.")
+        print(f"Model file {model_file_path} not found. Please train the model first.")
         return None
 
     model.eval()

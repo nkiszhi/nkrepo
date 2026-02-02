@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -6,12 +7,19 @@ import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image
 from torch.utils.data import TensorDataset, DataLoader
+from configparser import ConfigParser
 
 from models.m_vgg16.extract_feature import scan_load_samples, scan_load_prediction_samples
 
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
+
 # 全局变量
-TRAINING_SAMPLE_DIR = r"E:\Experimental data\dr_data"
-MODEL_PATH = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_vgg16/saved/trained_vgg16_model.pth"
+TRAINING_SAMPLE_DIR = TRAINING_DATA
+MODEL_FILE_PATH = os.path.join(MODEL_PATH, 'm_vgg16', 'saved', 'trained_vgg16_model.pth')
 
 
 def pe_to_image(file_path, image_size=(224, 224)):
@@ -92,7 +100,7 @@ def running_train():
                 running_loss = 0.0
 
     print('Training finished.')
-    torch.save(vgg16.state_dict(), MODEL_PATH)
+    torch.save(vgg16.state_dict(), MODEL_FILE_PATH)
     return
 
 
@@ -114,7 +122,7 @@ def run_prediction(file_path):
         num_ftrs = vgg16.classifier[6].in_features
         vgg16.classifier[6] = nn.Linear(num_ftrs, 2)
 
-        vgg16.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu'), weights_only=True))
+        vgg16.load_state_dict(torch.load(MODEL_FILE_PATH, map_location=torch.device('cpu'), weights_only=True))
         vgg16.eval()
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

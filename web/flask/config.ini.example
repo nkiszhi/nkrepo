@@ -23,17 +23,32 @@ charset = utf8mb4
 vt_key = YOUR_VIRUSTOTAL_API_KEY_HERE
 
 [files]
+# Base directory for NKREPO (update this to your installation path)
+# Linux: /home/username/nkrepo
+# Windows: C:/nkrepo
+base_dir = /home/user/nkrepo
+
 # Path to sample repository (use forward slashes or double backslashes on Windows)
-sample_repo = C:/nkrepo/data/samples
+# Will be used for 5-level SHA256-based storage
+sample_repo = /home/user/nkrepo/data/samples
+
+# ZIP file storage directory for downloads (encrypted with password: infected)
+zip_storage = /home/user/nkrepo/data/zips
 
 # Path to model files
-model_path = C:/nkrepo/web/flask/models
+model_path = /home/user/nkrepo/web/flask/models
 
 # Path to training data
-training_data = C:/nkrepo/web/flask/training_data
+training_data = /home/user/nkrepo/web/flask/training_data
 
-# Upload folder (relative to Flask app)
+# Upload folder (relative to Flask app or absolute path)
 upload_folder = ../vue/uploads
+
+# Feature extraction data files (update if using different paths)
+hmm_add = /home/user/nkrepo/web/flask/data/hmm_matrix.txt
+gib_add = /home/user/nkrepo/web/flask/data/gib_model.pkl
+gramfile_add = /home/user/nkrepo/web/flask/data/2grams.txt
+tld_add = /home/user/nkrepo/web/flask/data/tlds-alpha-by-domain.txt
 
 [security]
 # Secret key for Flask sessions (change this to a random string)

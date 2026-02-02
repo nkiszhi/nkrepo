@@ -4,12 +4,19 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from configparser import ConfigParser
 from models.m_2017_transformer.transformer import TransformerClassifier
 from models.m_2017_transformer.feature_extraction.extract_feature import extract_features_transforms, scan_load_samples
 
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
+
 
 def run_training():
-    train_samples = r"E:\Experimental data\dr_data"
+    train_samples = TRAINING_DATA
 
     # 定义训练样本列表
     num_epochs = 10
@@ -83,7 +90,7 @@ def run_prediction(file_path):
     """Transformer 模型预测函数（单文件版本）"""
     device = 'cpu'  # 强制使用 CPU
     model = TransformerClassifier()
-    model_path = '/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2017_transformer/saved/transformer_classifier.pth'
+    model_path = os.path.join(MODEL_PATH, 'm_2017_transformer', 'saved', 'transformer_classifier.pth')
     
     # 安全加载模型（修正 FutureWarning）
     if not os.path.exists(model_path):

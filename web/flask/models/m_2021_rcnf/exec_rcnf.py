@@ -3,9 +3,16 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset
 import logging
+from configparser import ConfigParser
 from models.m_2021_rcnf.CapsNet import CapsNet
 from models.m_2021_rcnf.RCNF import RCNF
 from models.m_2021_rcnf.extract_feature import scan_load_samples, extract_features_rcnf
+
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +28,7 @@ def run_training():
     └── malicious_unpacked\     （恶意样本，标签1）
     """
     # 硬编码路径
-    base_dir = r"E:\Experimental data\dr_data"
+    base_dir = TRAINING_DATA
     model_save_path = "rcnf_model.pth"
     img_size = 224
     n_estimators = 5
@@ -62,7 +69,7 @@ def run_training():
     logger.info(f"Model saved to {model_save_path}")
 
 def run_prediction(file_path):
-    model_path = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2021_rcnf/saved/rcnf_model.pth"
+    model_path = os.path.join(MODEL_PATH, 'm_2021_rcnf', 'saved', 'rcnf_model.pth')
     img_size = 224
 
     # 1. 加载测试样本

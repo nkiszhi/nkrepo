@@ -7,9 +7,16 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
+from configparser import ConfigParser
 
 from models.m_2021_malconv2.extract_feature import scan_load_samples, extract_features_malconv
 from models.m_2021_malconv2.malconv2 import MalConvGCT
+
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
 
 class TrainDataset(Dataset):
     def __init__(self, features, labels):
@@ -25,7 +32,7 @@ class TrainDataset(Dataset):
 
 def run_training():
     # 配置信息
-    samples_base_dir = "E:\Experimental data\dr_data"
+    samples_base_dir = TRAINING_DATA
     max_len = 16000000
     out_size = 2
     channels = 128
@@ -226,7 +233,7 @@ def run_prediction(file_path):
         ).to(device)
 
         # 加载训练好的模型
-        model_path = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2021_malconv2/saved/malconv_gct_epoch_29.pth"
+        model_path = os.path.join(MODEL_PATH, 'm_2021_malconv2', 'saved', 'malconv_gct_epoch_29.pth')
         # 指定 map_location=torch.device('cpu')
         checkpoint = torch.load(model_path, map_location=torch.device('cpu'), weights_only=False)
         model.load_state_dict(checkpoint['model_state_dict'])

@@ -7,32 +7,41 @@ import shutil
 
 
 config = configparser.ConfigParser()
-  
-config.read('config.ini') 
 
-host = config.get('mysql', 'host')  
-user = config.get('mysql', 'user')  
-passwd = config.get('mysql', 'passwd')  
-db = config.get('mysql', 'db')  
-charset = config.get('mysql', 'charset') 
+config.read('config.ini')
+
+host = config.get('mysql', 'host')
+user = config.get('mysql', 'user')
+passwd = config.get('mysql', 'passwd')
+db = config.get('mysql', 'db')
+charset = config.get('mysql', 'charset')
+
+# Read file paths from config
+SAMPLE_REPO = config.get('files', 'sample_repo')
+UPLOAD_FOLDER_CONFIG = config.get('files', 'upload_folder', fallback='../vue/uploads')
+
+# Resolve upload folder path (relative to this file's directory)
+if os.path.isabs(UPLOAD_FOLDER_CONFIG):
+    UPLOAD_FOLDER = UPLOAD_FOLDER_CONFIG
+else:
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), UPLOAD_FOLDER_CONFIG) 
 
 
 class Databaseoperation:
 
     #文件检测数据库查询
-    def filesha256(self, name):  
-        file_path = '../vue/uploads/%s' % name  
-        with open(file_path, 'rb') as file:  
-            str_sha256 = hashlib.sha256(file.read()).hexdigest()  
-        with open(file_path, 'rb') as file:  
-            str_md5 = hashlib.md5(file.read()).hexdigest()    
-        data_vs = self.mysqlsha256(str_sha256,str_md5)# 注意这里使用 self.mysqlsha256  
-        if data_vs == 0:  
-            # 构造新目录路径  
-            new_dir_path = '../../../data/samples/%s/%s/%s/%s/%s' % (  
-                str_sha256[0], str_sha256[1], str_sha256[2],  
-                str_sha256[3], str_sha256[4] 
-            )  
+    def filesha256(self, name):
+        # Use configured upload folder path
+        file_path = os.path.join(UPLOAD_FOLDER, name)
+        with open(file_path, 'rb') as file:
+            str_sha256 = hashlib.sha256(file.read()).hexdigest()
+        with open(file_path, 'rb') as file:
+            str_md5 = hashlib.md5(file.read()).hexdigest()
+        data_vs = self.mysqlsha256(str_sha256,str_md5)# 注意这里使用 self.mysqlsha256
+        if data_vs == 0:
+            # Build new directory path using configured sample_repo
+            prefix = list(str_sha256[:5])
+            new_dir_path = os.path.join(SAMPLE_REPO, *prefix)  
             # 确保目录存在  
             os.makedirs(new_dir_path, exist_ok=True)  
             # 将文件移动到新目录  

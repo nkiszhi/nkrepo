@@ -1,6 +1,10 @@
-# NKREPO - Malware Repository Query & Detection System
+# CLAUDE.md
 
-NKAMG (Nankai Anti-Malware Group) malware repository system for collecting, storing, and analyzing malware samples with multi-model detection capabilities.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Overview
+
+NKREPO is a malware repository system by NKAMG (Nankai Anti-Malware Group) for collecting, storing, and analyzing malware samples with multi-model detection capabilities.
 
 ## Tech Stack
 
@@ -65,12 +69,29 @@ python count_sample.py
 ## Configuration
 
 **Required:** Create `web/flask/config.ini` before running Flask:
-- `[mysql]`: host, user, passwd, db settings
-- `[API]`: vt_key (VirusTotal API key)
-- `[files]`: model paths, training data paths
+```ini
+[ini]
+ip = 0.0.0.0
+row_per_page = 20
+
+[mysql]
+host = localhost
+user = root
+passwd = password
+db_category = nkrepo_category
+db_family = nkrepo_family
+db_platform = nkrepo_platform
+charset = utf8mb4
+
+[API]
+vt_key = YOUR_VIRUSTOTAL_API_KEY
+
+[files]
+# Model and training data paths
+```
 
 **Vue Environment:**
-- `.env.development` - Dev API proxy
+- `.env.development` - Dev API proxy (localhost:5005)
 - `.env.production` - Production API endpoint
 
 ## Code Conventions
@@ -86,12 +107,27 @@ python count_sample.py
 - Component structure: `<template>` → `<script>` → `<style scoped>`
 - Axios with interceptors for API calls
 
-## Key Features
+## Architecture
 
-- **File Detection:** 10 ensemble ML classifiers + 10 deep learning models
-- **DGA Detection:** Multi-model malicious domain classification
-- **Sample Search:** Query by SHA256, category, family, or platform
-- **VirusTotal Integration:** External scanning via API v3
+### Detection Pipeline
+- **DGA Detection:** `dga_detection.py` - Multi-model domain classification using classifiers in `feeds/`
+- **File Detection:** `ensemble_predict.py` - Ensemble of 10 deep learning models:
+  - MalConv, MalConv2, Transformer, EMBER, 1D-CNN, InceptionV3, RCNF, Attention-RCNN, RCNN, VGG16
+- **ML Classifiers:** `feeds/` - SVM, KNN, Random Forest, XGBoost, AdaBoost, GBDT, Decision Tree, Logistic Regression, Naive Bayes, LSTM
+
+### Database Schema
+- 256 sharded sample tables: `sample_00` through `sample_ff` (by SHA256 prefix)
+- Separate databases for category (`db_category`), family (`db_family`), platform (`db_platform`)
+- Daily domain tables: `domain_YYYYMMDD`
+
+### API Endpoints (Flask)
+- `POST /api/detect` - DGA domain detection
+- `POST /upload` - File upload and ensemble prediction
+- `POST /query_category|family|platform|sha256` - Sample search
+- `GET /detail_*/<sha256>` - Sample details
+- `GET /download_*/<sha256>` - Download sample (7z encrypted, password: "infected")
+- `GET /detection_API/<sha256>` - VirusTotal detection results
+- `GET /behaviour_API/<sha256>` - VirusTotal behavior analysis
 
 ## Testing
 

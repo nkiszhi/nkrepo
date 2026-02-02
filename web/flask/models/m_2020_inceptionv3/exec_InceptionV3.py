@@ -7,13 +7,20 @@ from torch.utils.data import DataLoader, TensorDataset
 from PIL import Image
 import numpy as np
 import torchvision.models as models
+from configparser import ConfigParser
 from models.m_2020_inceptionv3.extract_feature import extract_features_rcnf, scan_load_samples, scan_load_prediction_samples, \
     extract_features_v3
 from models.m_2020_inceptionv3.InceptionV3 import InceptionV3Model
 
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
+
 # 训练函数
 def run_training():
-    malimg_dataset_path = r"E:\Experimental data\dr_data"
+    malimg_dataset_path = TRAINING_DATA
     features, labels = extract_features_v3(scan_load_samples(malimg_dataset_path))
 
     if features is None or labels is None:
@@ -73,7 +80,7 @@ def run_prediction(file_path):
 
     model = InceptionV3Model()
     try:
-        state_dict = torch.load('/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_2020_inceptionv3/saved/inceptionv3_malware_model.pth', weights_only=True,map_location=torch.device('cpu'))
+        state_dict = torch.load(os.path.join(MODEL_PATH, 'm_2020_inceptionv3', 'saved', 'inceptionv3_malware_model.pth'), weights_only=True,map_location=torch.device('cpu'))
         # 过滤掉辅助分类器的权重
         filtered_state_dict = {k: v for k, v in state_dict.items() if 'AuxLogits' not in k}
         model.load_state_dict(filtered_state_dict, strict=False)
@@ -107,7 +114,7 @@ def run_prediction(file_path):
 
 # 预测函数
 def run_training():
-    malimg_dataset_path = r"E:\Experimental data\dr_data"
+    malimg_dataset_path = TRAINING_DATA
     features, labels = extract_features_rcnf(scan_load_samples(malimg_dataset_path))
 
     if features is None or labels is None:

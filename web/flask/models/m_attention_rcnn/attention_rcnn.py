@@ -1,10 +1,18 @@
 import logging
+import os
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset
 import pefile
+from configparser import ConfigParser
 from models.m_attention_rcnn.extract_feature import scan_load_samples, scan_load_prediction_samples, extract_features_attention_rcnn
+
+# Load configuration
+cp = ConfigParser()
+cp.read(os.path.join(os.path.dirname(__file__), '..', '..', 'config.ini'))
+TRAINING_DATA = cp.get('files', 'training_data')
+MODEL_PATH = cp.get('files', 'model_path')
 
 
 class AttentionRCNN(nn.Module):
@@ -72,7 +80,7 @@ class AttentionRCNN(nn.Module):
 
 
 def running_training():
-    base_dir = r"E:\Experimental data\dr_data"
+    base_dir = TRAINING_DATA
     EPOCHS = 10
     LR = 0.001
     BATCH_SIZE = 32
@@ -117,7 +125,7 @@ def running_training():
 
 def run_prediction(file_path):
     sample_folder = file_path
-    MODEL_PATH = "/home/nkamg/nkrepo/zjp/multi_model_detection_system/new_flask/models/m_attention_rcnn/saved/attention_rcnn_model.pth"
+    model_file_path = os.path.join(MODEL_PATH, 'm_attention_rcnn', 'saved', 'attention_rcnn_model.pth')
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = AttentionRCNN(
@@ -135,7 +143,7 @@ def run_prediction(file_path):
     try:
         # 加载模型（添加 map_location 避免设备错误）
         checkpoint = torch.load(
-            MODEL_PATH, 
+            model_file_path,
             map_location=torch.device('cpu'),  # 确保加载到 CPU（兼容无 GPU 环境）
             weights_only=True
         )

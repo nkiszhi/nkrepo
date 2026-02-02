@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python pe_hash_calculator.py:*)",
       "Bash(python:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(test:*)",
+      "Bash(chmod:*)"
     ]
   }
 }
