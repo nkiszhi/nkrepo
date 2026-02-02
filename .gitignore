@@ -6,7 +6,8 @@
 # Application-Specific Files
 # ============================================================================
 
-# SUMMARY and GUIDE
+# Claude files, such as CLAUDE, SUMMARY and GUIDE
+CLAUDE.md
 *_SUMMARY.md
 *_GUIDE.md
 
