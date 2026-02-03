@@ -1,6 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+Ensemble Prediction Module
+
+Combines predictions from multiple ML/DL models for malware detection.
+"""
 
 import os
 import sys
+from pathlib import Path
+
+# Add multi_scan directory to path for model imports
+_MULTI_SCAN_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_MULTI_SCAN_DIR))
+
 from models.m_2017_malconv.exec_malconv import run_prediction as malconv_run_prediction
 from models.m_2017_transformer.exec_transformer import run_prediction as transformer_run_prediction
 from models.m_2018_ember.exec_ember import run_prediction as ember_run_prediction

@@ -62,15 +62,18 @@ class Config:
     # Utils directory
     UTILS_DIR = PROJECT_ROOT / "utils"
 
+    # Multi-scan directory (ML/DL models and detection)
+    MULTI_SCAN_DIR = PROJECT_ROOT / "multi_scan"
+
     # Web directories
     VUE_DIR = WEB_DIR / "vue"
     UPLOAD_FOLDER = VUE_DIR / "uploads"
 
-    # Flask subdirectories
-    MODEL_PATH = FLASK_DIR / "models"
-    TRAINING_DATA = FLASK_DIR / "training_data"
-    FEEDS_DIR = FLASK_DIR / "feeds"
-    DATA_FILES_DIR = FLASK_DIR / "data"
+    # Multi-scan subdirectories
+    MODEL_PATH = MULTI_SCAN_DIR / "models"
+    TRAINING_DATA = MULTI_SCAN_DIR / "training_data"
+    FEEDS_DIR = MULTI_SCAN_DIR / "feeds"
+    DATA_FILES_DIR = MULTI_SCAN_DIR / "data"
 
     # DGA detection data files
     HMM_ADD = DATA_FILES_DIR / "hmm_matrix.txt"
@@ -251,11 +254,14 @@ class Config:
         print(f"\nProject Root: {cls.PROJECT_ROOT}")
         print(f"Config File:  {cls.CONFIG_FILE} ({'loaded' if cls._config_loaded else 'not found'})")
         print(f"\n--- Directories ---")
-        print(f"Sample Repo:  {cls.SAMPLE_REPO}")
-        print(f"ZIP Storage:  {cls.ZIP_STORAGE}")
-        print(f"Upload Dir:   {cls.UPLOAD_FOLDER}")
-        print(f"Model Path:   {cls.MODEL_PATH}")
-        print(f"Data Files:   {cls.DATA_FILES_DIR}")
+        print(f"Sample Repo:   {cls.SAMPLE_REPO}")
+        print(f"ZIP Storage:   {cls.ZIP_STORAGE}")
+        print(f"Upload Dir:    {cls.UPLOAD_FOLDER}")
+        print(f"DB Dir:        {cls.DB_DIR}")
+        print(f"Multi-Scan:    {cls.MULTI_SCAN_DIR}")
+        print(f"Model Path:    {cls.MODEL_PATH}")
+        print(f"Feeds Dir:     {cls.FEEDS_DIR}")
+        print(f"Data Files:    {cls.DATA_FILES_DIR}")
         print(f"\n--- Server ---")
         print(f"Host:         {cls.HOST_IP}:{cls.PORT}")
         print(f"\n--- Database ---")
@@ -275,6 +281,8 @@ PROJECT_ROOT = Config.PROJECT_ROOT
 FLASK_DIR = Config.FLASK_DIR
 WEB_DIR = Config.WEB_DIR
 DATA_DIR = Config.DATA_DIR
+DB_DIR = Config.DB_DIR
+MULTI_SCAN_DIR = Config.MULTI_SCAN_DIR
 
 # File paths (as strings for compatibility)
 SAMPLE_REPO = str(Config.SAMPLE_REPO)
