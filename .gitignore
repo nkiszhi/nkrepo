@@ -1,0 +1,79 @@
+__pycache__/
+*.log ## log files
+*.npy
+*.py[cod]
+*.ipynb
+*.exe
+*.apk
+*.db
+json.txt
+DATA
+kefan_script
+az_zip
+az_unzip
+todo.txt
+test*
+*.swo
+database_record
+*.bak
+*.tmp
+*.swp
+.DS_Store
+temp*
+samples
+smj
+smjtest
+dianwang
+informationOfSamples
+bhy
+nkrepo
+nkrepo_2021
+jianwen
+chengkai
+*.rar
+
+# web folder
+web1
+old_web
+match_result.txt
+scan_result.csv
+ServerScript
+
+#yara
+network
+mal_trainset
+yararules
+norm_trainset
+
+# pic
+*.graffle
+
+# scan folder
+*log.txt
+*result.txt
+*/kav/*.txt
+
+# nkvs
+resume
+torrents
+transmission.log
+url_list.txt
+stats.json
+url_list.txt
+config
+
+# nkaz
+latest*
+nohup.out
+old
+
+# nkvt
+keys.txt
+*json
+json_files
+log
+keys.txt
+
+# control folder
+t.py
+tt.py
