@@ -1,99 +1,132 @@
 # -*- coding: utf-8 -*-
 """
-Created on 2020/8/16 12:38
+DGA Detection Module
+
+Multi-model detection system for Domain Generation Algorithm (DGA) domains.
+Uses ensemble of ML classifiers to detect malicious domains.
 
 __author__ = "Congyi Deng"
 __copyright__ = "Copyright (c) 2021 NKAMG"
 __license__ = "GPL"
 __contact__ = "dengcongyi0701@163.com"
-
-Description:
-
 """
-from importlib import import_module
-import warnings
-warnings.filterwarnings('ignore')
+
 import os
-import sys
-from configparser import ConfigParser
+import warnings
+from importlib import import_module
+
+warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-# 多模型检测
+from config import (
+    MODEL_PATH, TRAIN_ADD, TEST_ADD,
+    ALGORITHM_LIST, CLASSIFIER_LIST
+)
+
+
 class MultiModelDetection:
+    """
+    Multi-model DGA detection system.
+
+    Uses ensemble of ML classifiers to detect malicious domains.
+    Results are aggregated using a voting mechanism.
+    """
 
     def __init__(self):
-        self._cfg = dict()
-        cp = ConfigParser()
-        cp.read('config.ini')
-        self._cfg["model_path"] = cp.get('files', 'model_path')
-        self._cfg["train_add"] = cp.get('files', 'train_add')
-        self._cfg["test_add"] = cp.get('files', 'test_add')
-        self._cfg["algorithm_lst"] = cp.get('feeds', 'algorithm_list').split(',')
-        self._cfg["classifier_lst"] = cp.get('feeds', 'classifier_list').split(',')
+        """Initialize the multi-model detection system."""
+        self._config = {
+            "model_path": MODEL_PATH,
+            "train_add": TRAIN_ADD,
+            "test_add": TEST_ADD,
+            "algorithm_list": ALGORITHM_LIST,
+            "classifier_list": CLASSIFIER_LIST
+        }
+        self._classifiers = []
         self._load_models()
 
     def _load_models(self):
-        """
-        将训练好的多个模型全部预加载到内存中
-        :return:
-        """
-        self._clf_list = list()
-        for i in range(len(self._cfg["algorithm_lst"])):
-            aMod = import_module('feeds.'+self._cfg["algorithm_lst"][i])
-            aClass = getattr(aMod, self._cfg["classifier_lst"][i])
-            clf = aClass()
-            clf.load(self._cfg["model_path"])
-            self._clf_list.append(clf)
+        """Load all trained models into memory."""
+        for i, algorithm in enumerate(self._config["algorithm_list"]):
+            module = import_module(f'feeds.{algorithm}')
+            classifier_class = getattr(module, self._config["classifier_list"][i])
+            classifier = classifier_class()
+            classifier.load(self._config["model_path"])
+            self._classifiers.append(classifier)
 
-    def multi_predict_single_dname(self, dname):
+    def multi_predict_single_dname(self, domain_name):
         """
-        对单个域名进行多模型协同检测
-        :param dname: 域名
-        :return: (基础检测结果——字典类型，多模型检测结果——0安全1危险2可疑）
+        Perform multi-model detection on a single domain name.
+
+        Args:
+            domain_name: The domain name to analyze
+
+        Returns:
+            Tuple of (base_results_dict, final_result)
+            - base_results_dict: Results from each classifier
+            - final_result: 0=safe, 1=malicious, 2=suspicious
         """
-        base_result = dict()
-        base_result_t = dict()
-        for i in range(len(self._clf_list)):
-            clf_pre_rs = self._clf_list[i].predict_single_dname(self._cfg["model_path"], dname)
-            base_result[self._cfg["classifier_lst"][i][:-10]] = [clf_pre_rs[0], format(clf_pre_rs[1], '.4f'),
-                                                                 clf_pre_rs[2]]
-            base_result_t[self._cfg["classifier_lst"][i][:-10]] = clf_pre_rs if clf_pre_rs[2] > 0.01 \
-                else (2, clf_pre_rs[1], clf_pre_rs[2])
-        rs_list = list()
-        for j in base_result_t:
-            rs_list.append(base_result_t[j][0])
-        if len(set(rs_list)) == 1:
-            if list(base_result_t.values())[0][0] != 2:
-                result = list(base_result_t.values())[0][0]
-                return base_result, result
-            elif list(base_result_t.values())[0][0] == 2:  # 所有模型都表现很差
-                sort_result = sorted(base_result_t.items(), key=lambda base_result_t: base_result_t[1][2], reverse=True)
-                if sort_result[0][1][2] <= 0.5:
-                    result = 2
+        base_result = {}
+        base_result_temp = {}
+
+        # Run prediction on all classifiers
+        for i, classifier in enumerate(self._classifiers):
+            prediction = classifier.predict_single_dname(
+                self._config["model_path"], domain_name
+            )
+            classifier_name = self._config["classifier_list"][i][:-10]
+
+            base_result[classifier_name] = [
+                prediction[0],
+                format(prediction[1], '.4f'),
+                prediction[2]
+            ]
+
+            # Mark low-confidence predictions as suspicious
+            if prediction[2] > 0.01:
+                base_result_temp[classifier_name] = prediction
+            else:
+                base_result_temp[classifier_name] = (2, prediction[1], prediction[2])
+
+        # Aggregate results
+        result_list = [v[0] for v in base_result_temp.values()]
+
+        # All classifiers agree
+        if len(set(result_list)) == 1:
+            first_result = list(base_result_temp.values())[0][0]
+            if first_result != 2:
+                return base_result, first_result
+            else:
+                # All models show low confidence - use best confidence
+                sorted_results = sorted(
+                    base_result_temp.items(),
+                    key=lambda x: x[1][2],
+                    reverse=True
+                )
+                if sorted_results[0][1][2] <= 0.5:
+                    return base_result, 2
                 else:
-                    result = sort_result[0][1][0]
-                return base_result, result
+                    return base_result, sorted_results[0][1][0]
 
-        new_result = dict()
-        for k in base_result_t:
-            if base_result_t[k][0] != 2:
-                new_result[k] = base_result_t[k]
-        sort_result = sorted(new_result.items(), key=lambda new_result: new_result[1][2], reverse=True)
-        if sort_result[0][1][2] <= 0.5:
-            result = 2
+        # Classifiers disagree - filter out suspicious and use best confidence
+        confident_results = {
+            k: v for k, v in base_result_temp.items() if v[0] != 2
+        }
+        sorted_results = sorted(
+            confident_results.items(),
+            key=lambda x: x[1][2],
+            reverse=True
+        )
+
+        if sorted_results[0][1][2] <= 0.5:
+            final_result = 2
         else:
-            result = sort_result[0][1][0]
+            final_result = sorted_results[0][1][0]
 
-        return base_result, result
+        return base_result, final_result
 
 
 if __name__ == "__main__":
-    # muldec = MultiModelDetection()
-
     from feeds.knn import KNNClassifier
+
     clf = KNNClassifier()
-    clf.train(r"./data/model", r"./data/features/train_features.csv")
-#    clf.load(r"./data/model")
-#    clf.predict(r"./data/model", r"./data/features/test_features.csv")
-
-
+    clf.train("./data/model", "./data/features/train_features.csv")

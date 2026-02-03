@@ -16,14 +16,14 @@ from config import (
 )
 
 from dga_detection import MultiModelDetection
-from FLASK_MYSQL import Databaseoperation
+from db_operations import DatabaseOperation
 from file_detect import EXEDetection
 from ensemble_predict import run_ensemble_prediction
-from API_VT import VTAPI
+from api_vt import VirusTotalAPI
 
-querier = Databaseoperation()
-VT = VTAPI()
-detector = MultiModelDetection()
+db_ops = DatabaseOperation()
+vt_api = VirusTotalAPI()
+dga_detector = MultiModelDetection()
  
 
 
@@ -50,7 +50,7 @@ def detect_domain():
     if url is None:      
         return jsonify({'error': 'URL is required'}), 400      
       
-    result = detector.multi_predict_single_dname(url)    
+    result = dga_detector.multi_predict_single_dname(url)    
     if isinstance(result, tuple) and len(result) == 2:    
         # 假设 result 是一个包含字典和整数的元组  
         result_dict, status_code = result    
@@ -107,7 +107,7 @@ def upload_file():
     for key, value in exe_result.items():  
         if isinstance(value, np.ndarray):  
             exe_result[key] = value.tolist() 
-    query_result = querier.filesha256(original_filename)
+    query_result = db_ops.filesha256(original_filename)
     if len(query_result) == 2:
         query_result = convert_to_serializable(query_result) 
         query_result_inner = query_result[0]
@@ -146,12 +146,12 @@ def uploaded_file(filename):
 def get_detection_API(sha256):
     # Build sample directory path using Config utility
     sample_dir_path = str(Config.get_sample_dir(sha256))
-    json_file_path = VT.get_API_result_detection(sha256, api_key, sample_dir_path)
+    json_file_path = vt_api.get_API_result_detection(sha256, api_key, sample_dir_path)
     print(json_file_path)
     if json_file_path == 500:
        return 500
     else:
-      up_mysql=querier.update_db(sha256)
+      up_mysql=db_ops.update_db(sha256)
 #      print(f"成功更新，影响了 {up_mysql} 行")
       with open(json_file_path, 'r') as file:  
           scan_result = json.load(file)  
@@ -180,7 +180,7 @@ def get_detection_API(sha256):
 def get_behaviour_API(sha256):
     # Build sample directory path using Config utility
     sample_dir_path = str(Config.get_sample_dir(sha256))
-    behaviour_file_path = VT.get_API_result_behaviour(sha256, api_key, sample_dir_path)  # 确保 VT.get_API_result_behaviour 正确处理并返回文件路径或错误信息 
+    behaviour_file_path = vt_api.get_API_result_behaviour(sha256, api_key, sample_dir_path)  # 确保 vt_api.get_API_result_behaviour 正确处理并返回文件路径或错误信息 
     print(behaviour_file_path)
     try:  
         with open(behaviour_file_path, 'r') as file:  
@@ -257,7 +257,7 @@ def query_virus_category():
         # 构造完整的表名  
         table_name = 'category_' + table_name
         database = db1
-        sha256s = querier.mysql(table_name,database)
+        sha256s = db_ops.mysql(table_name,database)
         if not sha256s == 0:
             return jsonify({'sha256s': sha256s})
         else:
@@ -266,7 +266,7 @@ def query_virus_category():
 @app.route('/detail_category/<sha256>')  
 def get_detail_category(sha256):
     print(sha256)
-    query_result = querier.mysqlsha256s(sha256) 
+    query_result = db_ops.mysqlsha256s(sha256) 
     query_result = convert_to_serializable(query_result)
     query_result_inner = query_result[0]
     query_result_dict = {  'MD5': query_result_inner[1],  'SHA256': query_result_inner[2],  '类型': query_result_inner[5],  '平台': query_result_inner[6],  '家族': query_result_inner[7],'文件拓展名':query_result_inner[10] , '脱壳':query_result_inner[11],'SSDEEP':query_result_inner[12] }
@@ -298,7 +298,7 @@ def query_virus_family():
         # 构造完整的表名  
         table_name = 'family_' + table_name  
         database = db2
-        sha256s = querier.mysql(table_name,database)
+        sha256s = db_ops.mysql(table_name,database)
         if not sha256s == 0:
             return jsonify({'sha256s': sha256s})
         else:
@@ -307,7 +307,7 @@ def query_virus_family():
   
 @app.route('/detail_family/<sha256>')  
 def get_detail_family(sha256):
-    query_result = querier.mysqlsha256s(sha256) 
+    query_result = db_ops.mysqlsha256s(sha256) 
     query_result = convert_to_serializable(query_result)
     print(query_result)
     print('111111111111111111')
@@ -340,7 +340,7 @@ def query_virus_platform():
         # 构造完整的表名  
         table_name = 'platform_' + table_name  
         database = db3
-        sha256s = querier.mysql(table_name,database)
+        sha256s = db_ops.mysql(table_name,database)
         if not sha256s == 0:
             return jsonify({'sha256s': sha256s})
         else:
@@ -348,7 +348,7 @@ def query_virus_platform():
               
 @app.route('/detail_platform/<sha256>')  
 def get_detail_platform(sha256):
-    query_result = querier.mysqlsha256s(sha256) 
+    query_result = db_ops.mysqlsha256s(sha256) 
     query_result = convert_to_serializable(query_result)
     query_result_inner = query_result[0]
     query_result_dict = {  'MD5': query_result_inner[1],  'SHA256': query_result_inner[2],  '类型': query_result_inner[5],  '平台': query_result_inner[6],  '家族': query_result_inner[7],'文件拓展名':query_result_inner[10] , '脱壳':query_result_inner[11],'SSDEEP':query_result_inner[12] }
@@ -376,7 +376,7 @@ def query_virus_SHA256():
         sha256 = data.get('tableName', None)  
         if not sha256:  
             return jsonify({'error': '未提供类型名称'}), 400
-        query_result = querier.mysqlsha256s(sha256)
+        query_result = db_ops.mysqlsha256s(sha256)
         query_result = convert_to_serializable(query_result)
         query_result_inner = query_result[0]
         query_result_dict = {  'MD5': query_result_inner[1],  'SHA256': query_result_inner[2],  '类型': query_result_inner[5],  '平台': query_result_inner[6],  '家族': query_result_inner[7],'文件拓展名':query_result_inner[10] , '脱壳':query_result_inner[11],'SSDEEP':query_result_inner[12]}
