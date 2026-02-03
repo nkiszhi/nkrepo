@@ -1,0 +1,42 @@
+# NKREPO Flask Configuration Template
+# Copy this file to config.ini and configure for your environment
+#
+# NOTE: All file paths are automatically computed by config.py based on
+# the project root directory. You do NOT need to configure paths manually.
+
+[ini]
+# Server IP address (use 0.0.0.0 for all interfaces, 127.0.0.1 for localhost only)
+ip = 127.0.0.1
+port = 5005
+row_per_page = 20
+
+[mysql]
+# MySQL database configuration
+host = localhost
+port = 3306
+user = root
+passwd = your_password_here
+db = nkrepo
+db_category = nkrepo_category
+db_family = nkrepo_family
+db_platform = nkrepo_platform
+charset = utf8mb4
+
+[API]
+# VirusTotal API key (get from https://www.virustotal.com/gui/my-apikey)
+vt_key = YOUR_VIRUSTOTAL_API_KEY_HERE
+
+[security]
+# Secret key for Flask sessions (change this to a random string)
+secret_key = change_this_to_a_random_secret_key
+
+# CORS allowed origins (comma-separated)
+cors_origins = http://localhost:9528,http://127.0.0.1:9528
+
+[feeds]
+# DGA Detection ML Algorithm and Classifier Configuration
+# Comma-separated list of algorithm module names (in feeds/ directory)
+algorithm_list = knn,svm,randomforest,decisiontree,naivebayes,logisticregression,adaboost,gbdt,xgboost
+
+# Comma-separated list of classifier class names (must match algorithm_list order)
+classifier_list = KNNClassifier,SVMClassifier,RandomForestClassifier,DecisionTreeClassifier,NaiveBayesClassifier,LogisticRegressionClassifier,AdaBoostClassifier,GBDTClassifier,XGBoostClassifier

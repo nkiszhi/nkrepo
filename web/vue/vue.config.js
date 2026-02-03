@@ -36,7 +36,18 @@ module.exports = {
       warnings: false,
       errors: true
     },
-    before: require('./mock/mock-server.js')
+    before: require('./mock/mock-server.js'),
+    // Proxy configuration for Flask backend
+    // Uncomment this to proxy API requests to Flask server
+    proxy: {
+      '/dev-api': {
+        target: 'http://127.0.0.1:5005',  // Flask backend URL
+        changeOrigin: true,
+        pathRewrite: {
+          '^/dev-api': ''  // Remove /dev-api prefix when forwarding
+        }
+      }
+    }
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
