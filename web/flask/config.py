@@ -157,7 +157,8 @@ class Config:
         """
         Get the full path to a sample file based on its SHA256 hash.
 
-        Uses 5-level directory structure: ab/cd/ef/12/abcdef1234567890...
+        Uses 5-level directory structure: a/b/c/d/e/abcdef1234567890...
+        (first 5 individual characters of SHA256)
 
         Args:
             sha256: The SHA256 hash of the sample
@@ -165,7 +166,7 @@ class Config:
         Returns:
             Path object pointing to the sample file
         """
-        return cls.SAMPLE_REPO / sha256[0:2] / sha256[2:4] / sha256[4:6] / sha256[6:8] / sha256
+        return cls.SAMPLE_REPO / sha256[0] / sha256[1] / sha256[2] / sha256[3] / sha256[4] / sha256
 
     @classmethod
     def get_sample_dir(cls, sha256: str) -> Path:
@@ -178,7 +179,7 @@ class Config:
         Returns:
             Path object pointing to the sample directory
         """
-        return cls.SAMPLE_REPO / sha256[0:2] / sha256[2:4] / sha256[4:6] / sha256[6:8]
+        return cls.SAMPLE_REPO / sha256[0] / sha256[1] / sha256[2] / sha256[3] / sha256[4]
 
     @classmethod
     def get_table_name(cls, sha256: str) -> str:

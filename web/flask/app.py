@@ -1,38 +1,28 @@
-from flask import Flask, request, send_from_directory, url_for, jsonify,abort
-from configparser import ConfigParser
-from dga_detection import MultiModelDetection
-from flask_cors import CORS 
-import numpy as np 
+from flask import Flask, request, send_from_directory, url_for, jsonify, abort
+from flask_cors import CORS
+import numpy as np
 import json
-import os 
+import os
+import pymysql
+import subprocess
+
+# Import configuration from config.py
+from config import (
+    Config,
+    HOST_IP, PORT, ROW_PER_PAGE,
+    SAMPLE_REPO, ZIP_STORAGE, UPLOAD_FOLDER,
+    DB_CATEGORY as db1, DB_FAMILY as db2, DB_PLATFORM as db3,
+    VT_API_KEY as api_key
+)
+
+from dga_detection import MultiModelDetection
 from FLASK_MYSQL import Databaseoperation
 from file_detect import EXEDetection
 from ensemble_predict import run_ensemble_prediction
-import pymysql
-import subprocess
 from API_VT import VTAPI
-from flask import Flask, request, jsonify, abort
 
-cp = ConfigParser()
-querier =  Databaseoperation()
+querier = Databaseoperation()
 VT = VTAPI()
-cp.read('config.ini')
-HOST_IP = cp.get('ini', 'ip')
-host = cp.get('mysql', 'host')
-db1 = cp.get('mysql', 'db_category')
-db2 = cp.get('mysql', 'db_family')
-db3 = cp.get('mysql', 'db_platform')
-user = cp.get('mysql', 'user')
-passwd = cp.get('mysql', 'passwd')
-charset = cp.get('mysql', 'charset')
-api_key = cp.get('API','vt_key')
-#PORT = int(cp.get('ini', 'port'))
-ROW_PER_PAGE = int(cp.get('ini', 'row_per_page'))
-
-# Read file paths from config
-SAMPLE_REPO = cp.get('files', 'sample_repo')
-ZIP_STORAGE = cp.get('files', 'zip_storage', fallback=os.path.join(os.path.dirname(SAMPLE_REPO), 'zips'))
-UPLOAD_FOLDER_CONFIG = cp.get('files', 'upload_folder', fallback='../vue/uploads')
 detector = MultiModelDetection()
  
 
@@ -81,11 +71,7 @@ def detect_domain():
         return jsonify({'error': 'Unexpected result format'}), 500  
 #==========================================================================================================
 #文件检测
-# Use configured upload folder, resolve to absolute path if relative
-if os.path.isabs(UPLOAD_FOLDER_CONFIG):
-    UPLOAD_FOLDER = UPLOAD_FOLDER_CONFIG
-else:
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), UPLOAD_FOLDER_CONFIG)
+# Upload folder is configured in config.py
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def convert_to_serializable(obj):  
@@ -158,10 +144,9 @@ def uploaded_file(filename):
 #API查询detection
 @app.route('/detection_API/<sha256>')
 def get_detection_API(sha256):
-#    VT_API = request.args.get('VT_API')
-    # Build sample directory path using configured sample_repo
-    sample_dir_path = os.path.join(SAMPLE_REPO, sha256[0], sha256[1], sha256[2], sha256[3], sha256[4])
-    json_file_path = VT.get_API_result_detection(sha256,api_key,sample_dir_path)
+    # Build sample directory path using Config utility
+    sample_dir_path = str(Config.get_sample_dir(sha256))
+    json_file_path = VT.get_API_result_detection(sha256, api_key, sample_dir_path)
     print(json_file_path)
     if json_file_path == 500:
        return 500
@@ -193,8 +178,8 @@ def get_detection_API(sha256):
 #API查询  behaviour
 @app.route('/behaviour_API/<sha256>')
 def get_behaviour_API(sha256):
-    # Build sample directory path using configured sample_repo
-    sample_dir_path = os.path.join(SAMPLE_REPO, sha256[0], sha256[1], sha256[2], sha256[3], sha256[4])
+    # Build sample directory path using Config utility
+    sample_dir_path = str(Config.get_sample_dir(sha256))
     behaviour_file_path = VT.get_API_result_behaviour(sha256, api_key, sample_dir_path)  # 确保 VT.get_API_result_behaviour 正确处理并返回文件路径或错误信息 
     print(behaviour_file_path)
     try:  
@@ -215,11 +200,10 @@ def get_behaviour_API(sha256):
       
 #==============================================================================================================================
 def get_file_path_and_zip(sha256, zip_password="infected"):
-    prefix = list(sha256[:5])
-    # Build file path using configured sample_repo
-    file_path = os.path.join(SAMPLE_REPO, *prefix, sha256)
-    # Build ZIP file path using configured zip_storage
-    zip_file_path = os.path.join(ZIP_STORAGE, sha256 + '.zip')  
+    # Build file path using Config utility
+    file_path = str(Config.get_sample_path(sha256))
+    # Build ZIP file path using Config utility
+    zip_file_path = str(Config.get_zip_path(sha256))  
   
     # 检查原始文件是否存在  
     if os.path.exists(file_path):  
@@ -415,4 +399,4 @@ def download_file_sha256(sha256):
 
 
 if __name__ == '__main__':
-    app.run(host=HOST_IP, port=5005, threaded=True)
+    app.run(host=HOST_IP, port=PORT, threaded=True)
