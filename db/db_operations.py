@@ -8,6 +8,13 @@ Provides database operations for malware sample management including:
 - Database CRUD operations
 """
 
+import sys
+from pathlib import Path
+
+# Add web/flask to path for config import
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_PROJECT_ROOT / "web" / "flask"))
+
 import pymysql
 import hashlib
 import os
@@ -182,7 +189,3 @@ class DatabaseOperation:
                 return query_result if query_result else 0
         finally:
             conn.close()
-
-
-# Backward compatibility alias
-Databaseoperation = DatabaseOperation

@@ -1,5 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+File Detection Module
+
+Provides file-based malware detection using ensemble of ML/DL models.
+"""
+
 import sys
 import logging
+from pathlib import Path
+
+# Add multi_scan directory to path
+_MULTI_SCAN_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_MULTI_SCAN_DIR))
+
 from ensemble_predict import run_ensemble_prediction
 
 logging.basicConfig(level=logging.INFO)

@@ -11,6 +11,15 @@ __license__ = "GPL"
 __contact__ = "dengcongyi0701@163.com"
 """
 
+import sys
+from pathlib import Path
+
+# Add paths for imports
+_MULTI_SCAN_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _MULTI_SCAN_DIR.parent
+sys.path.insert(0, str(_PROJECT_ROOT / "web" / "flask"))
+sys.path.insert(0, str(_MULTI_SCAN_DIR))
+
 import os
 import warnings
 from importlib import import_module
@@ -24,7 +33,7 @@ from config import (
 )
 
 
-class MultiModelDetection:
+class DGADetection:
     """
     Multi-model DGA detection system.
 
