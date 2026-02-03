@@ -35,7 +35,7 @@ numpy==1.26.3
 # PyTorch and related packages
 # Note: torch>2.7.1 is not available yet, using stable 2.5.1
 # For GPU support: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-torch>=2.5.1
+torch>=2.8.0
 torch-geometric==2.6.1
 torchvision==0.20.1
 
