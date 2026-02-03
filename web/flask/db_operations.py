@@ -20,7 +20,7 @@ from config import (
 )
 
 
-class Databaseoperation:
+class DatabaseOperation:
     """Database operations for malware sample management."""
 
     def _get_connection(self, database=None):
@@ -182,3 +182,7 @@ class Databaseoperation:
                 return query_result if query_result else 0
         finally:
             conn.close()
+
+
+# Backward compatibility alias
+Databaseoperation = DatabaseOperation
