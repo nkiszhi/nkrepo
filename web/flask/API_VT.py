@@ -113,12 +113,3 @@ class VTAPI:
             except requests.exceptions.RequestException as e:  
                 print(f'检测发生错误 {sha256}: {e}')  
                 return {'error': str(e)}
-
-
-
-
-   
-
-
-
-  
