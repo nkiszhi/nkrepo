@@ -17,16 +17,13 @@ from config import (
 
 from dga_detection import MultiModelDetection
 from db_operations import DatabaseOperation
-from file_detect import EXEDetection
+#from file_detect import EXEDetection
 from ensemble_predict import run_ensemble_prediction
 from api_vt import VirusTotalAPI
 
 db_ops = DatabaseOperation()
 vt_api = VirusTotalAPI()
 dga_detector = MultiModelDetection()
- 
-
-
   
 app = Flask(__name__) 
 CORS(app) 
