@@ -7,8 +7,6 @@
 
 **NKAMG - Nankai Anti-Malware Group**
 
-![NKREPO](docs/nkrepo.png)
-
 ## Overview
 
 NKREPO is a comprehensive malware repository and analysis system that provides:
