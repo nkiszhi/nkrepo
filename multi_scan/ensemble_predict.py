@@ -4,11 +4,16 @@ Ensemble Prediction Module
 
 Combines predictions from multiple ML/DL models for malware detection.
 Supports 10 different deep learning models for PE file analysis.
+
+Uses lazy loading to avoid import errors at module load time.
 """
 
 import os
 import sys
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # Path Configuration
@@ -26,46 +31,88 @@ MODELS_DIR = MULTI_SCAN_DIR / "models"
 TRAIN_FEATURES = FEATURES_DIR / "train_features.csv"
 TEST_FEATURES = FEATURES_DIR / "test_features.csv"
 
-# Add multi_scan directory to path for model imports
-sys.path.insert(0, str(MULTI_SCAN_DIR))
-
 # =============================================================================
-# Model Imports
+# Lazy Model Loading
 # =============================================================================
 
-from models.m_2017_malconv.exec_malconv import run_prediction as malconv_predict
-from models.m_2017_transformer.exec_transformer import run_prediction as transformer_predict
-from models.m_2018_ember.exec_ember import run_prediction as ember_predict
-from models.m_2019_1d_cnn.exec_1d_cnn import run_prediction as cnn_1d_predict
-from models.m_2020_inceptionv3.exec_InceptionV3 import run_prediction as inceptionv3_predict
-from models.m_2021_malconv2.exec_malconv2 import run_prediction as malconv2_predict
-from models.m_2021_rcnf.exec_rcnf import run_prediction as rcnf_predict
-from models.m_attention_rcnn.attention_rcnn import run_prediction as attention_rcnn_predict
-from models.m_rcnn.rcnn import run_prediction as rcnn_predict
-from models.m_vgg16.vgg16 import run_prediction as vgg16_predict
+# Cache for loaded model prediction functions
+_model_cache = {}
 
-# =============================================================================
-# Model Registry
-# =============================================================================
-
-MODELS = [
-    ('MalConv', malconv_predict),
-    ('Transformer', transformer_predict),
-    ('EMBER', ember_predict),
-    ('1D-CNN', cnn_1d_predict),
-    ('InceptionV3', inceptionv3_predict),
-    ('MalConv2', malconv2_predict),
-    ('RCNF', rcnf_predict),
-    ('Attention-RCNN', attention_rcnn_predict),
-    ('RCNN', rcnn_predict),
-    ('VGG16', vgg16_predict)
+# Model configuration: (name, module_path, function_name)
+MODEL_CONFIG = [
+    ('MalConv', 'models.m_2017_malconv.exec_malconv', 'run_prediction'),
+    ('Transformer', 'models.m_2017_transformer.exec_transformer', 'run_prediction'),
+    ('EMBER', 'models.m_2018_ember.exec_ember', 'run_prediction'),
+    ('1D-CNN', 'models.m_2019_1d_cnn.exec_1d_cnn', 'run_prediction'),
+    ('InceptionV3', 'models.m_2020_inceptionv3.exec_InceptionV3', 'run_prediction'),
+    ('MalConv2', 'models.m_2021_malconv2.exec_malconv2', 'run_prediction'),
+    ('RCNF', 'models.m_2021_rcnf.exec_rcnf', 'run_prediction'),
+    ('Attention-RCNN', 'models.m_attention_rcnn.attention_rcnn', 'run_prediction'),
+    ('RCNN', 'models.m_rcnn.rcnn', 'run_prediction'),
+    ('VGG16', 'models.m_vgg16.vgg16', 'run_prediction'),
 ]
 
-# Result labels
+
+def _ensure_path():
+    """Ensure multi_scan directory is in sys.path for model imports."""
+    path_str = str(MULTI_SCAN_DIR)
+    if path_str not in sys.path:
+        sys.path.insert(0, path_str)
+
+
+def _load_model(model_name, module_path, func_name):
+    """
+    Lazily load a model's prediction function.
+
+    Args:
+        model_name: Display name for the model
+        module_path: Import path for the module
+        func_name: Name of the prediction function
+
+    Returns:
+        The prediction function, or None if loading failed
+    """
+    if model_name in _model_cache:
+        return _model_cache[model_name]
+
+    _ensure_path()
+
+    try:
+        import importlib
+        module = importlib.import_module(module_path)
+        func = getattr(module, func_name)
+        _model_cache[model_name] = func
+        logger.debug(f"Successfully loaded model: {model_name}")
+        return func
+    except Exception as e:
+        logger.warning(f"Failed to load model {model_name}: {e}")
+        _model_cache[model_name] = None
+        return None
+
+
+def get_available_models():
+    """
+    Get list of models that can be loaded successfully.
+
+    Returns:
+        List of (model_name, predict_function) tuples for available models
+    """
+    available = []
+    for name, module_path, func_name in MODEL_CONFIG:
+        func = _load_model(name, module_path, func_name)
+        if func is not None:
+            available.append((name, func))
+    return available
+
+# =============================================================================
+# Result Labels
+# =============================================================================
+
 LABEL_MALICIOUS = '恶意'
 LABEL_SAFE = '安全'
 LABEL_PREDICTION_FAILED = '预测失败'
 LABEL_NO_VALID_PREDICTION = '无有效预测'
+LABEL_MODEL_NOT_LOADED = '模型未加载'
 LABEL_ENSEMBLE = '集成结果'
 
 
@@ -87,7 +134,16 @@ def ensemble_prediction(file_path):
     malicious_probs = []
     safe_probs = []
 
-    for model_name, predict_func in MODELS:
+    for model_name, module_path, func_name in MODEL_CONFIG:
+        predict_func = _load_model(model_name, module_path, func_name)
+
+        if predict_func is None:
+            results[model_name] = {
+                "probability": None,
+                "result": LABEL_MODEL_NOT_LOADED
+            }
+            continue
+
         try:
             score = predict_func(file_path)
             if score is not None:
@@ -107,6 +163,7 @@ def ensemble_prediction(file_path):
                     "result": LABEL_PREDICTION_FAILED
                 }
         except Exception as e:
+            logger.error(f"Error running {model_name}: {e}")
             results[model_name] = {
                 "probability": None,
                 "result": f"错误: {str(e)[:50]}"
@@ -175,7 +232,19 @@ if __name__ == "__main__":
     print(f"Models Dir:       {MODELS_DIR}")
     print(f"Train Features:   {TRAIN_FEATURES}")
     print(f"Test Features:    {TEST_FEATURES}")
-    print(f"\nRegistered Models: {len(MODELS)}")
-    for name, _ in MODELS:
-        print(f"  - {name}")
+    print(f"\nConfigured Models: {len(MODEL_CONFIG)}")
+    for name, module_path, _ in MODEL_CONFIG:
+        print(f"  - {name} ({module_path})")
+
+    print("\nTesting model loading...")
+    available = get_available_models()
+    print(f"Successfully loaded: {len(available)}/{len(MODEL_CONFIG)} models")
+    for name, _ in available:
+        print(f"  ✓ {name}")
+
+    failed = set(m[0] for m in MODEL_CONFIG) - set(m[0] for m in available)
+    if failed:
+        print(f"Failed to load:")
+        for name in failed:
+            print(f"  ✗ {name}")
     print("=" * 60)
