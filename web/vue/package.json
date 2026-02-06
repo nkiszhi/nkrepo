@@ -1,49 +1,34 @@
 {
-  "name": "vue-element-admin",
-  "version": "4.4.0",
-  "description": "A magical vue admin. An out-of-box UI solution for enterprise applications. Newest development stack of vue. Lots of awesome features",
-  "author": "Pan <panfree23@gmail.com>",
+  "name": "nkrepo-web",
+  "version": "1.0.0",
+  "description": "NKREPO - Malware Repository and Analysis System Web Interface",
+  "author": "NKAMG (Nankai Anti-Malware Group)",
   "scripts": {
     "dev": "vue-cli-service serve",
     "lint": "eslint --ext .js,.vue src",
     "build:prod": "vue-cli-service build",
     "build:stage": "vue-cli-service build --mode staging",
     "preview": "node build/index.js --preview",
-    "new": "plop",
     "svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml",
     "test:unit": "jest --clearCache && vue-cli-service test:unit",
     "test:ci": "npm run lint && npm run test:unit"
   },
   "dependencies": {
     "axios": "0.18.1",
-    "clipboard": "2.0.4",
-    "codemirror": "5.45.0",
     "core-js": "3.6.5",
-    "driver.js": "0.9.5",
-    "dropzone": "5.5.1",
     "echarts": "4.2.1",
     "echarts-gl": "1.1.1",
     "echarts-map": "3.0.1",
     "element-ui": "2.13.2",
-    "file-saver": "2.0.1",
-    "fuse.js": "3.4.4",
     "js-cookie": "2.2.0",
-    "jsonlint": "1.6.3",
-    "jszip": "3.2.1",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",
     "path-to-regexp": "2.4.0",
-    "screenfull": "4.2.0",
     "script-loader": "0.7.2",
-    "sortablejs": "1.8.4",
-    "tui-editor": "1.3.3",
     "vue": "2.6.10",
     "vue-count-to": "1.0.13",
     "vue-router": "3.0.2",
-    "vue-splitpane": "1.0.4",
-    "vuedraggable": "2.20.0",
-    "vuex": "3.1.0",
-    "xlsx": "0.14.1"
+    "vuex": "3.1.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "4.4.4",
@@ -64,7 +49,6 @@
     "husky": "1.3.1",
     "lint-staged": "8.1.5",
     "mockjs": "1.0.1-beta3",
-    "plop": "2.3.0",
     "runjs": "4.3.2",
     "sass": "1.26.2",
     "sass-loader": "8.0.2",
@@ -78,21 +62,17 @@
     "> 1%",
     "last 2 versions"
   ],
-  "bugs": {
-    "url": "https://github.com/PanJiaChen/vue-element-admin/issues"
-  },
   "engines": {
     "node": ">=8.9",
     "npm": ">= 3.0.0"
   },
   "keywords": [
+    "malware",
+    "analysis",
+    "repository",
     "vue",
-    "admin",
-    "dashboard",
     "element-ui",
-    "boilerplate",
-    "admin-template",
-    "management-system"
+    "nkamg"
   ],
   "license": "MIT",
   "lint-staged": {
@@ -105,9 +85,5 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/PanJiaChen/vue-element-admin.git"
   }
 }
