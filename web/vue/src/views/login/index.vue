@@ -1,18 +1,16 @@
 <template>
- 
   <div class="login-container">
-  
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
+    <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
       <div class="title-container">
         <h4 class="title">基于可信度评估的多模型恶意代码检测系统</h4>
-         <h4 class="title">欢迎您</h4>
+        <h4 class="title">欢迎您</h4>
       </div>
       <el-form-item prop="username">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
         <el-input
-          ref="username"
+          ref="usernameRef"
           v-model="loginForm.username"
           placeholder="Username"
           name="username"
@@ -22,23 +20,23 @@
         />
       </el-form-item>
 
-      <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
+      <el-tooltip v-model:visible="capsTooltip" content="Caps lock is On" placement="right">
         <el-form-item prop="password">
           <span class="svg-container">
             <svg-icon icon-class="password" />
           </span>
           <el-input
             :key="passwordType"
-            ref="password"
+            ref="passwordRef"
             v-model="loginForm.password"
             :type="passwordType"
             placeholder="Password"
             name="password"
             tabindex="2"
             autocomplete="on"
-            @keyup.native="checkCapslock"
+            @keyup="checkCapslock"
             @blur="capsTooltip = false"
-            @keyup.enter.native="handleLogin"
+            @keyup.enter="handleLogin"
           />
           <span class="show-pwd" @click="showPwd">
             <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
@@ -46,24 +44,36 @@
         </el-form-item>
       </el-tooltip>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
+      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.prevent="handleLogin">登录</el-button>
 
       <div style="position:relative">
-        
       </div>
     </el-form>
-
   </div>
 </template>
 
 <script>
+import { ref, reactive, watch, onMounted, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { validUsername } from '@/utils/validate'
-import SocialSign from './components/SocialSignin'
+import { useUserStore } from '@/stores/user'
 
 export default {
   name: 'Login',
-  components: { SocialSign },
-  data() {
+  setup() {
+    const route = useRoute()
+    const router = useRouter()
+    const userStore = useUserStore()
+
+    const loginFormRef = ref(null)
+    const usernameRef = ref(null)
+    const passwordRef = ref(null)
+
+    const loginForm = reactive({
+      username: 'admin',
+      password: '111111'
+    })
+
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
         callback(new Error('Please enter the correct user name'))
@@ -71,6 +81,7 @@ export default {
         callback()
       }
     }
+
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
         callback(new Error('The password can not be less than 6 digits'))
@@ -78,82 +89,19 @@ export default {
         callback()
       }
     }
-    return {
-      loginForm: {
-        username: 'admin',
-        password: '111111'
-      },
-      loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
-      },
-      passwordType: 'password',
-      capsTooltip: false,
-      loading: false,
-      showDialog: false,
-      redirect: undefined,
-      otherQuery: {}
-    }
-  },
-  watch: {
-    $route: {
-      handler: function(route) {
-        const query = route.query
-        if (query) {
-          this.redirect = query.redirect
-          this.otherQuery = this.getOtherQuery(query)
-        }
-      },
-      immediate: true
-    }
-  },
-  created() {
-    // window.addEventListener('storage', this.afterQRScan)
-  },
-  mounted() {
-    if (this.loginForm.username === '') {
-      this.$refs.username.focus()
-    } else if (this.loginForm.password === '') {
-      this.$refs.password.focus()
-    }
-  },
-  destroyed() {
-    // window.removeEventListener('storage', this.afterQRScan)
-  },
-  methods: {
-    checkCapslock(e) {
-      const { key } = e
-      this.capsTooltip = key && key.length === 1 && (key >= 'A' && key <= 'Z')
-    },
-    showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = ''
-      } else {
-        this.passwordType = 'password'
-      }
-      this.$nextTick(() => {
-        this.$refs.password.focus()
-      })
-    },
-    handleLogin() {
-      this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-          this.$store.dispatch('user/login', this.loginForm)
-            .then(() => {
-              this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
-              this.loading = false
-            })
-            .catch(() => {
-              this.loading = false
-            })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
-    },
-    getOtherQuery(query) {
+
+    const loginRules = reactive({
+      username: [{ required: true, trigger: 'blur', validator: validateUsername }],
+      password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+    })
+
+    const passwordType = ref('password')
+    const capsTooltip = ref(false)
+    const loading = ref(false)
+    const redirect = ref(undefined)
+    const otherQuery = ref({})
+
+    const getOtherQuery = (query) => {
       return Object.keys(query).reduce((acc, cur) => {
         if (cur !== 'redirect') {
           acc[cur] = query[cur]
@@ -161,24 +109,70 @@ export default {
         return acc
       }, {})
     }
-    // afterQRScan() {
-    //   if (e.key === 'x-admin-oauth-code') {
-    //     const code = getQueryObject(e.newValue)
-    //     const codeMap = {
-    //       wechat: 'code',
-    //       tencent: 'code'
-    //     }
-    //     const type = codeMap[this.auth_type]
-    //     const codeName = code[type]
-    //     if (codeName) {
-    //       this.$store.dispatch('LoginByThirdparty', codeName).then(() => {
-    //         this.$router.push({ path: this.redirect || '/' })
-    //       })
-    //     } else {
-    //       alert('第三方登录失败')
-    //     }
-    //   }
-    // }
+
+    watch(() => route.query, (query) => {
+      if (query) {
+        redirect.value = query.redirect
+        otherQuery.value = getOtherQuery(query)
+      }
+    }, { immediate: true })
+
+    const checkCapslock = (e) => {
+      const { key } = e
+      capsTooltip.value = key && key.length === 1 && (key >= 'A' && key <= 'Z')
+    }
+
+    const showPwd = () => {
+      if (passwordType.value === 'password') {
+        passwordType.value = ''
+      } else {
+        passwordType.value = 'password'
+      }
+      nextTick(() => {
+        passwordRef.value?.focus()
+      })
+    }
+
+    const handleLogin = () => {
+      loginFormRef.value?.validate(async(valid) => {
+        if (valid) {
+          loading.value = true
+          try {
+            await userStore.login(loginForm)
+            router.push({ path: redirect.value || '/', query: otherQuery.value })
+          } catch (error) {
+            console.error(error)
+          } finally {
+            loading.value = false
+          }
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
+    }
+
+    onMounted(() => {
+      if (loginForm.username === '') {
+        usernameRef.value?.focus()
+      } else if (loginForm.password === '') {
+        passwordRef.value?.focus()
+      }
+    })
+
+    return {
+      loginFormRef,
+      usernameRef,
+      passwordRef,
+      loginForm,
+      loginRules,
+      passwordType,
+      capsTooltip,
+      loading,
+      checkCapslock,
+      showPwd,
+      handleLogin
+    }
   }
 }
 </script>
@@ -304,5 +298,4 @@ $light_gray:#eee;
     }
   }
 }
-
 </style>

@@ -22,9 +22,14 @@ export default {
       default: false
     }
   },
-  methods: {
-    toggleClick() {
-      this.$emit('toggleClick')
+  emits: ['toggleClick'],
+  setup(props, { emit }) {
+    const toggleClick = () => {
+      emit('toggleClick')
+    }
+
+    return {
+      toggleClick
     }
   }
 }

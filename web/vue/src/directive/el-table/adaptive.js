@@ -1,5 +1,3 @@
-import { addResizeListener, removeResizeListener } from 'element-ui/src/utils/resize-event'
-
 /**
  * How to use
  * <el-table height="100px" v-el-height-adaptive-table="{bottomOffset: 30}">...</el-table>
@@ -7,35 +5,39 @@ import { addResizeListener, removeResizeListener } from 'element-ui/src/utils/re
  * bottomOffset: 30(default)   // The height of the table from the bottom of the page.
  */
 
-const doResize = (el, binding, vnode) => {
-  const { componentInstance: $table } = vnode
-
+const doResize = (el, binding) => {
   const { value } = binding
-
-  if (!$table.height) {
-    throw new Error(`el-$table must set the height. Such as height='100px'`)
-  }
-  const bottomOffset = (value && value.bottomOffset) || 30
+  const $table = el.__vueParentComponent?.proxy
 
   if (!$table) return
 
+  const bottomOffset = (value && value.bottomOffset) || 30
+
   const height = window.innerHeight - el.getBoundingClientRect().top - bottomOffset
-  $table.layout.setHeight(height)
-  $table.doLayout()
+
+  // For Element Plus, we need to set the height differently
+  if ($table.setHeight) {
+    $table.setHeight(height)
+  } else if ($table.layout) {
+    $table.layout.setHeight(height)
+    $table.doLayout()
+  }
 }
 
 export default {
-  bind(el, binding, vnode) {
+  mounted(el, binding) {
     el.resizeListener = () => {
-      doResize(el, binding, vnode)
+      doResize(el, binding)
     }
-    // parameter 1 is must be "Element" type
-    addResizeListener(window.document.body, el.resizeListener)
+    // Add resize listener
+    window.addEventListener('resize', el.resizeListener)
+    // Initial resize
+    doResize(el, binding)
   },
-  inserted(el, binding, vnode) {
-    doResize(el, binding, vnode)
+  updated(el, binding) {
+    doResize(el, binding)
   },
-  unbind(el) {
-    removeResizeListener(window.document.body, el.resizeListener)
+  unmounted(el) {
+    window.removeEventListener('resize', el.resizeListener)
   }
 }

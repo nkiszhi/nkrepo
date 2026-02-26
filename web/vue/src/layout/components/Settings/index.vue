@@ -4,11 +4,6 @@
       <h3 class="drawer-title">Page style setting</h3>
 
       <div class="drawer-item">
-        <span>Theme Color</span>
-        <theme-picker style="float: right;height: 26px;margin: -3px 8px 0 0;" @change="themeChange" />
-      </div>
-
-      <div class="drawer-item">
         <span>Open Tags-View</span>
         <el-switch v-model="tagsView" class="drawer-switch" />
       </div>
@@ -28,54 +23,54 @@
 </template>
 
 <script>
-import ThemePicker from '@/components/ThemePicker'
+import { computed } from 'vue'
+import { useSettingsStore } from '@/stores/settings'
 
 export default {
-  components: { ThemePicker },
-  data() {
-    return {}
-  },
-  computed: {
-    fixedHeader: {
+  name: 'Settings',
+  setup() {
+    const settingsStore = useSettingsStore()
+
+    const fixedHeader = computed({
       get() {
-        return this.$store.state.settings.fixedHeader
+        return settingsStore.fixedHeader
       },
       set(val) {
-        this.$store.dispatch('settings/changeSetting', {
+        settingsStore.changeSetting({
           key: 'fixedHeader',
           value: val
         })
       }
-    },
-    tagsView: {
+    })
+
+    const tagsView = computed({
       get() {
-        return this.$store.state.settings.tagsView
+        return settingsStore.tagsView
       },
       set(val) {
-        this.$store.dispatch('settings/changeSetting', {
+        settingsStore.changeSetting({
           key: 'tagsView',
           value: val
         })
       }
-    },
-    sidebarLogo: {
+    })
+
+    const sidebarLogo = computed({
       get() {
-        return this.$store.state.settings.sidebarLogo
+        return settingsStore.sidebarLogo
       },
       set(val) {
-        this.$store.dispatch('settings/changeSetting', {
+        settingsStore.changeSetting({
           key: 'sidebarLogo',
           value: val
         })
       }
-    }
-  },
-  methods: {
-    themeChange(val) {
-      this.$store.dispatch('settings/changeSetting', {
-        key: 'theme',
-        value: val
-      })
+    })
+
+    return {
+      fixedHeader,
+      tagsView,
+      sidebarLogo
     }
   }
 }

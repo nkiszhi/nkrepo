@@ -19,7 +19,9 @@
 import RightPanel from '@/components/RightPanel'
 import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
-import { mapState } from 'vuex'
+import { useAppStore } from '@/stores/app'
+import { useSettingsStore } from '@/stores/settings'
+import { computed } from 'vue'
 
 export default {
   name: 'Layout',
@@ -32,26 +34,35 @@ export default {
     TagsView
   },
   mixins: [ResizeMixin],
-  computed: {
-    ...mapState({
-      sidebar: state => state.app.sidebar,
-      device: state => state.app.device,
-      showSettings: state => state.settings.showSettings,
-      needTagsView: state => state.settings.tagsView,
-      fixedHeader: state => state.settings.fixedHeader
-    }),
-    classObj() {
-      return {
-        hideSidebar: !this.sidebar.opened,
-        openSidebar: this.sidebar.opened,
-        withoutAnimation: this.sidebar.withoutAnimation,
-        mobile: this.device === 'mobile'
-      }
+  setup() {
+    const appStore = useAppStore()
+    const settingsStore = useSettingsStore()
+
+    const sidebar = computed(() => appStore.sidebar)
+    const device = computed(() => appStore.device)
+    const showSettings = computed(() => settingsStore.showSettings)
+    const needTagsView = computed(() => settingsStore.tagsView)
+    const fixedHeader = computed(() => settingsStore.fixedHeader)
+
+    const classObj = computed(() => ({
+      hideSidebar: !sidebar.value.opened,
+      openSidebar: sidebar.value.opened,
+      withoutAnimation: sidebar.value.withoutAnimation,
+      mobile: device.value === 'mobile'
+    }))
+
+    const handleClickOutside = () => {
+      appStore.closeSideBar({ withoutAnimation: false })
     }
-  },
-  methods: {
-    handleClickOutside() {
-      this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
+
+    return {
+      sidebar,
+      device,
+      showSettings,
+      needTagsView,
+      fixedHeader,
+      classObj,
+      handleClickOutside
     }
   }
 }

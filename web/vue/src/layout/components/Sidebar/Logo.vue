@@ -14,6 +14,8 @@
 </template>
 
 <script>
+import { ref } from 'vue'
+
 export default {
   name: 'SidebarLogo',
   props: {
@@ -22,10 +24,13 @@ export default {
       required: true
     }
   },
-  data() {
+  setup() {
+    const title = ref('多模型恶意代码检测系统 ')
+    const logo = ref('https://wpimg.wallstcn.com/69a1c46c-eb1c-4b46-8bd4-e9e686ef5251.png')
+
     return {
-      title: '多模型恶意代码检测系统 ',
-      logo: 'https://wpimg.wallstcn.com/69a1c46c-eb1c-4b46-8bd4-e9e686ef5251.png'
+      title,
+      logo
     }
   }
 }
@@ -36,7 +41,7 @@ export default {
   transition: opacity 1.5s;
 }
 
-.sidebarLogoFade-enter,
+.sidebarLogoFade-enter-from,
 .sidebarLogoFade-leave-to {
   opacity: 0;
 }

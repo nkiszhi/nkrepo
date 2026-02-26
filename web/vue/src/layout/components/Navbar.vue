@@ -10,52 +10,56 @@
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
           <i class="el-icon-caret-bottom" />
         </div>
-        <el-dropdown-menu slot="dropdown">
-          <!-- <router-link to="/profile/index">
-            <el-dropdown-item>Profile</el-dropdown-item>
-          </router-link>
-          <router-link to="/">
-            <el-dropdown-item>Dashboard</el-dropdown-item>
-          </router-link>
-          <a target="_blank" href="https://github.com/PanJiaChen/vue-element-admin/">
-            <el-dropdown-item>Github</el-dropdown-item>
-          </a>
-          <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">
-            <el-dropdown-item>Docs</el-dropdown-item>
-          </a> -->
-          <el-dropdown-item divided @click.native="logout">
-            <span style="display:block;">退出登录</span>
-          </el-dropdown-item>
-        </el-dropdown-menu>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item divided @click="logout">
+              <span style="display:block;">退出登录</span>
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
       </el-dropdown>
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
+import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 
 export default {
   components: {
     Breadcrumb,
     Hamburger
   },
-  computed: {
-    ...mapGetters([
-      'sidebar',
-      'avatar',
-      'device'
-    ])
-  },
-  methods: {
-    toggleSideBar() {
-      this.$store.dispatch('app/toggleSideBar')
-    },
-    async logout() {
-      await this.$store.dispatch('user/logout')
-      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+  setup() {
+    const router = useRouter()
+    const route = useRoute()
+    const appStore = useAppStore()
+    const userStore = useUserStore()
+
+    const sidebar = computed(() => appStore.sidebar)
+    const avatar = computed(() => userStore.avatar)
+    const device = computed(() => appStore.device)
+
+    const toggleSideBar = () => {
+      appStore.toggleSideBar()
+    }
+
+    const logout = async() => {
+      await userStore.logout()
+      router.push(`/login?redirect=${route.fullPath}`)
+    }
+
+    return {
+      sidebar,
+      avatar,
+      device,
+      toggleSideBar,
+      logout
     }
   }
 }
