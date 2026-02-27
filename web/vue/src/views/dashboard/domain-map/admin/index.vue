@@ -4,27 +4,37 @@
     <panel-group @handleSetLineChartData="handleSetLineChartData" />
 
     <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
+      <!-- 添加标题区域 -->
+      <div class="chart-header" style="margin-bottom: 16px;">
+        <h3 class="chart-title">{{ lineChartTitle }}</h3>
+        <div class="chart-subtitle">{{ lineChartSubtitle }}</div>
+      </div>
       <line-chart :chart-data="lineChartData" />
     </el-row>
 
-    <el-row :gutter="32">
-      <el-col :xs="24" :sm="24" :lg="12">
-        <div class="chart-wrapper">
-          <pie-chart />
-        </div>
-      </el-col>
-      <el-col :xs="24" :sm="24" :lg="12">
-        <div class="chart-wrapper">
-          <bar-chart />
+    <el-row :gutter="32" style="margin-bottom: 24px;">
+      <el-col :xs="24" :sm="24" :lg="24">
+        <div class="chart-wrapper" style="height: 450px;">
+          <div class="chart-header" style="margin-bottom: 8px;">
+            <h3 class="chart-title">恶意域名来源(Source)Top10</h3>
+          </div>
+          <div style="height: calc(100% - 40px);">
+            <pie-chart />
+          </div>
         </div>
       </el-col>
     </el-row>
 
-    <!-- 新增的地图标题和地图组件区域 -->
-    <el-row style="background:#fff;padding:16px;margin-top:32px;">
-      <el-col :span="24">
-        <h3>请求交互地图</h3>
-        <map-chart />
+    <el-row :gutter="32" style="margin-bottom: 24px;">
+      <el-col :xs="24" :sm="24" :lg="24">
+        <div class="chart-wrapper" style="height: 450px;">
+          <div class="chart-header" style="margin-bottom: 8px;">
+            <h3 class="chart-title">恶意域名类型(Category)Top10</h3>
+          </div>
+          <div style="height: calc(100% - 40px);">
+            <bar-chart />
+          </div>
+        </div>
       </el-col>
     </el-row>
 
@@ -32,24 +42,16 @@
 </template>
 
 <script>
-import PanelGroup from './components/PanelGroup'
-import LineChart from './components/LineChart'
-import PieChart from './components/PieChart'
-import BarChart from './components/BarChart'
-import MapChart from './components/map'
+import PanelGroup from './components/PanelGroup.vue'
+import LineChart from './components/LineChart.vue'
+import PieChart from './components/PieChart.vue'
+import BarChart from './components/BarChart.vue'
 
-const lineChartData = {
-  total_domain: {
-    date_data: ["2019年","2020年","2021年","2022年","2023年","2024年","2025年"],
-    amount_data: [468.2,4001.2,1300.4,17830.6,19714.0,33331.8,34513.5,14265.5]},
-  messages: {
-    date_data: ["2024年05月","2024年06月","2024年07月","2024年08月","2024年09月","2024年10月","2024年11月","2024年12月","2025年01月","2025年02月","2025年03月","2025年04月"],
-    amount_data: [2407.2,2317.7,2563,2511.1,2854.6,2817.4,3224.3,3328.8,3363.1,3072.9,2809.6,2062.2]},
-  purchases: {
-    date_data: ["4月01日","4月02日","4月03日","4月04日","4月05日","4月06日","4月07日","4月08日","4月09日","4月10日","4月11日","4月12日","4月13日","4月14日","4月15日","4月16日","4月17日","4月18日","4月19日","4月20日","4月21日","4月22日","4月23日","4月24日","4月25日","4月26日","4月27日","4月28日","4月29日","4月30日"],
-    amount_data: [112.5,113.6,113.3,113.3,112.6,113.6,114.5,117.6,113.4,118.2,114.9,114.8,114.8,113.6,113.7,118.5,114.0,114.2,114.1,114.9,115,115.1,115.5,115.6,115.8,114.9,115.0,125.5 ]
-  }
-}
+// 从chart_data.js导入数据
+import chartData from '@/data/chart_data.js'
+
+// 使用导入的数据
+const lineChartData = chartData.lineChartDataDomain
 
 export default {
   name: 'DashboardAdmin',
@@ -57,17 +59,29 @@ export default {
     PanelGroup,
     LineChart,
     PieChart,
-    BarChart,
-    MapChart
+    BarChart
   },
   data() {
     return {
-      lineChartData: lineChartData.total_domain
+      lineChartData: lineChartData.total_domain,
+      currentChartType: 'total_domain',
+      // 新增数据
+      sourceData: chartData.top10Source || [],
+      categoryData: chartData.top10Category || []
+    }
+  },
+  computed: {
+    lineChartTitle() {
+      return lineChartData[this.currentChartType]?.name || '恶意域名数量统计'
+    },
+    lineChartSubtitle() {
+      return lineChartData[this.currentChartType]?.subtitle || ''
     }
   },
   methods: {
     handleSetLineChartData(type) {
       this.lineChartData = lineChartData[type]
+      this.currentChartType = type
     }
   }
 }
@@ -90,6 +104,23 @@ export default {
     background: #fff;
     padding: 16px 16px 0;
     margin-bottom: 32px;
+  }
+
+  .chart-header {
+    h3.chart-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      line-height: 1.4;
+    }
+
+    .chart-subtitle {
+      margin-top: 4px;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.4;
+    }
   }
 }
 

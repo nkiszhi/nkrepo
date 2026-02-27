@@ -12,53 +12,76 @@
         :collapse-transition="false"
         mode="vertical"
       >
-        <sidebar-item v-for="route in permission_routes" :key="route.path" :item="route" :base-path="route.path" />
+        <!-- 遍历permission_routes（动态生成的路由），渲染侧边栏 -->
+        <sidebar-item v-for="route in permission_routes" :key="route.path || route.name" :item="route" :base-path="route.path" />
       </el-menu>
     </el-scrollbar>
   </div>
 </template>
 
 <script>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import Logo from './Logo'
-import SidebarItem from './SidebarItem'
-import variables from '@/styles/variables.scss'
-import { usePermissionStore } from '@/stores/permission'
-import { useAppStore } from '@/stores/app'
-import { useSettingsStore } from '@/stores/settings'
+import { mapGetters } from 'vuex'
+import Logo from './Logo.vue'
+import SidebarItem from './SidebarItem.vue'
 
 export default {
   components: { SidebarItem, Logo },
-  setup() {
-    const route = useRoute()
-    const permissionStore = usePermissionStore()
-    const appStore = useAppStore()
-    const settingsStore = useSettingsStore()
-
-    const permission_routes = computed(() => permissionStore.routes)
-    const sidebar = computed(() => appStore.sidebar)
-
-    const activeMenu = computed(() => {
+  computed: {
+    ...mapGetters([
+      'permission_routes', // 从Vuex获取动态路由（已包含常量路由+异步路由）
+      'sidebar'
+    ]),
+    activeMenu() {
+      const route = this.$route
       const { meta, path } = route
-      // if set path, the sidebar will highlight the path you set
-      if (meta.activeMenu) {
+      // 优先使用meta中配置的activeMenu，否则用当前路径
+      if (meta && meta.activeMenu) {
         return meta.activeMenu
       }
       return path
-    })
-
-    const showLogo = computed(() => settingsStore.sidebarLogo)
-
-    const isCollapse = computed(() => !sidebar.value.opened)
-
-    return {
-      permission_routes,
-      activeMenu,
-      showLogo,
-      variables,
-      isCollapse
+    },
+    showLogo() {
+      // 从settings中获取是否显示Logo的配置
+      return this.$store.state.settings.sidebarLogo
+    },
+    variables() {
+      // 直接定义SCSS变量,避免Vite中导入SCSS文件的问题
+      return {
+        menuText: '#bfcbd9',
+        menuActiveText: '#409EFF',
+        subMenuActiveText: '#f4f4f5',
+        menuBg: '#304156',
+        menuHover: '#263445',
+        subMenuBg: '#1f2d3d',
+        subMenuHover: '#001528',
+        sideBarWidth: '210px'
+      }
+    },
+    isCollapse() {
+      // 侧边栏折叠状态（取反，opened为true时不折叠）
+      return !this.sidebar.opened
+    }
+  },
+  watch: {
+    // 监听路由变化，强制刷新侧边栏（确保动态路由添加后渲染）
+    $route() {
+      this.$forceUpdate()
+    },
+    // 监听permission_routes变化，刷新侧边栏
+    permission_routes() {
+      this.$forceUpdate()
     }
   }
 }
 </script>
+
+<style scoped>
+.scrollbar-wrapper {
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.has-logo {
+  padding-top: 20px;
+}
+</style>

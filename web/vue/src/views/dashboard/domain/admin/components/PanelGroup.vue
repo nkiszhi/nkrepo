@@ -3,16 +3,16 @@
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('total_domain')">
         <div class="card-panel-icon-wrapper icon-people">
-          <svg-icon icon-class="chart" class-name="card-panel-icon" />
+          <svg-icon icon-class="peoples" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
-          <div class="card-panel-info flex-container">  
-            <span class="card-panel-text">总数量：</span>  
-            <count-to :start-val="0" :end-val="76646" :duration="2600" class="card-panel-num" />  
-            <span class="card-panel-text">万条</span>  
-          </div>  
+          <div class="card-panel-info flex-container">
+            <span class="card-panel-text">总数量：</span>
+            <count-to :start-val="0" :end-val="panelData.total_domain.value" :duration="2600" class="card-panel-num" />
+            <span class="card-panel-text">万条</span>
+          </div>
           <div class="card-panel-text">
-            统计日期：2019年-2024年
+            {{ panelData.total_domain.dateRange }}
           </div>
         </div>
       </div>
@@ -23,13 +23,13 @@
           <svg-icon icon-class="chart" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
-          <div class="card-panel-info flex-container">  
-            <span class="card-panel-text">近一年数量：</span>  
-            <count-to :start-val="0" :end-val="33331.8" :duration="2600" class="card-panel-num" />  
-            <span class="card-panel-text">万条</span>  
-          </div>  
+          <div class="card-panel-info flex-container">
+            <span class="card-panel-text">近一年数量：</span>
+            <count-to :start-val="0" :end-val="panelData.messages.value" :duration="2600" class="card-panel-num" />
+            <span class="card-panel-text">万条</span>
+          </div>
           <div class="card-panel-text">
-            统计日期：2024年1月-2024年12月
+            {{ panelData.messages.dateRange }}
           </div>
         </div>
       </div>
@@ -37,46 +37,85 @@
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('purchases')">
         <div class="card-panel-icon-wrapper icon-money">
-          <svg-icon icon-class="chart" class-name="card-panel-icon" />
+          <svg-icon icon-class="search" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
-          <div class="card-panel-info flex-container">  
-            <span class="card-panel-text">近一个月数量：</span>  
-            <count-to :start-val="0" :end-val="2062.2" :duration="2600" class="card-panel-num" />  
-            <span class="card-panel-text">万条</span>  
-          </div>  
+          <div class="card-panel-info flex-container">
+            <span class="card-panel-text">近一个月数量：</span>
+            <count-to :start-val="0" :end-val="panelData.purchases.value" :duration="2600" class="card-panel-num" />
+            <span class="card-panel-text">万条</span>
+          </div>
           <div class="card-panel-text">
-            统计日期：2024年12月1日-20日
+            {{ panelData.purchases.dateRange }}
           </div>
         </div>
       </div>
     </el-col>
-    <!-- <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('shoppings')">
-        <div class="card-panel-icon-wrapper icon-shopping">
-          <svg-icon icon-class="shopping" class-name="card-panel-icon" />
-        </div>
-        <div class="card-panel-description">
-          <div class="card-panel-text">
-            Shoppings
-          </div>
-          <count-to :start-val="0" :end-val="13600" :duration="3600" class="card-panel-num" />
-        </div>
-      </div>
-    </el-col> -->
   </el-row>
 </template>
 
 <script>
-import CountTo from 'vue-count-to'
+import CountTo from '@/components/CountTo/index.vue'
+import chartData from '@/data/chart_data.js'
 
 export default {
   components: {
     CountTo
   },
+  data() {
+    return {
+      panelData: {
+        total_domain: { value: 0, dateRange: '' },
+        messages: { value: 0, dateRange: '' },
+        purchases: { value: 0, dateRange: '' }
+      }
+    }
+  },
+  mounted() {
+    this.initData()
+  },
   methods: {
     handleSetLineChartData(type) {
       this.$emit('handleSetLineChartData', type)
+    },
+    
+    initData() {
+      try {
+        console.log('正在加载域名chart_data.js数据...')
+        
+        const domainData = chartData.lineChartDataDomain || {}
+        
+        // 计算总数量(万)
+        if (domainData.total_domain && domainData.total_domain.amount_data) {
+          const total = domainData.total_domain.amount_data.reduce((a, b) => a + b, 0)
+          this.panelData.total_domain = {
+            value: Math.round(total),
+            dateRange: '2019-2026年'
+          }
+        }
+        
+        // 计算近一年数量(万)
+        if (domainData.messages && domainData.messages.amount_data) {
+          const yearTotal = domainData.messages.amount_data.reduce((a, b) => a + b, 0)
+          this.panelData.messages = {
+            value: Math.round(yearTotal),
+            dateRange: '2025年2月-2026年1月'
+          }
+        }
+        
+        // 计算近一个月数量(万)
+        if (domainData.purchases && domainData.purchases.amount_data) {
+          const monthTotal = domainData.purchases.amount_data.reduce((a, b) => a + b, 0)
+          this.panelData.purchases = {
+            value: Math.round(monthTotal),
+            dateRange: '近30天'
+          }
+        }
+        
+        console.log('域名面板数据初始化完成:', this.panelData)
+      } catch (error) {
+        console.error('初始化域名数据时出错:', error)
+      }
     }
   }
 }
@@ -155,27 +194,27 @@ export default {
       font-size: 48px;
     }
 
-    .flex-container {  
-      display: flex;  
-      align-items: center; /* 垂直居中 */  
-    }  
-  
-    .card-panel-text {  
-      margin-right: 0px; /* 根据需要调整间距 */  
-    }  
+    .flex-container {
+      display: flex;
+      align-items: center; /* 垂直居中 */
+    }
 
-    .card-panel-description {  
-  font-weight: bold;  
-  margin: 26px 10%; /* 简化margin设置 */  
-  
-  .card-panel-text,  
-  .card-panel-num {  
-    line-height: 18px;  
-    color: rgba(0, 0, 0, 0.45);  
-    /* 使用vw单位设置字体大小，可以根据需要调整基数 */  
-    font-size: 0.79vw; /* 示例值，根据设计需求调整 */  
-    margin-bottom: 12px;  
-  }  
+    .card-panel-text {
+      margin-right: 0px; /* 根据需要调整间距 */
+    }
+
+    .card-panel-description {
+  font-weight: bold;
+  margin: 26px 10%; /* 简化margin设置 */
+
+  .card-panel-text,
+  .card-panel-num {
+    line-height: 18px;
+    color: rgba(0, 0, 0, 0.45);
+    /* 使用vw单位设置字体大小，可以根据需要调整基数 */
+    font-size: 0.79vw; /* 示例值，根据设计需求调整 */
+    margin-bottom: 12px;
+  }
 }
   }
 }

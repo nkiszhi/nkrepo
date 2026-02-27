@@ -3,9 +3,10 @@
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
-import resize from './mixins/resize'
+import * as echarts from 'echarts'
+// ECharts theme
+import resize from './mixins/resize.js'
+import chartData from '@/data/chart_data.js' // 导入数据
 
 const animationDuration = 6000
 
@@ -22,7 +23,7 @@ export default {
     },
     height: {
       type: String,
-      default: '300px'
+      default: '400px'
     }
   },
   data() {
@@ -46,40 +47,135 @@ export default {
     initChart() {
       this.chart = echarts.init(this.$el, 'macarons')
 
+      // 从导入的数据中获取top10Source
+      const top10Data = chartData.top10Source || []
+
+      // 提取sources和counts，并按count降序排列（如果数据未排序）
+      const sortedData = [...top10Data].sort((a, b) => b.count - a.count)
+
+      // 提取前10个数据
+      const displayData = sortedData.slice(0, 10)
+
+      // 将count转换为百万单位，并保留1位小数（根据需要调整）
+      // 这里直接使用原始count值，如果数值太大可以考虑转换
+      const sources = displayData.map(item => item.source)
+      const values = displayData.map(item => item.count / 1000000) // 转换为百万单位
+
+      // 使用 ECharts 默认的鲜艳彩色系列
+      const colors = [
+        '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
+        '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#60acfc'
+      ].slice(0, sources.length)
+
       this.chart.setOption({
         tooltip: {
           trigger: 'axis',
-          axisPointer: { // 坐标轴指示器，坐标轴触发有效
-            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+          axisPointer: {
+            type: 'shadow'
+          },
+          formatter: function(params) {
+            const param = params[0]
+            const originalData = displayData[param.dataIndex]
+            const originalCount = originalData ? originalData.count.toLocaleString() : param.value
+            return `${param.name}<br/>数量: ${originalCount}`
           }
         },
         grid: {
-          top: 10,
-          left: '2%',
-          right: '2%',
-          bottom: '3%',
+          left: '3%',
+          right: '3%',
+          top: '15%',
+          bottom: '25%', // 增加底部留白以适应长标签
           containLabel: true
         },
-        xAxis: [{
+        xAxis: {
           type: 'category',
-          data: ["abuse.ch","cybercrime-tracker.net","abuseipdb.com","github.com","viriback.com","blocklist.de","openphish.com","emergingthreats.net","ip.blackhole.monster","binarydefense.com"],
+          data: sources,
           axisTick: {
-            alignWithLabel: true
+            alignWithLabel: true,
+            show: false
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#e0e0e0'
+            }
+          },
+          axisLabel: {
+            interval: 0,
+            rotate: 45,
+            fontSize: 10, // 稍微减小字体大小以适应长标签
+            margin: 15,
+            color: '#666',
+            formatter: function(value) {
+              // 如果标签太长，可以截断并添加省略号
+              if (value.length > 20) {
+                return value.substring(0, 20) + '...'
+              }
+              return value
+            }
           }
-        }],
-        yAxis: [{
+        },
+        yAxis: {
           type: 'value',
           axisTick: {
             show: false
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#e0e0e0'
+            }
+          },
+          name: '数量（百万）', // 修改单位说明
+          nameTextStyle: {
+            fontSize: 12,
+            padding: [0, 0, 0, 10],
+            color: '#666'
+          },
+          splitLine: {
+            lineStyle: {
+              type: 'dashed',
+              color: '#f0f0f0'
+            }
+          },
+          axisLabel: {
+            color: '#666',
+            fontSize: 11,
+            formatter: function(value) {
+              return value
+            }
           }
-        }],
+        },
         series: [{
           name: '恶意域名来源',
           type: 'bar',
-          stack: 'category',
-          barWidth: '60%',
-          data: [238.8,93.1,25.9,25.1,24.4,2.0,1.5,0.7,0.6,0.4],
-          animationDuration
+          barWidth: '40%',
+          data: values.map((value, index) => ({
+            value: value,
+            itemStyle: {
+              color: colors[index],
+              borderRadius: [2, 2, 0, 0]
+            }
+          })),
+          animationDuration,
+          animationEasing: 'cubicOut',
+          label: {
+            show: true,
+            position: 'top',
+            formatter: function(params) {
+              const originalData = displayData[params.dataIndex]
+              // 显示原始count值（已转换为百万单位并保留1位小数）
+              return originalData ? (originalData.count / 1000000).toFixed(1) : params.value.toFixed(1)
+            },
+            fontSize: 10,
+            color: '#333',
+            fontWeight: 'bold'
+          },
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.3)'
+            }
+          }
         }]
       })
     }

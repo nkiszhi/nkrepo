@@ -3,9 +3,11 @@
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
-import resize from './mixins/resize'
+import * as echarts from 'echarts'
+// ECharts theme // echarts theme
+import resize from './mixins/resize.js'
+// 导入生成的JS数据文件
+import chartData from '@/data/chart_data.js'
 
 export default {
   mixins: [resize],
@@ -51,7 +53,12 @@ export default {
         },
         legend: {
           left: 'center',
-          bottom: '10'
+          bottom: '10',
+          // 增加滚动功能，避免标签过多溢出
+          type: 'scroll',
+          pageButtonPosition: 'end',
+          pageIconColor: '#666',
+          pageIconInactiveColor: '#ccc'
         },
         series: [
           {
@@ -59,22 +66,26 @@ export default {
             type: 'pie',
             roseType: 'radius',
             radius: [15, 95],
-            center: ['50%', '38%'],
-            data: [
-              { value: 279.2, name: 'Win32' },
-              { value: 110.9, name: 'Script' },
-              { value: 53.8, name: 'VBS' },
-              { value: 47.5, name: 'JS' },
-              { value: 34.7, name: 'HTML' },
-              { value: 18.5, name: 'Multi' },
-              { value: 17.6, name: 'PDF' },
-              { value: 10.2, name: 'MSIL' },
-              { value: 5.6, name: 'NSIS' },
-              { value: 4.6, name: 'MSOffice' },
-              { value: 17.2, name: 'Others' }
-            ],
+            center: ['50%', '42%'],
+            // 从JS文件读取platform的Top10+Others数据
+            data: chartData.pieTop10Data.platform,
             animationEasing: 'cubicInOut',
-            animationDuration: 2600
+            animationDuration: 2600,
+            // 优化标签显示
+            label: {
+              formatter: '{b}: {d}%',
+              fontSize: 12,
+              overflow: 'truncate', // 标签过长时截断
+              ellipsis: '...'
+            },
+            // 鼠标悬停时放大标签
+            emphasis: {
+              label: {
+                fontSize: 14,
+                fontWeight: 'bold',
+                overflow: 'none' // 悬停时不截断
+              }
+            }
           }
         ]
       })

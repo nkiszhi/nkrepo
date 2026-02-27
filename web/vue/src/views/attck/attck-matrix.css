@@ -1,0 +1,232 @@
+/* ATT&CK矩阵主样式 */
+.attck-matrix-container {
+  padding: 20px;
+  background: #f0f2f5;
+  min-height: calc(100vh - 60px);
+}
+
+/* 页面头部 */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1890ff;
+  margin: 0 0 8px 0;
+}
+
+.page-description {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* 统计卡片 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+/* 战术卡片布局 */
+.tactics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.tactic-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.tactic-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.tactic-header {
+  padding: 16px;
+  color: white;
+  font-weight: 600;
+}
+
+.tactic-body {
+  padding: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* 技术项 */
+.technique-item {
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.technique-item:hover {
+  background: #e6f7ff;
+  transform: translateX(4px);
+}
+
+.technique-id {
+  font-size: 12px;
+  color: #1890ff;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.technique-name {
+  font-size: 12px;
+  color: #333;
+  line-height: 1.3;
+}
+
+/* 技术详情卡片 */
+.technique-detail-modal {
+  max-width: 800px !important;
+}
+
+.technique-detail-header {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: white;
+  padding: 24px;
+  margin: -20px -20px 20px -20px;
+}
+
+.tech-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tech-subtitle {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.tech-id-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  display: inline-block;
+  margin-top: 8px;
+}
+
+/* 相关函数列表 */
+.function-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.function-card {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.function-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+}
+
+.function-name {
+  font-weight: 600;
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.function-summary {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* 热力图容器 */
+.heatmap-container {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.heatmap-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #262626;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .tactics-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .attck-matrix-container {
+    padding: 12px;
+  }
+  
+  .tactics-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .tactics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

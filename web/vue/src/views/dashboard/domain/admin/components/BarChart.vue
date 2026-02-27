@@ -3,9 +3,9 @@
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
-import resize from './mixins/resize'
+import * as echarts from 'echarts'
+// ECharts theme
+import resize from './mixins/resize.js'
 
 const animationDuration = 6000
 
@@ -62,7 +62,7 @@ export default {
         },
         xAxis: [{
           type: 'category',
-          data: ["elf","apt","android","cobaltstrike","bad","njrat","browser","mass","emotet","blackshades"],
+          data: ['elf', 'apt', 'android', 'cobaltstrike', 'bad', 'njrat', 'browser', 'mass', 'emotet', 'blackshades'],
           axisTick: {
             alignWithLabel: true
           }
@@ -78,7 +78,7 @@ export default {
           type: 'bar',
           stack: 'category',
           barWidth: '60%',
-          data: [309.9,301.0,239.5,162.0,99.9,75.9,65.5,55.8,53.3,45.2 ],
+          data: [309.9, 301.0, 239.5, 162.0, 99.9, 75.9, 65.5, 55.8, 53.3, 45.2],
           animationDuration
         }]
       })

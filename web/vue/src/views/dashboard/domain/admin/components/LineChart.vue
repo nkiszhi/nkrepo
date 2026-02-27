@@ -3,9 +3,8 @@
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
-import resize from './mixins/resize'
+import * as echarts from 'echarts'
+import resize from './mixins/resize.js'
 
 export default {
   mixins: [resize],
@@ -49,7 +48,7 @@ export default {
       this.initChart()
     })
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (!this.chart) {
       return
     }
@@ -58,14 +57,18 @@ export default {
   },
   methods: {
     initChart() {
-      this.chart = echarts.init(this.$el, 'macarons')
+      this.chart = echarts.init(this.$el)
       this.setOptions(this.chartData)
     },
-    setOptions({ date_data, amount_data } = {}) {
+    setOptions(chartData) {
+      if (!this.chart || !chartData) return
+      
+      const { date_data, amount_data } = chartData
+      
       this.chart.setOption({
         xAxis: {
+          data: date_data || [],
           boundaryGap: false,
-          data: date_data,
           axisTick: {
             show: false
           }
@@ -85,7 +88,7 @@ export default {
           padding: [5, 10]
         },
         yAxis: {
-          name:"单位(万条)",
+          name: '单位(万条)',
           axisTick: {
             show: false
           }
@@ -94,18 +97,18 @@ export default {
           data: ['恶意域名样本数量']
         },
         series: [{
-          name: '恶意域名样本数量', itemStyle: {
-            normal: {
-              color: '#FF005A',
-              lineStyle: {
-                color: '#FF005A',
-                width: 2
-              }
-            }
+          name: '恶意域名样本数量',
+          itemStyle: {
+            color: '#FF005A'
           },
-          smooth: true,
+          lineStyle: {
+            color: '#FF005A',
+            width: 2
+          },
+          showSymbol: false,
           type: 'line',
-          data: amount_data,
+          smooth: true,  // 添加平滑效果,使折线变为曲线
+          data: amount_data || [],
           animationDuration: 2800,
           animationEasing: 'cubicInOut'
         }]

@@ -1,13 +1,21 @@
 <template>
   <div class="navbar">
+    <!-- 侧边栏折叠按钮 -->
     <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
 
+    <!-- 面包屑导航 -->
     <breadcrumb id="breadcrumb-container" class="breadcrumb-container" />
 
     <div class="right-menu">
+      <!-- 右上角用户头像&下拉菜单 -->
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
         <div class="avatar-wrapper">
-          <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+          <!-- 保留图片缩放参数，兼容绝对/相对路径 -->
+          <img
+            :src="avatar ? (avatar + '?imageView2/1/w/80/h/80') : 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'"
+            class="user-avatar"
+            alt="用户头像"
+          >
           <i class="el-icon-caret-bottom" />
         </div>
         <template #dropdown>
@@ -23,43 +31,37 @@
 </template>
 
 <script>
-import { computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import Breadcrumb from '@/components/Breadcrumb'
-import Hamburger from '@/components/Hamburger'
-import { useAppStore } from '@/stores/app'
-import { useUserStore } from '@/stores/user'
+import { mapGetters } from 'vuex'
+import Breadcrumb from '@/components/Breadcrumb/index.vue'
+import Hamburger from '@/components/Hamburger/index.vue'
 
 export default {
   components: {
     Breadcrumb,
     Hamburger
   },
-  setup() {
-    const router = useRouter()
-    const route = useRoute()
-    const appStore = useAppStore()
-    const userStore = useUserStore()
-
-    const sidebar = computed(() => appStore.sidebar)
-    const avatar = computed(() => userStore.avatar)
-    const device = computed(() => appStore.device)
-
-    const toggleSideBar = () => {
-      appStore.toggleSideBar()
+  computed: {
+    ...mapGetters([
+      'sidebar',
+      'avatar', // 从Vuex user模块获取头像地址
+      'device'
+    ])
+  },
+  watch: {
+    // 登录状态变化时，强制刷新组件
+    '$store.state.user.token'(newVal) {
+      if (newVal) { // 只有Token存在（登录成功）时才刷新
+        this.$forceUpdate()
+      }
     }
-
-    const logout = async() => {
-      await userStore.logout()
-      router.push(`/login?redirect=${route.fullPath}`)
-    }
-
-    return {
-      sidebar,
-      avatar,
-      device,
-      toggleSideBar,
-      logout
+  },
+  methods: {
+    toggleSideBar() {
+      this.$store.dispatch('app/toggleSideBar')
+    },
+    async logout() {
+      await this.$store.dispatch('user/logout')
+      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
   }
 }
@@ -71,7 +73,7 @@ export default {
   overflow: hidden;
   position: relative;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
 
   .hamburger-container {
     line-height: 46px;
@@ -79,7 +81,7 @@ export default {
     float: left;
     cursor: pointer;
     transition: background .3s;
-    -webkit-tap-highlight-color:transparent;
+    -webkit-tap-highlight-color: transparent;
 
     &:hover {
       background: rgba(0, 0, 0, .025)
@@ -88,6 +90,7 @@ export default {
 
   .breadcrumb-container {
     float: left;
+    margin-left: 20px;
   }
 
   .right-menu {
@@ -129,6 +132,7 @@ export default {
           width: 40px;
           height: 40px;
           border-radius: 10px;
+          object-fit: cover; // 新增：确保图片填充不拉伸
         }
 
         .el-icon-caret-bottom {

@@ -4,6 +4,11 @@
       <h3 class="drawer-title">Page style setting</h3>
 
       <div class="drawer-item">
+        <span>Theme Color</span>
+        <theme-picker style="float: right;height: 26px;margin: -3px 8px 0 0;" @change="themeChange" />
+      </div>
+
+      <div class="drawer-item">
         <span>Open Tags-View</span>
         <el-switch v-model="tagsView" class="drawer-switch" />
       </div>
@@ -23,54 +28,54 @@
 </template>
 
 <script>
-import { computed } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
+import ThemePicker from '@/components/ThemePicker/index.vue'
 
 export default {
-  name: 'Settings',
-  setup() {
-    const settingsStore = useSettingsStore()
-
-    const fixedHeader = computed({
+  components: { ThemePicker },
+  data() {
+    return {}
+  },
+  computed: {
+    fixedHeader: {
       get() {
-        return settingsStore.fixedHeader
+        return this.$store.state.settings.fixedHeader
       },
       set(val) {
-        settingsStore.changeSetting({
+        this.$store.dispatch('settings/changeSetting', {
           key: 'fixedHeader',
           value: val
         })
       }
-    })
-
-    const tagsView = computed({
+    },
+    tagsView: {
       get() {
-        return settingsStore.tagsView
+        return this.$store.state.settings.tagsView
       },
       set(val) {
-        settingsStore.changeSetting({
+        this.$store.dispatch('settings/changeSetting', {
           key: 'tagsView',
           value: val
         })
       }
-    })
-
-    const sidebarLogo = computed({
+    },
+    sidebarLogo: {
       get() {
-        return settingsStore.sidebarLogo
+        return this.$store.state.settings.sidebarLogo
       },
       set(val) {
-        settingsStore.changeSetting({
+        this.$store.dispatch('settings/changeSetting', {
           key: 'sidebarLogo',
           value: val
         })
       }
-    })
-
-    return {
-      fixedHeader,
-      tagsView,
-      sidebarLogo
+    }
+  },
+  methods: {
+    themeChange(val) {
+      this.$store.dispatch('settings/changeSetting', {
+        key: 'theme',
+        value: val
+      })
     }
   }
 }

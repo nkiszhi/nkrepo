@@ -1,0 +1,41 @@
+/* vue/src/views/attck/FunctionDetail.css */
+.code-highlight {
+  background: #f6f8fa;
+  border-radius: 6px;
+  padding: 16px;
+  overflow: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #24292e;
+}
+
+.code-line {
+  display: flex;
+  min-height: 1.5em;
+}
+
+.line-number {
+  min-width: 40px;
+  padding-right: 12px;
+  text-align: right;
+  color: #6a737d;
+  user-select: none;
+}
+
+.line-content {
+  flex: 1;
+  padding-left: 12px;
+  white-space: pre;
+}
+
+/* 语法高亮 */
+.keyword { color: #d73a49; font-weight: bold; }
+.comment { color: #6a737d; font-style: italic; }
+.string { color: #032f62; }
+.number { color: #005cc5; }
+.function { color: #6f42c1; }
+.macro { color: #6f42c1; font-weight: bold; }
+.type { color: #22863a; }
+.operator { color: #d73a49; }
+</style>

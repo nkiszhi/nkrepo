@@ -1,0 +1,59 @@
+/* vue/src/views/attck/attck.css */
+/* ATT&CK矩阵通用样式 */
+
+.attck-stat-card {
+  border-radius: 8px;
+  padding: 16px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.attck-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.attck-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.attck-stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.technique-tag {
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  color: #1890ff;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.subtechnique-tag {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #52c41a;
+  border-radius: 12px;
+  padding: 1px 6px;
+  font-size: 11px;
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.tactic-color-badge {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}

@@ -3,9 +3,11 @@
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
-import resize from './mixins/resize'
+import * as echarts from 'echarts'
+// ECharts theme // echarts theme
+import resize from './mixins/resize.js'
+// 导入生成的JS数据文件
+import chartData from '@/data/chart_data.js'
 
 export default {
   mixins: [resize],
@@ -51,7 +53,12 @@ export default {
         },
         legend: {
           left: 'center',
-          bottom: '10'
+          bottom: '10',
+          // 增加滚动功能，避免标签过多溢出
+          type: 'scroll',
+          pageButtonPosition: 'end',
+          pageIconColor: '#666',
+          pageIconInactiveColor: '#ccc'
         },
         series: [
           {
@@ -60,21 +67,25 @@ export default {
             roseType: 'radius',
             radius: [15, 95],
             center: ['50%', '38%'],
-            data: [
-              { value: 254.3, name: 'Trojan' },
-              { value: 65.2, name: 'AdWare' },
-              { value: 58.8, name: 'Trojan-Dropper' },
-              { value: 53.8, name: 'Trojan-Downloader' },
-              { value: 22.0, name: 'Downloader' },
-              { value: 19.5, name: 'Hoax' },
-              { value: 18.0, name: 'DangerousObject' },
-              { value: 17.8, name: 'Backdoor' },
-              { value: 15.8, name: 'Virus' },
-              { value: 12.9, name: 'Worm' },
-              { value: 61.9, name: 'Others' }
-            ],
+            // 从JS文件读取category的Top10+Others数据
+            data: chartData.pieTop10Data.category,
             animationEasing: 'cubicInOut',
-            animationDuration: 2600
+            animationDuration: 2600,
+            // 优化标签显示
+            label: {
+              formatter: '{b}: {d}%',
+              fontSize: 12,
+              overflow: 'truncate', // 标签过长时截断
+              ellipsis: '...'
+            },
+            // 鼠标悬停时放大标签
+            emphasis: {
+              label: {
+                fontSize: 14,
+                fontWeight: 'bold',
+                overflow: 'none' // 悬停时不截断
+              }
+            }
           }
         ]
       })

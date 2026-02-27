@@ -1,4 +1,5 @@
 // base color
+// 使用 @forward 导出变量供其他文件使用
 $blue:#324157;
 $light-blue:#3A71A8;
 $red:#C03639;
@@ -11,7 +12,7 @@ $panGreen: #30B08F;
 // sidebar
 $menuText:#bfcbd9;
 $menuActiveText:#409EFF;
-$subMenuActiveText:#f4f4f5; // https://github.com/ElemeFE/element/issues/12951
+$subMenuActiveText:#f4f4f5;
 
 $menuBg:#304156;
 $menuHover:#263445;

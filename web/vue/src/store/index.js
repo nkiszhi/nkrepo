@@ -1,23 +1,15 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
-import getters from './getters'
+import { createStore } from 'vuex'
+import getters from './getters.js'
 
-Vue.use(Vuex)
+const modulesFiles = import.meta.glob('./modules/*.js', { eager: true })
 
-// https://webpack.js.org/guides/dependency-management/#requirecontext
-const modulesFiles = require.context('./modules', true, /\.js$/)
+const modules = {}
+for (const path in modulesFiles) {
+  const moduleName = path.replace(/^\.\/modules\/(.*)\.\w+$/, '$1')
+  modules[moduleName] = modulesFiles[path].default
+}
 
-// you do not need `import app from './modules/app'`
-// it will auto require all vuex module from modules file
-const modules = modulesFiles.keys().reduce((modules, modulePath) => {
-  // set './app.js' => 'app'
-  const moduleName = modulePath.replace(/^\.\/(.*)\.\w+$/, '$1')
-  const value = modulesFiles(modulePath)
-  modules[moduleName] = value.default
-  return modules
-}, {})
-
-const store = new Vuex.Store({
+const store = createStore({
   modules,
   getters
 })

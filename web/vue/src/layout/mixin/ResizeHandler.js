@@ -1,4 +1,4 @@
-import { useAppStore } from '@/stores/app'
+import store from '@/store'
 
 const { body } = document
 const WIDTH = 992 // refer to Bootstrap's responsive design
@@ -7,23 +7,21 @@ export default {
   watch: {
     $route(route) {
       if (this.device === 'mobile' && this.sidebar.opened) {
-        const appStore = useAppStore()
-        appStore.closeSideBar({ withoutAnimation: false })
+        store.dispatch('app/closeSideBar', { withoutAnimation: false })
       }
     }
   },
   beforeMount() {
     window.addEventListener('resize', this.$_resizeHandler)
   },
-  beforeUnmount() {
+  beforeDestroy() {
     window.removeEventListener('resize', this.$_resizeHandler)
   },
   mounted() {
     const isMobile = this.$_isMobile()
-    const appStore = useAppStore()
     if (isMobile) {
-      appStore.toggleDevice('mobile')
-      appStore.closeSideBar({ withoutAnimation: true })
+      store.dispatch('app/toggleDevice', 'mobile')
+      store.dispatch('app/closeSideBar', { withoutAnimation: true })
     }
   },
   methods: {
@@ -36,11 +34,10 @@ export default {
     $_resizeHandler() {
       if (!document.hidden) {
         const isMobile = this.$_isMobile()
-        const appStore = useAppStore()
-        appStore.toggleDevice(isMobile ? 'mobile' : 'desktop')
+        store.dispatch('app/toggleDevice', isMobile ? 'mobile' : 'desktop')
 
         if (isMobile) {
-          appStore.closeSideBar({ withoutAnimation: true })
+          store.dispatch('app/closeSideBar', { withoutAnimation: true })
         }
       }
     }

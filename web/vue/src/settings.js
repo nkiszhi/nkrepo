@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   title: '基于可信度评估的多模型恶意代码检测系统',
 
   /**

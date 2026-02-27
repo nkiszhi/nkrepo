@@ -1,6 +1,6 @@
 /**
-* Element Plus custom theme colors
-**/
+ * Element Plus theme variables
+ */
 
 /* theme color */
 $--color-primary: #1890ff;
@@ -8,8 +8,12 @@ $--color-success: #13ce66;
 $--color-warning: #ffba00;
 $--color-danger: #ff4949;
 
-// the :export directive is the magic sauce for webpack
-// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
-:export {
-  theme: $--color-primary;
-}
+$--button-font-weight: 400;
+
+$--border-color-light: #dfe4ed;
+$--border-color-lighter: #e6ebf5;
+
+$--table-border: 1px solid #dfe6ec;
+
+// Element Plus uses CSS variables, no need to import styles here
+// The styles are imported in main.js

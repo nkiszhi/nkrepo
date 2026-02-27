@@ -16,11 +16,25 @@ CLAUDE.md
 web/flask/config.ini
 config.ini
 
+# Vue git submodule directory (should not be committed)
+web/vue/.git/
+
+# Vue large data files (test data, not needed in repo)
+web/vue/chart_data.json
+
 # Environment configuration files (contain local settings)
 .env.local
 .env.*.local
 web/vue/.env.development.local
 web/vue/.env.production.local
+
+# Vue environment files (contain internal IP addresses and sensitive config)
+web/vue/.env.development
+web/vue/.env.production
+web/vue/.env.staging
+web/vue/.env.development.local
+web/vue/.env.production.local
+web/vue/.env.staging.local
 
 # Uploaded files and user data
 web/vue/uploads/
@@ -292,6 +306,7 @@ lerna-debug.log*
 *.iws
 .idea_modules/
 out/
+web/vue/.idea/
 
 # Sublime Text
 *.tmlanguage.cache
@@ -498,8 +513,11 @@ core.*
 # Keep config examples
 !config.ini.example
 !.env.example
+
+# Keep env files only in root directory, exclude web/vue directory
 !.env.development
 !.env.production
+web/vue/.env.*
 
 # Keep empty directories with .gitkeep
 !.gitkeep

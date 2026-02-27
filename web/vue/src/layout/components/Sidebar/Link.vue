@@ -5,29 +5,29 @@
 </template>
 
 <script>
-import { computed } from 'vue'
 import { isExternal } from '@/utils/validate'
 
 export default {
-  name: 'AppLink',
   props: {
     to: {
       type: String,
       required: true
     }
   },
-  setup(props) {
-    const isExternalLink = computed(() => isExternal(props.to))
-
-    const type = computed(() => {
-      if (isExternalLink.value) {
+  computed: {
+    isExternal() {
+      return isExternal(this.to)
+    },
+    type() {
+      if (this.isExternal) {
         return 'a'
       }
       return 'router-link'
-    })
-
-    const linkProps = (to) => {
-      if (isExternalLink.value) {
+    }
+  },
+  methods: {
+    linkProps(to) {
+      if (this.isExternal) {
         return {
           href: to,
           target: '_blank',
@@ -37,11 +37,6 @@ export default {
       return {
         to: to
       }
-    }
-
-    return {
-      type,
-      linkProps
     }
   }
 }

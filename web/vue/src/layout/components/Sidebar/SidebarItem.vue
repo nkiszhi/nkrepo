@@ -8,7 +8,7 @@
       </app-link>
     </template>
 
-    <el-sub-menu v-else ref="subMenu" :index="resolvePath(item.path)" teleported>
+    <el-sub-menu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
       <template #title>
         <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.meta.title" />
       </template>
@@ -25,15 +25,15 @@
 </template>
 
 <script>
-import { ref } from 'vue'
-import path from 'path'
-import { isExternal } from '@/utils/validate'
-import Item from './Item'
-import AppLink from './Link'
+import { isExternal } from '@/utils/validate.js'
+import Item from './Item.vue'
+import AppLink from './Link.vue'
+import FixiOSBug from './FixiOSBug.js'
 
 export default {
   name: 'SidebarItem',
   components: { Item, AppLink },
+  mixins: [FixiOSBug],
   props: {
     // route object
     item: {
@@ -49,19 +49,20 @@ export default {
       default: ''
     }
   },
-  setup(props) {
-    const onlyOneChild = ref(null)
-
-    const hasOneShowingChild = (children = [], parent) => {
-      if (!children) {
-        children = []
-      }
+  data() {
+    // To fix https://github.com/PanJiaChen/vue-admin-template/issues/237
+    // TODO: refactor with render function
+    this.onlyOneChild = null
+    return {}
+  },
+  methods: {
+    hasOneShowingChild(children = [], parent) {
       const showingChildren = children.filter(item => {
         if (item.hidden) {
           return false
         } else {
           // Temp set(will be used if only has one showing child)
-          onlyOneChild.value = item
+          this.onlyOneChild = item
           return true
         }
       })
@@ -73,27 +74,21 @@ export default {
 
       // Show parent if there are no child router to display
       if (showingChildren.length === 0) {
-        onlyOneChild.value = { ...parent, path: '', noShowingChildren: true }
+        this.onlyOneChild = { ... parent, path: '', noShowingChildren: true }
         return true
       }
 
       return false
-    }
-
-    const resolvePath = (routePath) => {
+    },
+    resolvePath(routePath) {
       if (isExternal(routePath)) {
         return routePath
       }
-      if (isExternal(props.basePath)) {
-        return props.basePath
+      if (isExternal(this.basePath)) {
+        return this.basePath
       }
-      return path.resolve(props.basePath, routePath)
-    }
-
-    return {
-      onlyOneChild,
-      hasOneShowingChild,
-      resolvePath
+      // 浏览器环境下的路径解析
+      return this.basePath ? `${this.basePath}/${routePath}`.replace(/\/+/g, '/') : routePath
     }
   }
 }

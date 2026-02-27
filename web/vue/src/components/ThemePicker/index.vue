@@ -8,7 +8,9 @@
 </template>
 
 <script>
-const version = require('element-ui/package.json').version // element-ui version from node_modules
+// 在Vue 3 + Vite中，使用ES模块语法，不支持require
+// 直接硬编码版本号或使用import.meta.glob
+const version = '2.5.0' // Element Plus版本
 const ORIGINAL_THEME = '#409EFF' // default color
 
 export default {

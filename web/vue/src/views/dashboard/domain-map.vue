@@ -6,8 +6,8 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import adminDashboard from './domain-map/admin'
-import editorDashboard from './domain-map/editor'
+import adminDashboard from './domain-map/admin/index.vue'
+import editorDashboard from './domain-map/editor/index.vue'
 
 export default {
   name: 'Dashboard',

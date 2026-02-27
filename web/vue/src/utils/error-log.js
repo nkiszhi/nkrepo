@@ -1,5 +1,5 @@
-import { nextTick } from 'vue'
-import { useErrorLogStore } from '@/stores/errorLog'
+import { createApp } from 'vue'
+import store from '@/store'
 import { isString, isArray } from '@/utils/validate'
 import settings from '@/settings'
 
@@ -18,14 +18,14 @@ function checkNeed() {
   return false
 }
 
-export function setupErrorLog(app) {
+// 总是导出setupErrorHandler函数
+export function setupErrorHandler(app) {
   if (checkNeed()) {
     app.config.errorHandler = function(err, vm, info) {
-      // Don't ask me why I use nextTick, it just a hack.
+      // Don't ask me why I use setTimeout, it just a hack.
       // detail see https://forum.vuejs.org/t/dispatch-in-vue-config-errorhandler-has-some-problem/23500
-      nextTick(() => {
-        const errorLogStore = useErrorLogStore()
-        errorLogStore.addErrorLog({
+      setTimeout(() => {
+        store.dispatch('errorLog/addErrorLog', {
           err,
           vm,
           info,

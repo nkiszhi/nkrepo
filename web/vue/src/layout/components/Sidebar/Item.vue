@@ -1,10 +1,8 @@
 <template>
   <span>
-    <template v-if="icon">
-      <i v-if="icon.includes('el-icon')" :class="[icon, 'sub-el-icon']" />
-      <svg-icon v-else :icon-class="icon" />
-    </template>
-    <span v-if="title">{{ title }}</span>
+    <svg-icon v-if="icon && !icon.includes('el-icon')" :icon-class="icon" />
+    <i v-else-if="icon && icon.includes('el-icon')" :class="[icon, 'sub-el-icon']" />
+    <span v-if="title" class="menu-title">{{ title }}</span>
   </span>
 </template>
 
@@ -29,5 +27,10 @@ export default {
   color: currentColor;
   width: 1em;
   height: 1em;
+  margin-right: 10px;
+}
+
+.menu-title {
+  margin-left: 10px;
 }
 </style>

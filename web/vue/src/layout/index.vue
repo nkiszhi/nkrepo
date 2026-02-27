@@ -8,20 +8,19 @@
         <tags-view v-if="needTagsView" />
       </div>
       <app-main />
-      <right-panel v-if="showSettings">
+      <!-- 隐藏右侧设置面板,已移到系统设置菜单中 -->
+      <!-- <right-panel v-if="showSettings">
         <settings />
-      </right-panel>
+      </right-panel> -->
     </div>
   </div>
 </template>
 
 <script>
-import RightPanel from '@/components/RightPanel'
-import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components'
-import ResizeMixin from './mixin/ResizeHandler'
-import { useAppStore } from '@/stores/app'
-import { useSettingsStore } from '@/stores/settings'
-import { computed } from 'vue'
+import RightPanel from '@/components/RightPanel/index.vue'
+import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components/index.js'
+import ResizeMixin from './mixin/ResizeHandler.js'
+import { mapState } from 'vuex'
 
 export default {
   name: 'Layout',
@@ -34,44 +33,33 @@ export default {
     TagsView
   },
   mixins: [ResizeMixin],
-  setup() {
-    const appStore = useAppStore()
-    const settingsStore = useSettingsStore()
-
-    const sidebar = computed(() => appStore.sidebar)
-    const device = computed(() => appStore.device)
-    const showSettings = computed(() => settingsStore.showSettings)
-    const needTagsView = computed(() => settingsStore.tagsView)
-    const fixedHeader = computed(() => settingsStore.fixedHeader)
-
-    const classObj = computed(() => ({
-      hideSidebar: !sidebar.value.opened,
-      openSidebar: sidebar.value.opened,
-      withoutAnimation: sidebar.value.withoutAnimation,
-      mobile: device.value === 'mobile'
-    }))
-
-    const handleClickOutside = () => {
-      appStore.closeSideBar({ withoutAnimation: false })
+  computed: {
+    ...mapState({
+      sidebar: state => state.app.sidebar,
+      device: state => state.app.device,
+      showSettings: state => state.settings.showSettings,
+      needTagsView: state => state.settings.tagsView,
+      fixedHeader: state => state.settings.fixedHeader
+    }),
+    classObj() {
+      return {
+        hideSidebar: !this.sidebar.opened,
+        openSidebar: this.sidebar.opened,
+        withoutAnimation: this.sidebar.withoutAnimation,
+        mobile: this.device === 'mobile'
+      }
     }
-
-    return {
-      sidebar,
-      device,
-      showSettings,
-      needTagsView,
-      fixedHeader,
-      classObj,
-      handleClickOutside
+  },
+  methods: {
+    handleClickOutside() {
+      this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  @import "~@/styles/mixin.scss";
-  @import "~@/styles/variables.scss";
-
+  @use "@/styles/mixin.scss" as *;
   .app-wrapper {
     @include clearfix;
     position: relative;

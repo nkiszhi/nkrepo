@@ -1,3 +1,5 @@
+@use './variables.scss' as *;
+
 #app {
 
   .main-container {
@@ -104,6 +106,14 @@
       padding: 0 !important;
       position: relative;
 
+      .svg-icon {
+        margin-left: 20px;
+      }
+
+      .sub-el-icon {
+        margin-left: 19px;
+      }
+
       .el-tooltip {
         padding: 0 !important;
 
@@ -147,6 +157,13 @@
             visibility: hidden;
             display: inline-block;
           }
+        }
+      }
+      
+      // 折叠时隐藏单级菜单的文字
+      .submenu-title-noDropdown {
+        .menu-title {
+          display: none;
         }
       }
     }
@@ -194,6 +211,13 @@
     .sub-el-icon {
       margin-right: 12px;
       margin-left: -2px;
+    }
+  }
+
+  // 折叠时隐藏文字
+  .el-menu--collapse {
+    .menu-title {
+      display: none;
     }
   }
 

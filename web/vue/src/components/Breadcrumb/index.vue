@@ -10,68 +10,46 @@
 </template>
 
 <script>
-import { ref, watch, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { compile } from 'path-to-regexp'
+import pathToRegexp from 'path-to-regexp'
 
 export default {
-  name: 'Breadcrumb',
-  setup() {
-    const route = useRoute()
-    const router = useRouter()
-    const levelList = ref(null)
-
-    const isDashboard = (routeItem) => {
-      const name = routeItem && routeItem.name
-      if (!name) {
-        return false
-      }
-      return name.trim().toLocaleLowerCase() === 'Dashboard'.toLocaleLowerCase()
+  data() {
+    return {
+      levelList: null
     }
-
-    const getBreadcrumb = () => {
+  },
+  watch: {
+    $route(route) {
+      // if you go to the redirect page, do not update the breadcrumbs
+      if (route.path.startsWith('/redirect/')) {
+        return
+      }
+      this.getBreadcrumb()
+    }
+  },
+  created() {
+    this.getBreadcrumb()
+  },
+  methods: {
+    getBreadcrumb() {
       // only show routes with meta.title
-      let matched = route.matched.filter(item => item.meta && item.meta.title)
-      const first = matched[0]
-
-      if (!isDashboard(first)) {
-        matched = [{ path: '/dashboard', meta: { title: 'Dashboard' }}].concat(matched)
-      }
-
-      levelList.value = matched.filter(item => item.meta && item.meta.title && item.meta.breadcrumb !== false)
-    }
-
-    const pathCompile = (path) => {
+      let matched = this.$route.matched.filter(item => item.meta && item.meta.title)
+      
+      this.levelList = matched.filter(item => item.meta && item.meta.title && item.meta.breadcrumb !== false)
+    },
+    pathCompile(path) {
       // To solve this problem https://github.com/PanJiaChen/vue-element-admin/issues/561
-      const { params } = route
-      const toPath = compile(path)
+      const { params } = this.$route
+      var toPath = pathToRegexp.compile(path)
       return toPath(params)
-    }
-
-    const handleLink = (item) => {
+    },
+    handleLink(item) {
       const { redirect, path } = item
       if (redirect) {
-        router.push(redirect)
+        this.$router.push(redirect)
         return
       }
-      router.push(pathCompile(path))
-    }
-
-    watch(() => route.path, (path) => {
-      // if you go to the redirect page, do not update the breadcrumbs
-      if (path.startsWith('/redirect/')) {
-        return
-      }
-      getBreadcrumb()
-    })
-
-    onMounted(() => {
-      getBreadcrumb()
-    })
-
-    return {
-      levelList,
-      handleLink
+      this.$router.push(this.pathCompile(path))
     }
   }
 }
