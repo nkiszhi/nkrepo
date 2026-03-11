@@ -35,7 +35,7 @@
     "html2canvas": "^1.4.1",
     "js-cookie": "3.0.5",
     "jsonlint": "1.6.3",
-    "jszip": "3.7.0",
+    "jszip": "3.8.0",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",
     "path-to-regexp": "3.3.0",
