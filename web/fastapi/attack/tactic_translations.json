@@ -1,0 +1,58 @@
+{
+  "TA0042": {
+    "en": "Resource Development",
+    "cn": "资源开发"
+  },
+  "TA0043": {
+    "en": "Reconnaissance",
+    "cn": "侦察"
+  },
+  "TA0001": {
+    "en": "Initial Access",
+    "cn": "初始访问"
+  },
+  "TA0002": {
+    "en": "Execution", 
+    "cn": "执行"
+  },
+  "TA0003": {
+    "en": "Persistence",
+    "cn": "持久化"
+  },
+  "TA0004": {
+    "en": "Privilege Escalation",
+    "cn": "权限提升"
+  },
+  "TA0005": {
+    "en": "Defense Evasion",
+    "cn": "防御规避"
+  },
+  "TA0006": {
+    "en": "Credential Access",
+    "cn": "凭证访问"
+  },
+  "TA0007": {
+    "en": "Discovery",
+    "cn": "发现"
+  },
+  "TA0008": {
+    "en": "Lateral Movement",
+    "cn": "横向移动"
+  },
+  "TA0009": {
+    "en": "Collection",
+    "cn": "收集"
+  },
+  "TA0011": {
+    "en": "Exfiltration",
+    "cn": "数据渗出"
+  },
+  "TA0010": {
+    "en": "Command and Control",
+    "cn": "命令与控制"
+  },
+  "TA0040": {
+    "en": "Impact",
+    "cn": "影响"
+  }
+}

@@ -541,9 +541,19 @@ export default {
         this.rawNodes.push(nodeData)
       }
 
-      // 准备可视化节点（添加位置信息）
+      // 准备可视化节点（添加位置信息和data属性）
       const visualizationNode = {
         ...nodeData,
+        // 确保有data属性,如果没有则创建
+        data: nodeData.data || {
+          label: nodeData.label || nodeData.id,
+          description: nodeData.description || '',
+          technique_id: nodeData.technique_id || '',
+          tactic: nodeData.tactic || '',
+          cve_id: nodeData.cve_id || '',
+          ip_address: nodeData.ip_address || '',
+          domain: nodeData.domain || ''
+        },
         position: {
           x: 100 + (this.visualizationNodes.length % 10) * 250,
           y: 100 + Math.floor(this.visualizationNodes.length / 10) * 180

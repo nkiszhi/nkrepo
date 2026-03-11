@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <main>
     <div class="text-center">
       <h2 class="text-primary">基于可信度评估的多模型恶意文件检测</h2>
@@ -321,13 +321,10 @@ export default {
       return this.results.length - this.unsupportedCount
     },
     maliciousCount() {
-      return this.results.filter(item =>
-        item.category &&
-        item.category !== 'type-unsupported' &&
-        item.category !== 'undetected' &&
-        item.category !== 'harmless'
-      ).length
-    },
+        return this.results.filter(item =>
+          item.category === 'malicious' || item.category === 'suspicious'
+        ).length
+      },
     harmlessCount() {
       return this.validDetectorCount - this.maliciousCount
     }

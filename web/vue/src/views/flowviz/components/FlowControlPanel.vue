@@ -150,12 +150,14 @@
               <i class="el-icon-download" style="margin-right: 5px;" />
               导出
             </el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="png">PNG 图片</el-dropdown-item>
-              <el-dropdown-item command="json">JSON 数据</el-dropdown-item>
-              <el-dropdown-item command="attackflow">ATT&CK Flow v3</el-dropdown-item>
-              <el-dropdown-item command="stix">STIX 格式</el-dropdown-item>
-            </el-dropdown-menu>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="png">PNG 图片</el-dropdown-item>
+                <el-dropdown-item command="json">JSON 数据</el-dropdown-item>
+                <el-dropdown-item command="attackflow">ATT&CK Flow v3</el-dropdown-item>
+                <el-dropdown-item command="stix">STIX 格式</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
           </el-dropdown>
         </el-button-group>
       </el-form-item>

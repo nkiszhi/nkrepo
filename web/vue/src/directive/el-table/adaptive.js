@@ -1,5 +1,3 @@
-import { addResizeListener, removeResizeListener } from 'element-ui/src/utils/resize-event'
-
 /**
  * How to use
  * <el-table height="100px" v-el-height-adaptive-table="{bottomOffset: 30}">...</el-table>
@@ -25,17 +23,14 @@ const doResize = (el, binding, vnode) => {
 }
 
 export default {
-  bind(el, binding, vnode) {
+  mounted(el, binding, vnode) {
     el.resizeListener = () => {
       doResize(el, binding, vnode)
     }
-    // parameter 1 is must be "Element" type
-    addResizeListener(window.document.body, el.resizeListener)
-  },
-  inserted(el, binding, vnode) {
+    window.addEventListener('resize', el.resizeListener)
     doResize(el, binding, vnode)
   },
-  unbind(el) {
-    removeResizeListener(window.document.body, el.resizeListener)
+  unmounted(el) {
+    window.removeEventListener('resize', el.resizeListener)
   }
 }

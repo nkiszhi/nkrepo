@@ -1,7 +1,7 @@
 export default {
   lineChartData: {
     total_amount: {'date_data': ["2012\u5e74", "2013\u5e74", "2014\u5e74", "2015\u5e74", "2016\u5e74", "2017\u5e74", "2018\u5e74", "2019\u5e74", "2020\u5e74", "2021\u5e74", "2022\u5e74", "2023\u5e74", "2024\u5e74", "2025\u5e74", "2026\u5e74"], 'amount_data': [3538942, 11403261, 4194304, 4456440, 4128768, 2097152, 2555904, 1769471, 1900538, 131072, 3342322, 2031615, 196608, 1088993, 0]},
-    year_amount: {'date_data': ["2025\u5e7403\u6708", "2025\u5e7404\u6708", "2025\u5e7405\u6708", "2025\u5e7406\u6708", "2025\u5e7407\u6708", "2025\u5e7408\u6708", "2025\u5e7409\u6708", "2025\u5e7410\u6708", "2025\u5e7411\u6708", "2025\u5e7412\u6708", "2026\u5e7401\u6708", "2026\u5e7402\u6708"], 'amount_data': [0, 0, 0, 196608, 736431, 131072, 20618, 0, 4264, 0, 0, 0]}
+    year_amount: {'date_data': ["2025\u5e7404\u6708", "2025\u5e7405\u6708", "2025\u5e7406\u6708", "2025\u5e7407\u6708", "2025\u5e7408\u6708", "2025\u5e7409\u6708", "2025\u5e7410\u6708", "2025\u5e7411\u6708", "2025\u5e7412\u6708", "2026\u5e7401\u6708", "2026\u5e7402\u6708", "2026\u5e7403\u6708"], 'amount_data': [0, 0, 196608, 736431, 131072, 20618, 0, 4264, 0, 0, 0, 0]}
   },
   pieTop10Data: {
     category: [{"name": "Trojan", "value": 9580976}, {"name": "AdWare", "value": 3397299}, {"name": "Trojan-Downloader", "value": 1847408}, {"name": "Trojan-Dropper", "value": 1633592}, {"name": "Virus", "value": 1019884}, {"name": "DangerousObject", "value": 983277}, {"name": "Downloader", "value": 955526}, {"name": "Backdoor", "value": 840479}, {"name": "Worm", "value": 740300}, {"name": "Hoax", "value": 642972}, {"name": "Others", "value": 3047136}],
@@ -51,18 +51,18 @@ export default {
     behaviourMitreTrees1: 31367
   },
   lineChartDataDomain: {
-    total_domain: {'name': '2019-2026年恶意域名总数统计', 'date_data': ["2019年", "2020年", "2021年", "2022年", "2023年", "2024年", "2025年", "2026年"], 'amount_data': [4682499, 40011902, 13004298, 178305831, 151579273, 344319815, 409875308, 29569225]},
-    messages: {'name': '2025年02月-2026年01月恶意域名数量统计', 'date_data': ["2025年02月", "2025年03月", "2025年04月", "2025年05月", "2025年06月", "2025年07月", "2025年08月", "2025年09月", "2025年10月", "2025年11月", "2025年12月", "2026年01月"], 'amount_data': [33005632, 35577041, 35642377, 36873332, 29277313, 33822322, 29288699, 37175900, 37933671, 35926998, 24475659, 15841322]},
-    purchases: {'name': '1月每日恶意域名数量统计', 'date_data': ["01月29日", "01月30日", "01月31日", "02月01日", "02月02日", "02月03日", "02月04日", "02月05日", "02月06日", "02月07日", "02月08日", "02月09日", "02月10日", "02月11日", "02月12日", "02月13日", "02月14日", "02月15日", "02月16日", "02月17日", "02月24日", "02月25日"], 'amount_data': [1282245, 541260, 540683, 538653, 541214, 557958, 1302161, 561846, 563828, 565610, 1307577, 1330504, 580640, 579791, 579257, 573351, 1334949, 578302, 579608, 575242, 500642, 576770]}
+    total_domain: {'name': '2019-2026年恶意域名总数统计', 'date_data': ["2019年", "2020年", "2021年", "2022年", "2023年", "2024年", "2025年", "2026年"], 'amount_data': [4682499, 40011902, 13004298, 178305831, 151579273, 344319815, 409875308, 11337954]},
+    messages: {'name': '2025年03月-2026年01月恶意域名数量统计', 'date_data': ["2025年03月", "2025年04月", "2025年05月", "2025年06月", "2025年07月", "2025年08月", "2025年09月", "2025年10月", "2025年11月", "2025年12月", "2026年01月"], 'amount_data': [34406712, 35642377, 36873332, 29277313, 33822322, 29288699, 37175900, 37933671, 35926998, 24475659, 11337954]},
+    purchases: {'name': '3月每日恶意域名数量统计', 'date_data': [], 'amount_data': []}
   },
-  top10Source: [{"source": "abuse.ch", "count": 120798049}, {"source": "cybercrime-tracker.net", "count": 26966590}, {"source": "(static)\r", "count": 25292716}, {"source": "malware", "count": 20019127}, {"source": "bambenekconsulting.com", "count": 17321479}, {"source": "github.com/stamparm/blackbook", "count": 7234422}, {"source": "viriback.com", "count": 7207277}, {"source": "360.com", "count": 6711403}, {"source": "malwaredomains.com", "count": 5875055}, {"source": "alienvault.com", "count": 4564656}],
-  top10Category: [{"category": "malware", "count": 165973451}, {"category": "apt gamaredon (malware)", "count": 48085116}, {"category": "elf mirai (malware)", "count": 47947139}, {"category": "elf gafgyt (malware)", "count": 38002418}, {"category": "cobaltstrike-2 (malware)", "count": 25916558}, {"category": "bad history (suspicious)", "count": 25907547}, {"category": "browser locker (malicious)", "count": 18294913}, {"category": "emotet (malware)", "count": 18184457}, {"category": "android fakeapp (malware)", "count": 17605492}, {"category": "android mellat (malware)", "count": 17425151}],
+  top10Source: [{"source": "abuse.ch", "count": 120798049}, {"source": "cybercrime-tracker.net", "count": 26966590}, {"source": "malware", "count": 20019127}, {"source": "bambenekconsulting.com", "count": 17321479}, {"source": "(static)\r", "count": 11914667}, {"source": "github.com/stamparm/blackbook", "count": 7234422}, {"source": "viriback.com", "count": 7207277}, {"source": "360.com", "count": 6711403}, {"source": "malwaredomains.com", "count": 5875055}, {"source": "alienvault.com", "count": 4564656}],
+  top10Category: [{"category": "malware", "count": 164236374}, {"category": "apt gamaredon (malware)", "count": 47870128}, {"category": "elf mirai (malware)", "count": 46764299}, {"category": "elf gafgyt (malware)", "count": 36919872}, {"category": "bad history (suspicious)", "count": 25805053}, {"category": "cobaltstrike-2 (malware)", "count": 25003581}, {"category": "browser locker (malicious)", "count": 18207932}, {"category": "emotet (malware)", "count": 17997936}, {"category": "android fakeapp (malware)", "count": 17407696}, {"category": "android mellat (malware)", "count": 17326083}],
   summary: {
     total_samples: 43030480,
     benign_samples: 195090,
     malicious_samples: 42835390,
     recent_year_samples: 1088993,
     current_year: 2026,
-    generated_at: '2026-02-27 05:17:24'
+    generated_at: '2026-03-10 09:47:26'
   }
 };

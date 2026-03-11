@@ -13,8 +13,9 @@ CLAUDE.md
 *_GUIDE.md
 
 # Configuration files with sensitive credentials
-web/flask/config.ini
+web/fastapi/config.ini
 config.ini
+web/vue/public/config.ini
 
 # Vue git submodule directory (should not be committed)
 web/vue/.git/
@@ -35,16 +36,21 @@ web/vue/.env.staging
 web/vue/.env.development.local
 web/vue/.env.production.local
 web/vue/.env.staging.local
+.env.development
+.env.production
+.env.staging
 
 # Uploaded files and user data
 web/vue/uploads/
 uploads/
 *.upload
+web/fastapi/uploads/
 
 # Log files
 logs/
 *.log
-web/flask/logs/
+web/fastapi/logs/
+web/fastapi/app.log
 
 # Malware samples (NEVER commit actual malware!)
 data/samples/
@@ -65,13 +71,22 @@ backup/
 db_backup/
 
 # Trained ML/DL models (often too large for git)
-web/flask/models/*.h5
-web/flask/models/*.pth
-web/flask/models/*.pt
-web/flask/models/*.pkl
-web/flask/models/*.joblib
-web/flask/models/*.model
-web/flask/training_data/
+web/fastapi/data/model/*.h5
+web/fastapi/data/model/*.pth
+web/fastapi/data/model/*.pt
+web/fastapi/data/model/*.pkl
+web/fastapi/data/model/*.joblib
+web/fastapi/data/model/*.model
+web/fastapi/data/model/*.npy
+web/fastapi/data/models/*.h5
+web/fastapi/data/models/*.pth
+web/fastapi/data/models/*.pt
+web/fastapi/data/models/*.pkl
+web/fastapi/data/models/*.joblib
+web/fastapi/data/models/*.model
+web/fastapi/data/models/*.npy
+web/fastapi/data/models/*.json
+web/fastapi/data/models/*.csv
 training_data/
 
 # YARA compiled rules
@@ -91,6 +106,7 @@ download/*.dex
 __pycache__/
 *.py[cod]
 *$py.class
+web/fastapi/__pycache__/
 
 # C extensions
 *.so
@@ -148,7 +164,7 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Flask stuff:
+# FastAPI stuff:
 instance/
 .webassets-cache
 
@@ -200,8 +216,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-web/flask/venv/
-
+web/fastapi/venv/
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -397,6 +412,8 @@ Temporary Items
 *.swp
 *.swo
 *~
+requirements.txt.backup
+package.json.backup
 
 # Cache directories
 .cache/
@@ -515,9 +532,10 @@ core.*
 !.env.example
 
 # Keep env files only in root directory, exclude web/vue directory
-!.env.development
-!.env.production
-web/vue/.env.*
+!config.ini.example
+!web/fastapi/config.ini.example
+!web/vue/.env.example
+!web/vue/public/config.ini.example
 
 # Keep empty directories with .gitkeep
 !.gitkeep
@@ -547,12 +565,17 @@ web/vue/.env.*
 #
 # 1. NEVER commit config.ini (contains MySQL passwords, API keys)
 # 2. NEVER commit malware samples from data/samples/
-# 3. NEVER commit uploaded files from web/vue/uploads/
+# 3. NEVER commit uploaded files from web/vue/uploads/ and web/fastapi/uploads/
 # 4. NEVER commit trained ML models (too large, use model registry)
 # 5. NEVER commit .env.*.local files (contain local configuration)
-# 6. DO commit .example and template files
-# 7. DO commit YARA rules (.yar files)
-# 8. DO commit documentation (.md files)
-# 9. DO commit setup scripts (.bat, .sh files)
+# 6. NEVER commit .env files (contain internal IP addresses and API endpoints)
+# 7. NEVER commit config files with internal IPs (web/vue/public/config.ini)
+# 8. NEVER commit log files
+# 9. NEVER commit Python cache files (__pycache__)
+# 10. NEVER commit backup files (*.backup)
+# 11. DO commit .example and template files
+# 12. DO commit YARA rules (.yar files)
+# 13. DO commit documentation (.md files)
+# 14. DO commit setup scripts (.bat, .sh files)
 #
 # ============================================================================
