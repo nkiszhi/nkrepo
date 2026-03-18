@@ -13,9 +13,9 @@ CLAUDE.md
 *_GUIDE.md
 
 # Configuration files with sensitive credentials
-web/fastapi/config.ini
 config.ini
-web/vue/public/config.ini
+web/fastapi/config.ini
+web/fastapi/app/services/av_detection/vm_config.json
 
 # Vue git submodule directory (should not be committed)
 web/vue/.git/
@@ -26,8 +26,6 @@ web/vue/chart_data.json
 # Environment configuration files (contain local settings)
 .env.local
 .env.*.local
-web/vue/.env.development.local
-web/vue/.env.production.local
 
 # Vue environment files (contain internal IP addresses and sensitive config)
 web/vue/.env.development
@@ -36,25 +34,24 @@ web/vue/.env.staging
 web/vue/.env.development.local
 web/vue/.env.production.local
 web/vue/.env.staging.local
-.env.development
-.env.production
-.env.staging
 
-# Uploaded files and user data
+# Uploaded files and user data (may contain malware samples)
 web/vue/uploads/
+web/fastapi/uploads/
 uploads/
 *.upload
-web/fastapi/uploads/
 
 # Log files
 logs/
 *.log
 web/fastapi/logs/
 web/fastapi/app.log
+web/fastapi/app/services/data/log.txt
 
 # Malware samples (NEVER commit actual malware!)
 data/samples/
 data/trails/
+data/sample/
 *.exe
 *.dll
 *.bin
@@ -71,23 +68,16 @@ backup/
 db_backup/
 
 # Trained ML/DL models (often too large for git)
-web/fastapi/data/model/*.h5
-web/fastapi/data/model/*.pth
-web/fastapi/data/model/*.pt
-web/fastapi/data/model/*.pkl
-web/fastapi/data/model/*.joblib
-web/fastapi/data/model/*.model
-web/fastapi/data/model/*.npy
-web/fastapi/data/models/*.h5
-web/fastapi/data/models/*.pth
-web/fastapi/data/models/*.pt
-web/fastapi/data/models/*.pkl
-web/fastapi/data/models/*.joblib
-web/fastapi/data/models/*.model
-web/fastapi/data/models/*.npy
-web/fastapi/data/models/*.json
-web/fastapi/data/models/*.csv
+web/fastapi/data/model/
+web/fastapi/data/models/
 training_data/
+
+# Feature data files
+web/fastapi/data/features/
+web/fastapi/data/*.csv
+web/fastapi/data/*.pki
+web/fastapi/data/*.txt
+web/fastapi/data/*.npy
 
 # YARA compiled rules
 *.yarc
@@ -106,7 +96,6 @@ download/*.dex
 __pycache__/
 *.py[cod]
 *$py.class
-web/fastapi/__pycache__/
 
 # C extensions
 *.so
@@ -164,9 +153,12 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# FastAPI stuff:
+# Flask stuff:
 instance/
 .webassets-cache
+
+# FastAPI stuff:
+web/fastapi/app.log
 
 # Scrapy stuff:
 .scrapy
@@ -217,6 +209,7 @@ ENV/
 env.bak/
 venv.bak/
 web/fastapi/venv/
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -254,6 +247,7 @@ web/vue/node_modules/
 dist/
 dist-ssr/
 web/vue/dist/
+web/vue/build/
 
 # Build files
 *.tsbuildinfo
@@ -285,9 +279,7 @@ lerna-debug.log*
 *.sln
 *.sw?
 
-# Local env files
-.env.local
-.env.*.local
+# Local env files (duplicate rule removed - already defined in Application-Specific Files)
 
 # Package lock files (optional - uncomment if you want to ignore)
 # package-lock.json
@@ -322,6 +314,7 @@ lerna-debug.log*
 .idea_modules/
 out/
 web/vue/.idea/
+web/fastapi/.idea/
 
 # Sublime Text
 *.tmlanguage.cache
@@ -412,8 +405,6 @@ Temporary Items
 *.swp
 *.swo
 *~
-requirements.txt.backup
-package.json.backup
 
 # Cache directories
 .cache/
@@ -532,10 +523,9 @@ core.*
 !.env.example
 
 # Keep env files only in root directory, exclude web/vue directory
-!config.ini.example
-!web/fastapi/config.ini.example
-!web/vue/.env.example
-!web/vue/public/config.ini.example
+!.env.development
+!.env.production
+web/vue/.env.*
 
 # Keep empty directories with .gitkeep
 !.gitkeep
@@ -563,19 +553,18 @@ core.*
 #
 # IMPORTANT FOR NKREPO:
 #
-# 1. NEVER commit config.ini (contains MySQL passwords, API keys)
-# 2. NEVER commit malware samples from data/samples/
-# 3. NEVER commit uploaded files from web/vue/uploads/ and web/fastapi/uploads/
-# 4. NEVER commit trained ML models (too large, use model registry)
-# 5. NEVER commit .env.*.local files (contain local configuration)
-# 6. NEVER commit .env files (contain internal IP addresses and API endpoints)
-# 7. NEVER commit config files with internal IPs (web/vue/public/config.ini)
-# 8. NEVER commit log files
-# 9. NEVER commit Python cache files (__pycache__)
-# 10. NEVER commit backup files (*.backup)
-# 11. DO commit .example and template files
-# 12. DO commit YARA rules (.yar files)
-# 13. DO commit documentation (.md files)
-# 14. DO commit setup scripts (.bat, .sh files)
+# 1. NEVER commit config.ini (contains MySQL passwords, JWT secrets, API keys)
+# 2. NEVER commit web/fastapi/config.ini (backend sensitive configuration)
+# 3. NEVER commit web/fastapi/app/services/av_detection/vm_config.json (VM IPs and ports)
+# 4. NEVER commit malware samples from data/samples/, data/sample/, uploads/
+# 5. NEVER commit uploaded files from web/vue/uploads/, web/fastapi/uploads/
+# 6. NEVER commit trained ML models (too large, use model registry)
+# 7. NEVER commit .env.* files (contain internal IP addresses and API endpoints)
+# 8. NEVER commit .env.*.local files (contain local configuration)
+# 9. NEVER commit feature data files (CSV, PKI, TXT, NPY files in data/)
+# 10. DO commit .example and template files
+# 11. DO commit YARA rules (.yar files)
+# 12. DO commit documentation (.md files)
+# 13. DO commit setup scripts (.bat, .sh files)
 #
 # ============================================================================

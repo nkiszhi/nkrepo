@@ -27,7 +27,6 @@
 
 <script>
 import ScrollPane from './ScrollPane.vue'
-import path from 'path'
 
 export default {
   components: { ScrollPane },
@@ -72,11 +71,21 @@ export default {
     isAffix(tag) {
       return tag.meta && tag.meta.affix
     },
+    // 自定义路径解析函数,替代Node.js的path.resolve
+    resolvePath(basePath, routePath) {
+      if (routePath.startsWith('/')) {
+        return routePath
+      }
+      if (basePath.endsWith('/')) {
+        return basePath + routePath
+      }
+      return basePath + '/' + routePath
+    },
     filterAffixTags(routes, basePath = '/') {
       let tags = []
       routes.forEach(route => {
         if (route.meta && route.meta.affix) {
-          const tagPath = path.resolve(basePath, route.path)
+          const tagPath = this.resolvePath(basePath, route.path)
           tags.push({
             fullPath: tagPath,
             path: tagPath,

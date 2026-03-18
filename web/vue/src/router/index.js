@@ -73,6 +73,18 @@ export const asyncRoutes = [
         component: () => import('@/views/detect/domain.vue'),
         name: 'DomainDetect',
         meta: { title: '恶意域名检测' }
+      },
+      {
+        path: 'av-scan-single',
+        component: () => import('@/views/detect/av-scan-single.vue'),
+        name: 'AVScanSingle',
+        meta: { title: '分布式杀毒检测' }
+      },
+      {
+        path: 'av-scan-batch',
+        component: () => import('@/views/detect/av-scan-batch.vue'),
+        name: 'AVScanBatch',
+        meta: { title: '批量杀毒检测' }
       }
     ]
   },

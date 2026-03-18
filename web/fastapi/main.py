@@ -18,7 +18,8 @@ from app.api import (
     flowviz_router,
     query_router,
     config_router,
-    flowviz_streaming_router
+    flowviz_streaming_router,
+    av_scan_router
 )
 
 # 导入vue_data生成函数
@@ -197,6 +198,7 @@ app.include_router(flowviz_router, prefix="/flowviz", tags=["攻击流可视化"
 app.include_router(flowviz_streaming_router, prefix="/flowviz", tags=["FlowViz流式分析"])
 app.include_router(query_router, tags=["查询"])
 app.include_router(config_router, prefix="/api", tags=["配置"])
+app.include_router(av_scan_router, prefix="/api", tags=["分布式杀毒扫描"])
 
 
 @app.get("/")

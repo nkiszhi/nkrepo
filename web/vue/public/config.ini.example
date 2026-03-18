@@ -1,6 +1,0 @@
-# Vue前端API配置
-# 后端启动时会自动更新此文件
-
-[api]
-baseUrl = http://127.0.0.1:5005
-prefix = /api
