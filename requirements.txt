@@ -9,17 +9,16 @@
 #   pip install -r requirements.txt
 #
 # Components Covered:
-#   - Flask Web Backend (web/flask/)
+#   - FastAPI Web Backend (web/fastapi/)
 #   - Malware Analysis Utilities (utils/)
-#   - Machine Learning Models (web/flask/models/)
+#   - Machine Learning Models (multi_scan/)
 #   - Data Processing Scripts (download/, db/)
 # ============================================================================
 
 # ============================================================================
 # Web Framework & API
 # ============================================================================
-flask>=3.1.2
-flask-cors>=6.0.2
+# Note: FastAPI is used in web/fastapi/, see web/fastapi/requirements.txt
 bcrypt==4.3.0
 
 # ============================================================================
@@ -83,7 +82,7 @@ requests-toolbelt==1.0.0
 # ============================================================================
 # Image Processing
 # ============================================================================
-Pillow==11.2.1
+Pillow>=12.1.1
 
 # ============================================================================
 # Text Analysis & NLP
