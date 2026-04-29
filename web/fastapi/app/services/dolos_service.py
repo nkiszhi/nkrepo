@@ -242,119 +242,28 @@ class DolosAnalyzer:
         from urllib.parse import urlparse
         import re
         
-        # 允许的协议
         ALLOWED_SCHEMES = ['http', 'https']
-        # 禁止访问的内网IP模式
         BLOCKED_PATTERNS = [
-            r'^127\.',           # 127.0.0.0/8
-            r'^10\.',            # 10.0.0.0/8
-            r'^172\.(1[6-9]|2[0-9]|3[0-1])\.',  # 172.16.0.0/12
-            r'^192\.168\.',      # 192.168.0.0/16
-            r'^localhost
-                try:
-                    response = await client.get(url)
-                    response.raise_for_status()
-                    
-                    # 保存文件
-                    filename = url.split('/')[-1] or f"file_{len(file_paths)}"
-                    file_path = self.temp_dir / filename
-                    
-                    with open(file_path, 'wb') as f:
-                        f.write(response.content)
-                    
-                    file_paths.append(str(file_path))
-                except Exception as e:
-                    logger.error(f"下载文件失败 {url}: {str(e)}")
-                    raise Exception(f"下载文件失败: {url}")
-        
-        # 执行分析
-        result = await self.analyze(file_paths)
-        
-        # 清理临时文件
-        for path in file_paths:
-            try:
-                os.remove(path)
-            except Exception:
-                pass
-        
-        return result
-,      # localhost
-            r'^0\.0\.0\.0
-                try:
-                    response = await client.get(url)
-                    response.raise_for_status()
-                    
-                    # 保存文件
-                    filename = url.split('/')[-1] or f"file_{len(file_paths)}"
-                    file_path = self.temp_dir / filename
-                    
-                    with open(file_path, 'wb') as f:
-                        f.write(response.content)
-                    
-                    file_paths.append(str(file_path))
-                except Exception as e:
-                    logger.error(f"下载文件失败 {url}: {str(e)}")
-                    raise Exception(f"下载文件失败: {url}")
-        
-        # 执行分析
-        result = await self.analyze(file_paths)
-        
-        # 清理临时文件
-        for path in file_paths:
-            try:
-                os.remove(path)
-            except Exception:
-                pass
-        
-        return result
-,     # 0.0.0.0
-            r'^::1
-                try:
-                    response = await client.get(url)
-                    response.raise_for_status()
-                    
-                    # 保存文件
-                    filename = url.split('/')[-1] or f"file_{len(file_paths)}"
-                    file_path = self.temp_dir / filename
-                    
-                    with open(file_path, 'wb') as f:
-                        f.write(response.content)
-                    
-                    file_paths.append(str(file_path))
-                except Exception as e:
-                    logger.error(f"下载文件失败 {url}: {str(e)}")
-                    raise Exception(f"下载文件失败: {url}")
-        
-        # 执行分析
-        result = await self.analyze(file_paths)
-        
-        # 清理临时文件
-        for path in file_paths:
-            try:
-                os.remove(path)
-            except Exception:
-                pass
-        
-        return result
-,            # IPv6 localhost
+            r'^127\.',
+            r'^10\.',
+            r'^172\.(1[6-9]|2[0-9]|3[0-1])\.',
+            r'^192\.168\.',
+            r'^localhost$',
+            r'^0\.0\.0\.0$',
+            r'^::1$',
         ]
         
         validated_urls = []
         for url in urls:
             try:
                 parsed = urlparse(url)
-                
-                # 检查协议
                 if parsed.scheme.lower() not in ALLOWED_SCHEMES:
                     raise ValueError(f"不支持的协议: {parsed.scheme}")
-                
-                # 检查是否为内网地址
                 hostname = parsed.hostname
                 if hostname:
                     for pattern in BLOCKED_PATTERNS:
                         if re.match(pattern, hostname):
                             raise ValueError(f"禁止访问内网地址: {hostname}")
-                
                 validated_urls.append(url)
             except Exception as e:
                 logger.error(f"URL验证失败 {url}: {str(e)}")
@@ -391,3 +300,4 @@ class DolosAnalyzer:
                 pass
         
         return result
+
