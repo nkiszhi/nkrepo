@@ -20,8 +20,8 @@ class ClaudeProvider(BaseProvider):
         self.provider_name = 'Claude'
         self.client = None
         
+        # 注意: 不记录包含敏感信息的配置，只记录必要的调试信息
         logger.info(f"[Claude] 初始化客户端")
-        logger.info(f"[Claude] API URL: {self.base_url}")
         logger.info(f"[Claude] 模型: {self.model}")
         
         try:

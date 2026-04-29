@@ -65,6 +65,7 @@ def get_field_value(result, field_name, index, default=''):
         return default
 
 
+@router.post("/detect")
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     """文件上传和检测 - 完全按照旧后端实现"""
@@ -99,47 +100,51 @@ async def upload_file(file: UploadFile = File(...), current_user: dict = Depends
                 'sha256': ''
             }
         
-        # 解析查询结果
-        if isinstance(query_result, tuple) and len(query_result) == 3:
-            str_sha256, str_md5, has_vt = query_result
-            
-            # 如果数据库有记录,查询详细信息
-            if has_vt != '0':
-                # 查询完整信息
-                detailed_result = db_op.mysqlsha256(str_sha256)
-                if detailed_result:
-                    detailed_result = convert_to_serializable(detailed_result)
-                    if isinstance(detailed_result, (list, tuple)) and len(detailed_result) > 0:
-                        detailed_result = detailed_result[0]
-                    
-                    query_result_dict = {
-                        'MD5': get_field_value(detailed_result, 'md5', 3, str_md5),
-                        'SHA-256': str_sha256,
-                        'SSDEEP': get_field_value(detailed_result, 'ssdeep', 4, ''),
-                        'vhash': get_field_value(detailed_result, 'vhash', 5, ''),
-                        'Authentihash': get_field_value(detailed_result, 'authentihash', 6, ''),
-                        'Imphash': get_field_value(detailed_result, 'imphash', 7, ''),
-                        'Rich header hash': get_field_value(detailed_result, 'rich_header_hash', 8, ''),
-                        '类型': get_field_value(detailed_result, 'category', 11, ''),
-                        '平台': get_field_value(detailed_result, 'platform', 12, ''),
-                        '家族': get_field_value(detailed_result, 'family', 13, '')
-                    }
-                else:
-                    query_result_dict = {'MD5': str_md5, 'SHA256': str_sha256}
+        # 解析查询结果 - 支持多种返回格式
+        # 格式1: (sha256, md5, '0') - 数据库无记录
+        # 格式2: (data_dict, '0'/'1') - 数据库有记录
+        if isinstance(query_result, tuple):
+            if len(query_result) == 3 and isinstance(query_result[2], str):
+                # 格式1: (sha256, md5, '0')
+                str_sha256, str_md5, has_vt = query_result
+                query_result_dict = {'MD5': str_md5, 'SHA-256': str_sha256}
+                VT_API = str_sha256
+            elif len(query_result) == 2 and isinstance(query_result[0], dict):
+                # 格式2: (data_dict, '0'/'1')
+                data_dict = query_result[0]
+                has_vt = query_result[1]
+                str_sha256 = data_dict.get('sha256', '')
+                str_md5 = data_dict.get('md5', '')
+                
+                # 构建完整的基础信息
+                query_result_dict = {
+                    'MD5': str_md5,
+                    'SHA-256': str_sha256,
+                    'SSDEEP': data_dict.get('ssdeep', ''),
+                    'vhash': data_dict.get('vhash', ''),
+                    'Authentihash': data_dict.get('authentihash', ''),
+                    'Imphash': data_dict.get('imphash', ''),
+                    'Rich header hash': data_dict.get('rich_header_hash', ''),
+                    '类型': data_dict.get('category', ''),
+                    '平台': data_dict.get('platform', ''),
+                    '家族': data_dict.get('family', ''),
+                    '文件大小': f"{data_dict.get('length', 0)} bytes",
+                    '文件类型': data_dict.get('filetype', ''),
+                    '来源': data_dict.get('source', ''),
+                    '卡巴结果': data_dict.get('kav_result', ''),
+                    'Defender结果': data_dict.get('defender_result', '')
+                }
+                VT_API = str_sha256
             else:
-                query_result_dict = {'MD5': str_md5, 'SHA256': str_sha256}
-            
-            VT_API = str_sha256
-            logger.info(f"文件上传成功: filename={file.filename}, sha256={str_sha256}")
-            
-            return {
-                'original_filename': file.filename,
-                'query_result': query_result_dict,
-                'file_size': file_size,
-                'exe_result': exe_result,
-                'VT_API': VT_API,
-                'sha256': str_sha256
-            }
+                logger.error(f"数据库查询结果格式错误: {query_result}")
+                return {
+                    'original_filename': file.filename,
+                    'query_result': {'MD5': '', 'SHA256': ''},
+                    'file_size': file_size,
+                    'exe_result': exe_result,
+                    'VT_API': '',
+                    'sha256': ''
+                }
         else:
             logger.error(f"数据库查询结果格式错误: {query_result}")
             return {
@@ -150,6 +155,17 @@ async def upload_file(file: UploadFile = File(...), current_user: dict = Depends
                 'VT_API': '',
                 'sha256': ''
             }
+        
+        logger.info(f"文件上传成功: filename={file.filename}, sha256={str_sha256}")
+        
+        return {
+            'original_filename': file.filename,
+            'query_result': query_result_dict,
+            'file_size': file_size,
+            'exe_result': exe_result,
+            'VT_API': VT_API,
+            'sha256': str_sha256
+        }
         
     except Exception as e:
         logger.error(f"文件上传接口异常: {str(e)}")
@@ -228,10 +244,11 @@ async def get_detection_API(sha256: str, current_user: dict = Depends(get_curren
             raise HTTPException(status_code=404, detail="样本文件不存在")
         
         # 导入VT API
-        from app.services.external.api_vt import VT
+        from app.services.external.api_vt import VTAPI
         
         # 调用VT API
-        json_file_path = VT.get_API_result_detection(sha256, api_key, sample_dir_path, sample_file_path)
+        vt = VTAPI()
+        json_file_path = vt.get_API_result_detection(sha256, api_key, sample_dir_path, sample_file_path)
         
         if json_file_path == 500:
             raise HTTPException(status_code=500, detail="VT检测服务失败")
@@ -272,19 +289,42 @@ async def get_detection_API(sha256: str, current_user: dict = Depends(get_curren
 
 
 def get_existing_sample_path(sha256):
-    """查找样本文件路径 - 按照旧后端实现"""
+    """查找样本文件路径 - 从config.ini读取配置"""
+    # 验证SHA256格式，防止路径遍历攻击
+    import re
+    if not sha256 or not re.fullmatch(r"[0-9a-fA-F]{64}", sha256):
+        logger.error(f"无效的SHA256值: {sha256}")
+        return None, None
+    
     try:
+        import configparser
+        config = configparser.ConfigParser()
+        config_path = os.path.join(os.path.dirname(__file__), '../../config.ini')
+        config.read(config_path, encoding='utf-8')
+        
+        # 从配置文件读取路径
+        samples_dir = config.get('paths', 'sample_root', fallback='../../../data/samples')
+        web_upload_dir = config.get('paths', 'web_upload_dir', fallback='../../../data/web_upload_file')
+        
+        # 五级目录结构: {samples_dir}/{sha256[0]}/{sha256[1]}/{sha256[2]}/{sha256[3]}/{sha256[4]}/{sha256}
         prefix_parts = [sha256[0], sha256[1], sha256[2], sha256[3], sha256[4]]
-        old_sample_dir = os.path.join('../../../data/samples', *prefix_parts)
+        
+        # 路径1: 五级目录（已有恶意样本库）
+        old_sample_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', samples_dir, *prefix_parts))
         old_sample_path = os.path.join(old_sample_dir, sha256)
-        new_sample_dir = '../../../data/web_upload_file'
+        
+        # 路径2: web上传目录
+        new_sample_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', web_upload_dir))
         new_sample_path = os.path.join(new_sample_dir, sha256)
         
         if os.path.exists(old_sample_path):
+            logger.info(f"样本在五级目录找到: {old_sample_path}")
             return old_sample_dir, old_sample_path
         elif os.path.exists(new_sample_path):
+            logger.info(f"样本在web上传目录找到: {new_sample_path}")
             return new_sample_dir, new_sample_path
         else:
+            logger.warning(f"样本文件不存在: 五级目录={old_sample_path}, web目录={new_sample_path}")
             return None, None
     except Exception as e:
         logger.error(f"查找样本路径异常: {str(e)}")
@@ -297,7 +337,9 @@ async def detect_by_sha256(request: dict, current_user: dict = Depends(get_curre
     try:
         sha256 = request.get('sha256', '').strip().lower()
         
-        if not sha256 or len(sha256) != 64:
+        # 验证SHA256格式，防止路径遍历攻击
+        import re
+        if not sha256 or not re.fullmatch(r"[0-9a-fA-F]{64}", sha256):
             raise HTTPException(status_code=400, detail="无效的SHA256值")
         
         logger.info(f"SHA256检测请求: {sha256}")
@@ -335,7 +377,9 @@ async def detect_by_sha256(request: dict, current_user: dict = Depends(get_curre
                 exe_result = run_ensemble_prediction(sample_file_path)
                 exe_result = convert_to_serializable(exe_result)
         except Exception as model_error:
-            exe_result = {'error': str(model_error)}
+            logger.error(f"模型预测失败: {str(model_error)}")
+            # 注意: 不向用户暴露详细的错误信息
+            exe_result = {'error': '模型预测失败，请稍后重试'}
         
         return {
             'success': True,
@@ -380,10 +424,11 @@ async def get_behaviour_API(sha256: str, current_user: dict = Depends(get_curren
             raise HTTPException(status_code=404, detail="样本文件不存在")
         
         # 导入VT API
-        from app.services.external.api_vt import VT
+        from app.services.external.api_vt import VTAPI
         
         # 调用VT API
-        behaviour_file_path = VT.get_API_result_behaviour(sha256, api_key, sample_dir_path, sample_file_path)
+        vt = VTAPI()
+        behaviour_file_path = vt.get_API_result_behaviour(sha256, api_key, sample_dir_path, sample_file_path)
         
         with open(behaviour_file_path, 'r') as f:
             behaviour_scan = json.load(f)

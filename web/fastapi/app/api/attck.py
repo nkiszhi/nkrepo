@@ -150,10 +150,12 @@ def query_attck_technique_list(page=1, page_size=20, search=None, technique_id=N
         
     except pymysql.MySQLError as e:
         logger.error(f"ATT&CK技术列表查询异常: {str(e)}")
-        return {"success": False, "error": f"数据库错误: {str(e)}", "data": [], "pagination": {}}
+        # 注意: 不向用户暴露详细的错误信息
+        return {"success": False, "error": "数据库错误，请稍后重试", "data": [], "pagination": {}}
     except Exception as e:
         logger.error(f"ATT&CK技术列表查询通用异常: {str(e)}")
-        return {"success": False, "error": f"服务器内部错误: {str(e)}", "data": [], "pagination": {}}
+        # 注意: 不向用户暴露详细的错误信息
+        return {"success": False, "error": "服务器内部错误，请稍后重试", "data": [], "pagination": {}}
     finally:
         if cursor:
             cursor.close()
@@ -298,7 +300,7 @@ async def get_attck_matrix(current_user: dict = Depends(get_current_user)):
         }
     except Exception as e:
         logger.error(f"ATT&CK矩阵接口异常: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
+        raise HTTPException(status_code=500, detail="服务器内部错误，请稍后重试")
     finally:
         if cursor:
             cursor.close()
@@ -341,11 +343,12 @@ async def get_matrix_stats_light(current_user: dict = Depends(get_current_user))
         
     except Exception as e:
         logger.warning(f"矩阵统计查询失败: {str(e)}")
+        # 注意: 不向用户暴露详细的错误信息
         return {
             'success': True,
             'function_stats': {},
             'count': 0,
-            'message': f'查询失败: {str(e)}'
+            'message': '查询失败，请稍后重试'
         }
     finally:
         if cursor:
@@ -488,7 +491,7 @@ async def get_attck_technique_detail_by_id(
         raise
     except Exception as e:
         logger.error(f"获取技术详情失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
+        raise HTTPException(status_code=500, detail="服务器内部错误，请稍后重试")
     finally:
         if cursor:
             cursor.close()
@@ -534,7 +537,7 @@ async def get_tactics_techniques(current_user: dict = Depends(get_current_user))
         
     except Exception as e:
         logger.error(f"获取战术技术失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="服务器内部错误，请稍后重试")
     finally:
         if cursor:
             cursor.close()
@@ -645,7 +648,8 @@ async def get_api_components(
 
     except Exception as e:
         logger.error(f"获取API组件失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # 注意: 不向用户暴露详细的错误信息
+        raise HTTPException(status_code=500, detail="服务器内部错误，请稍后重试")
     finally:
         if cursor:
             cursor.close()
@@ -758,7 +762,7 @@ async def get_technique_mapping(
         
     except Exception as e:
         logger.error(f"获取技术映射失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="服务器内部错误，请稍后重试")
     finally:
         if cursor:
             cursor.close()
@@ -810,7 +814,7 @@ async def get_technique_functions(
         
     except Exception as e:
         logger.error(f"获取技术函数失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="服务器内部错误，请稍后重试")
     finally:
         if cursor:
             cursor.close()

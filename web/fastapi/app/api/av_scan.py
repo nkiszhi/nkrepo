@@ -2,7 +2,7 @@
 分布式杀毒软件扫描API
 功能: 单个文件检测、批量文件检测、任务进度查询、CSV报告下载
 """
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, BackgroundTasks, Form
 from fastapi.responses import FileResponse, StreamingResponse
 from app.api.auth import get_current_user
 from app.core import settings
@@ -238,11 +238,13 @@ def get_engine_vm(engine_name: str) -> str:
 @router.post("/av_batch_upload")
 async def batch_upload_files(
     files: List[UploadFile] = File(...),
+    engines: str = Form(""),  # 修复：使用 Form() 接收 FormData 中的字符串参数
     current_user: dict = Depends(get_current_user)
 ):
     """
     批量文件上传
     创建批量任务ID,接收多个文件上传
+    支持指定引擎列表
     """
     try:
         # 生成任务ID
@@ -269,6 +271,17 @@ async def batch_upload_files(
                 "path": str(file_path)
             })
 
+        # 解析引擎列表
+        selected_engines = []
+        logger.info(f"接收到的engines参数: '{engines}', 类型: {type(engines)}")
+        if engines:
+            selected_engines = [e.strip() for e in engines.split(",") if e.strip()]
+            logger.info(f"解析后的引擎列表: {selected_engines}")
+        else:
+            # 默认使用所有引擎
+            selected_engines = AV_ENGINES
+            logger.info(f"未指定引擎，使用默认所有引擎: {len(selected_engines)}个")
+
         # 初始化任务状态
         batch_tasks[task_id] = {
             "status": "pending",
@@ -279,16 +292,19 @@ async def batch_upload_files(
             "start_time": datetime.now(),
             "files": uploaded_files,
             "results": [],
-            "error": None
+            "error": None,
+            "selected_engines": selected_engines,  # 新增：选择的引擎
+            "user_id": current_user.get("id", 0)  # 新增：用户ID
         }
 
-        logger.info(f"批量上传完成: task_id={task_id}, files={len(files)}")
+        logger.info(f"批量上传完成: task_id={task_id}, files={len(files)}, engines={len(selected_engines)}")
 
         return {
             "task_id": task_id,
             "upload_dir": str(task_dir),
             "files": [{"name": f["name"], "size": f["size"]} for f in uploaded_files],
-            "total_files": len(files)
+            "total_files": len(files),
+            "selected_engines": selected_engines  # 新增：返回选择的引擎
         }
 
     except Exception as e:
@@ -337,16 +353,18 @@ async def start_batch_scan(
 
 
 async def execute_batch_scan(task_id: str):
-    """执行批量扫描任务(后台任务)"""
+    """执行批量扫描任务(后台任务) - 优化版：文件级并行扫描"""
     try:
         task = batch_tasks[task_id]
         files = task['files']
         total_files = len(files)
+        selected_engines = task.get('selected_engines', AV_ENGINES)  # 获取选择的引擎
 
-        logger.info(f"开始执行批量扫描: task_id={task_id}, files={total_files}")
+        logger.info(f"开始执行批量扫描: task_id={task_id}, files={total_files}, engines={len(selected_engines)}")
 
-        # 逐个文件扫描
-        for idx, file_info in enumerate(files):
+        # 定义单个文件扫描函数
+        async def scan_single_file_task(file_info: dict, idx: int) -> dict:
+            """扫描单个文件的异步任务"""
             try:
                 file_path = file_info['path']
                 file_name = file_info['name']
@@ -355,38 +373,80 @@ async def execute_batch_scan(task_id: str):
 
                 # 更新当前正在扫描的文件
                 task['current_file'] = file_name
-                logger.info(f"[进度更新] current_file={file_name}, scanned_files={idx}, progress={idx/total_files*100:.1f}%")
 
-                # 调用AV客户端扫描 - 使用asyncio.to_thread避免阻塞
-                scan_result = await asyncio.to_thread(av_client.scan_single_file, file_path)
+                # 调用AV客户端扫描 - 使用选择的引擎
+                # 优化：max_workers设为引擎数量，timeout减少到30秒
+                scan_result = await asyncio.to_thread(
+                    av_client.scan_single_file,
+                    file_path,
+                    selected_engines,  # 传递选择的引擎列表
+                    len(selected_engines),  # max_workers: 动态设置为引擎数量
+                    60   # timeout: 
+                )
 
                 # 格式化结果
                 formatted = format_batch_scan_result(scan_result, file_name)
-
-                # 添加到结果列表
-                task['results'].append(formatted)
 
                 # 更新进度
                 task['scanned_files'] = idx + 1
                 task['progress'] = (idx + 1) / total_files * 100
                 logger.info(f"[进度更新] scanned_files={idx+1}, progress={task['progress']:.1f}%")
 
+                return formatted
+
             except Exception as e:
                 logger.error(f"扫描文件失败: {file_info['name']}, error={str(e)}")
-                # 添加错误结果
-                task['results'].append({
+                # 返回错误结果
+                task['scanned_files'] = idx + 1
+                task['progress'] = (idx + 1) / total_files * 100
+                return {
                     "file_name": file_info['name'],
                     "error": str(e),
                     "engines": {}
-                })
-                task['scanned_files'] = idx + 1
-                task['progress'] = (idx + 1) / total_files * 100
+                }
+
+        # 使用 asyncio.gather 并行扫描所有文件
+        # 限制并发数为 min(文件数, 5) 避免资源耗尽
+        max_concurrent = min(total_files, 5)
+        results = []
+        
+        # 分批处理，每批 max_concurrent 个文件
+        for batch_start in range(0, total_files, max_concurrent):
+            batch_end = min(batch_start + max_concurrent, total_files)
+            batch_files = files[batch_start:batch_end]
+            
+            # 并行扫描当前批次
+            batch_tasks_list = [
+                scan_single_file_task(file_info, batch_start + idx) 
+                for idx, file_info in enumerate(batch_files)
+            ]
+            batch_results = await asyncio.gather(*batch_tasks_list)
+            results.extend(batch_results)
+            
+            logger.info(f"批次完成: {batch_start}-{batch_end}/{total_files}")
+
+        # 保存结果
+        task['results'] = results
 
         # 任务完成
         task['status'] = 'completed'
         task['end_time'] = datetime.now()
         task['current_file'] = None  # 清空当前文件
         logger.info(f"批量扫描完成: task_id={task_id}")
+
+        # 保存到历史记录
+        try:
+            from app.api.av_scan_history import save_scan_to_history
+            save_scan_to_history(
+                task_id=task_id,
+                user_id=task.get('user_id', 0),
+                status='completed',
+                total_files=total_files,
+                selected_engines=selected_engines,
+                scan_results=task['results']
+            )
+        except Exception as e:
+            logger.error(f"保存历史记录失败: {str(e)}")
 
     except Exception as e:
         logger.error(f"批量扫描任务异常: task_id={task_id}, error={str(e)}")
@@ -488,6 +548,11 @@ async def download_batch_scan_report(
     """
     下载批量检测CSV报告
     """
+    # 验证task_id格式，防止路径遍历攻击
+    import re
+    if not re.fullmatch(r"[a-zA-Z0-9_\-]+", task_id):
+        raise HTTPException(status_code=400, detail="无效的任务ID格式")
+    
     if task_id not in batch_tasks:
         raise HTTPException(status_code=404, detail="任务不存在")
 
@@ -499,18 +564,21 @@ async def download_batch_scan_report(
     try:
         # 生成CSV文件
         csv_path = Path(settings.UPLOAD_DIR) / "batch_tasks" / task_id / "report.csv"
+        
+        # 获取选择的引擎列表
+        selected_engines = task.get('selected_engines', AV_ENGINES)
 
         with open(csv_path, 'w', newline='', encoding='utf-8-sig') as csvfile:
             writer = csv.writer(csvfile)
 
-            # 写入表头
-            header = ['文件名'] + AV_ENGINES
+            # 写入表头 - 只包含选择的引擎
+            header = ['文件名'] + selected_engines
             writer.writerow(header)
 
-            # 写入数据
+            # 写入数据 - 只包含选择的引擎
             for result in task['results']:
                 row = [result['file_name']]
-                for engine in AV_ENGINES:
+                for engine in selected_engines:
                     status = result['engines'].get(engine, 'N/A')
                     # 转换状态为中文
                     if status == 'malicious':

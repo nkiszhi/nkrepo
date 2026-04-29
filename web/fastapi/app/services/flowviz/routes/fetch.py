@@ -166,9 +166,10 @@ def fetch_image():
         
     except Exception as error:
         logger.error(f'Image fetch error: {error}')
+        # 注意: 不向用户暴露详细的错误信息
         return jsonify({
             'error': 'Failed to fetch image',
-            'details': str(error)
+            'message': 'An error occurred while fetching the image.'
         }), 500
 
 @bp.route('/fetch-article', methods=['GET'])
@@ -250,7 +251,8 @@ def fetch_article():
         
     except Exception as error:
         logger.error(f'Article fetch error: {error}')
+        # 注意: 不向用户暴露详细的错误信息
         return jsonify({
             'error': 'Failed to fetch article',
-            'details': str(error)
+            'message': 'An error occurred while fetching the article.'
         }), 500

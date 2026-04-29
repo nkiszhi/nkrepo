@@ -145,7 +145,8 @@ def main():
         'password': args.password,  
         'host': args.host,  
     }  
-    print(db_config)
+    # 注意: 不打印包含密码的完整配置，只打印连接信息
+    print(f"数据库连接配置: user={args.user}, host={args.host}")
 
     try:  
         cnx = mysql.connector.connect(**db_config)  

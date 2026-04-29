@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { saveAs } from 'file-saver'
-import XLSX from 'xlsx'
+import XLSX from 'xlsx-js-style'  // 使用社区维护版本，修复ReDoS漏洞
 
 function generateArray(table) {
   var out = [];

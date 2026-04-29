@@ -45,9 +45,10 @@ def vision_analysis():
         
     except Exception as error:
         logger.error('Vision analysis error:', str(error))
+        # 注意: 不向用户暴露详细的错误信息，只返回通用错误消息
         return jsonify({
             'error': 'Vision analysis failed',
-            'details': str(error)
+            'message': 'An error occurred during vision analysis. Please try again later.'
         }), 500
 
 def assess_confidence_english(analysis_text, image_count):

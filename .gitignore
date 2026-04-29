@@ -160,6 +160,15 @@ instance/
 # FastAPI stuff:
 web/fastapi/app.log
 
+# Virtual environments
+web/fastapi/venv*/
+web/fastapi/.venv*/
+
+# Saved images and generated files
+web/fastapi/saved_gray_img/
+web/fastapi/dolos_results/
+web/fastapi/feeds/
+
 # Scrapy stuff:
 .scrapy
 

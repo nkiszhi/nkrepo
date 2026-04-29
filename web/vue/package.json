@@ -35,7 +35,7 @@
     "html2canvas": "^1.4.1",
     "js-cookie": "3.0.5",
     "jsonlint": "1.6.3",
-    "jszip": "^3.10.1",
+    "jszip": "3.7.0",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",
     "path-to-regexp": "3.3.0",
@@ -50,7 +50,7 @@
     "vue-splitpane": "1.0.6",
     "vuedraggable": "4.1.0",
     "vuex": "^4.1.0",
-    "xlsx": "0.17.0"
+    "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

@@ -223,7 +223,7 @@ def fetch_vt_data(api_key: str, sha256: str, folder: str, usage: Dict) -> Tuple[
 
     headers = {"x-apikey": api_key, "Accept": "application/json"}
     try:
-        logger.debug(f"请求 VT API: {sha256} (key: {api_key[:8]}...)")
+        logger.debug(f"请求 VT API: {sha256}")
         time.sleep(REQUEST_INTERVAL)
         response = requests.get(url, headers=headers, timeout=60)
 
@@ -239,12 +239,12 @@ def fetch_vt_data(api_key: str, sha256: str, folder: str, usage: Dict) -> Tuple[
             return False, 1, False, False
 
         elif response.status_code == 429:
-            logger.warning(f"配额用尽！Key: {api_key[:8]}... 今日配额已达上限")
+            logger.warning(f"配额用尽！今日配额已达上限")
             usage[api_key]['count'] = MAX_CALLS_PER_KEY
             return True, 0, True, False  # 需要切换密钥，错误，非临时错误
 
         elif response.status_code == 401:
-            logger.error(f"API 密钥无效: {api_key[:8]}...")
+            logger.error(f"API 密钥无效")
             usage[api_key]['count'] = MAX_CALLS_PER_KEY
             return True, 0, True, False  # 需要切换密钥，错误，非临时错误
 
@@ -348,7 +348,7 @@ def run_scan(csv_file: str, result_folder: str, key_usage: Dict) -> Tuple[int, i
                 break
 
             tried_keys.add(current_key)
-            logger.info(f"处理 [{i+1}/{len(sha256_list)}] {sha256}，使用密钥 {current_key[:8]}...")
+            logger.info(f"处理 [{i+1}/{len(sha256_list)}] {sha256}...")
 
             should_switch, call_inc, is_error, is_temporary = fetch_vt_data(
                 current_key, sha256, result_folder, key_usage

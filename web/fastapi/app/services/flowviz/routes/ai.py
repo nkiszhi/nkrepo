@@ -305,6 +305,7 @@ def analyze_stream():
         if not model:
             provider_config = ProviderFactory.get_provider_config(provider)
             model = provider_config.get('model', 'gpt-4o' if provider == 'openai' else 'claude-3-5-sonnet-20241022')
+            # 注意: 只记录模型名称，不记录包含api_key的provider_config
             logger.info(f"🔄 [{request_id}] 使用默认模型: {model}")
         
         content = ""
@@ -381,9 +382,11 @@ def analyze_stream():
         
         api_key = provider_config.get('api_key')
         if not api_key:
+            # 注意: 只记录错误信息，不记录api_key本身
             logger.error(f"❌ [{request_id}] {provider} API密钥未配置")
             return jsonify({'error': f'{provider} API密钥未配置，请检查配置文件'}), 500
         
+        # 注意: 只记录配置状态，不记录包含api_key的provider_config
         logger.info(f"✅ [{request_id}] 提供商配置有效")
         logger.info(f"🚀 [{request_id}] 开始生成流响应...")
         
@@ -416,9 +419,11 @@ def analyze_stream():
                 try:
                     provider_config['model'] = model
                     provider_config['strict_mode'] = strict_mode
+                    # 注意: 只记录模型和模式，不记录包含api_key的provider_config
                     logger.info(f"🔄 [{request_id}] 使用模型: {model}, 严格模式: {strict_mode}")
                     
                     ai_provider = ProviderFactory.create(provider, provider_config)
+                    # 注意: 只记录提供商名称，不记录包含api_key的provider_config
                     logger.info(f"✅ [{request_id}] AI提供商创建成功: {ai_provider.get_name()}")
                 except Exception as e:
                     logger.error(f"❌ [{request_id}] 创建AI提供商失败: {str(e)}")
@@ -621,7 +626,8 @@ def analyze_stream():
     except Exception as e:
         logger.error(f"❌ [{request_id}] 分析请求处理失败: {str(e)}")
         logger.error(traceback.format_exc())
-        return jsonify({'error': f'服务器内部错误: {str(e)}'}), 500
+        # 注意: 不向用户暴露详细的错误信息
+        return jsonify({'error': '服务器内部错误，请稍后重试'}), 500
 
 def generate_cached_response(cached_result, request_id, strict_mode):
     """从缓存生成响应"""

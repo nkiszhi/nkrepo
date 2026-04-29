@@ -1,7 +1,7 @@
 export default {
   lineChartData: {
     total_amount: {'date_data': ["2012\u5e74", "2013\u5e74", "2014\u5e74", "2015\u5e74", "2016\u5e74", "2017\u5e74", "2018\u5e74", "2019\u5e74", "2020\u5e74", "2021\u5e74", "2022\u5e74", "2023\u5e74", "2024\u5e74", "2025\u5e74", "2026\u5e74"], 'amount_data': [3538942, 11403261, 4194304, 4456440, 4128768, 2097152, 2555904, 1769471, 1900538, 131072, 3342322, 2031615, 196608, 1088993, 0]},
-    year_amount: {'date_data': ["2025\u5e7404\u6708", "2025\u5e7405\u6708", "2025\u5e7406\u6708", "2025\u5e7407\u6708", "2025\u5e7408\u6708", "2025\u5e7409\u6708", "2025\u5e7410\u6708", "2025\u5e7411\u6708", "2025\u5e7412\u6708", "2026\u5e7401\u6708", "2026\u5e7402\u6708", "2026\u5e7403\u6708"], 'amount_data': [0, 0, 196608, 736431, 131072, 20618, 0, 4264, 0, 0, 0, 0]}
+    year_amount: {'date_data': ["2025\u5e7405\u6708", "2025\u5e7406\u6708", "2025\u5e7407\u6708", "2025\u5e7408\u6708", "2025\u5e7409\u6708", "2025\u5e7410\u6708", "2025\u5e7411\u6708", "2025\u5e7412\u6708", "2026\u5e7401\u6708", "2026\u5e7402\u6708", "2026\u5e7403\u6708", "2026\u5e7404\u6708"], 'amount_data': [0, 196608, 736431, 131072, 20618, 0, 4264, 0, 0, 0, 0, 0]}
   },
   pieTop10Data: {
     category: [{"name": "Trojan", "value": 9580976}, {"name": "AdWare", "value": 3397299}, {"name": "Trojan-Downloader", "value": 1847408}, {"name": "Trojan-Dropper", "value": 1633592}, {"name": "Virus", "value": 1019884}, {"name": "DangerousObject", "value": 983277}, {"name": "Downloader", "value": 955526}, {"name": "Backdoor", "value": 840479}, {"name": "Worm", "value": 740300}, {"name": "Hoax", "value": 642972}, {"name": "Others", "value": 3047136}],
@@ -52,8 +52,8 @@ export default {
   },
   lineChartDataDomain: {
     total_domain: {'name': '2019-2026年恶意域名总数统计', 'date_data': ["2019年", "2020年", "2021年", "2022年", "2023年", "2024年", "2025年", "2026年"], 'amount_data': [4682499, 40011902, 13004298, 178305831, 151579273, 344319815, 409875308, 11337954]},
-    messages: {'name': '2025年03月-2026年01月恶意域名数量统计', 'date_data': ["2025年03月", "2025年04月", "2025年05月", "2025年06月", "2025年07月", "2025年08月", "2025年09月", "2025年10月", "2025年11月", "2025年12月", "2026年01月"], 'amount_data': [34406712, 35642377, 36873332, 29277313, 33822322, 29288699, 37175900, 37933671, 35926998, 24475659, 11337954]},
-    purchases: {'name': '3月每日恶意域名数量统计', 'date_data': [], 'amount_data': []}
+    messages: {'name': '2025年04月-2026年01月恶意域名数量统计', 'date_data': ["2025年04月", "2025年05月", "2025年06月", "2025年07月", "2025年08月", "2025年09月", "2025年10月", "2025年11月", "2025年12月", "2026年01月"], 'amount_data': [34476147, 36873332, 29277313, 33822322, 29288699, 37175900, 37933671, 35926998, 24475659, 11337954]},
+    purchases: {'name': '4月每日恶意域名数量统计', 'date_data': [], 'amount_data': []}
   },
   top10Source: [{"source": "abuse.ch", "count": 120798049}, {"source": "cybercrime-tracker.net", "count": 26966590}, {"source": "malware", "count": 20019127}, {"source": "bambenekconsulting.com", "count": 17321479}, {"source": "(static)\r", "count": 11914667}, {"source": "github.com/stamparm/blackbook", "count": 7234422}, {"source": "viriback.com", "count": 7207277}, {"source": "360.com", "count": 6711403}, {"source": "malwaredomains.com", "count": 5875055}, {"source": "alienvault.com", "count": 4564656}],
   top10Category: [{"category": "malware", "count": 164236374}, {"category": "apt gamaredon (malware)", "count": 47870128}, {"category": "elf mirai (malware)", "count": 46764299}, {"category": "elf gafgyt (malware)", "count": 36919872}, {"category": "bad history (suspicious)", "count": 25805053}, {"category": "cobaltstrike-2 (malware)", "count": 25003581}, {"category": "browser locker (malicious)", "count": 18207932}, {"category": "emotet (malware)", "count": 17997936}, {"category": "android fakeapp (malware)", "count": 17407696}, {"category": "android mellat (malware)", "count": 17326083}],
@@ -63,6 +63,6 @@ export default {
     malicious_samples: 42835390,
     recent_year_samples: 1088993,
     current_year: 2026,
-    generated_at: '2026-03-10 09:47:26'
+    generated_at: '2026-04-28 13:40:27'
   }
 };

@@ -52,11 +52,11 @@
           <svg-icon icon-class="detect-report" class="report-icon" />
           <span class="summary-title">检测结果</span>
         </div>
+        <div class="stat-item">
+          <span class="stat-label">文件名:</span>
+          <span class="stat-value">{{ scanResult.file_name }}</span>
+        </div>
         <div class="summary-stats">
-          <div class="stat-item">
-            <span class="stat-label">文件名:</span>
-            <span class="stat-value">{{ scanResult.file_name }}</span>
-          </div>
           <div class="stat-item">
             <span class="stat-label">文件大小:</span>
             <span class="stat-value">{{ scanResult.file_size }}</span>
@@ -68,7 +68,12 @@
           <div class="stat-item highlight">
             <span class="stat-label">检测结果:</span>
             <span class="stat-value" :class="resultClass">
-              {{ scanResult.total_engines }}个杀软中 {{ scanResult.malicious_count }}个判定为恶意
+             <template v-if="isScanCompleted">
+                {{ scanResult.total_engines }}个杀软中 {{ scanResult.malicious_count }}个判定为恶意
+              </template>
+              <template v-else>
+                检测中...
+              </template>
             </span>
           </div>
         </div>

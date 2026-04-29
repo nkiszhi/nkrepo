@@ -12,6 +12,9 @@ import os
 
 logger = logging.getLogger(__name__)
 
+# 调试模式开关 - 生产环境应设置为False
+DEBUG_MODE = os.environ.get('FLOWVIZ_DEBUG', 'false').lower() == 'true'
+
 class AdvancedFlowParser:
     """Advanced Streaming Parser - 简化版，更灵活的验证"""
     
@@ -174,9 +177,10 @@ class AdvancedFlowParser:
     
     def clean_json_text(self, json_text: str) -> str:
         """清理JSON文本"""
-        # 移除注释
+        # 移除注释 - 使用更高效的正则避免ReDoS
         json_text = re.sub(r'//.*', '', json_text)
-        json_text = re.sub(r'/\*[\s\S]*?\*/', '', json_text)
+        # 优化: 使用非贪婪匹配.*?配合re.DOTALL标志，避免[\s\S]*?的潜在性能问题
+        json_text = re.sub(r'/\*.*?\*/', '', json_text, flags=re.DOTALL)
         
         # 修复尾随逗号
         json_text = re.sub(r',\s*}', '}', json_text)
@@ -190,11 +194,16 @@ class AdvancedFlowParser:
         return json_text
     
     def save_debug_file(self, raw_text: str):
-        """保存调试文件"""
+        """保存调试文件 - 仅在调试模式下启用"""
+        # 安全检查: 生产环境禁用调试文件保存，避免敏感信息泄露
+        if not DEBUG_MODE:
+            return
+        
         try:
             debug_dir = '/tmp/flowviz_debug'
             os.makedirs(debug_dir, exist_ok=True)
             
+            # 注意: 调试模式下保存AI响应，可能包含敏感信息，仅用于开发调试
             file_path = os.path.join(debug_dir, f'response_{self.request_id}.txt')
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(raw_text)

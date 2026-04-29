@@ -110,6 +110,20 @@ class AVDistributedClient:
                 )
                 resp.raise_for_status()
                 result = resp.json()
+                
+                # 过滤结果：确保只返回指定引擎的结果
+                # 有些虚拟机可能返回所有引擎结果，需要过滤
+                if 'results' in result:
+                    filtered_results = {}
+                    for file_name, detection in result['results'].items():
+                        # 如果返回的是字典（多引擎结果），只取当前引擎
+                        if isinstance(detection, dict):
+                            filtered_results[file_name] = detection.get(engine, -1)
+                        else:
+                            # 单引擎结果，直接使用
+                            filtered_results[file_name] = detection
+                    result['results'] = filtered_results
+                
                 result['success'] = True
                 result['vm_id'] = vm_info['vm_id']
                 return result
@@ -138,8 +152,8 @@ class AVDistributedClient:
         self,
         file_paths: List[str],
         engines: List[str] = None,
-        max_workers: int = 5,
-        timeout: int = 300
+        max_workers: int = 15,
+        timeout: int = 60
     ) -> Dict[str, Any]:
         """
         使用多个引擎扫描文件
@@ -155,6 +169,10 @@ class AVDistributedClient:
         """
         if engines is None:
             engines = self.get_available_engines()
+        
+        # 添加日志：显示实际使用的引擎列表
+        print(f"[AV_Distributed_Client] scan_files called with engines: {engines}")
+        print(f"[AV_Distributed_Client] engines type: {type(engines)}, length: {len(engines) if engines else 0}")
 
         if not file_paths:
             return {'error': '未提供待扫描文件'}
@@ -228,8 +246,8 @@ class AVDistributedClient:
         self,
         file_path: str,
         engines: List[str] = None,
-        max_workers: int = 5,
-        timeout: int = 300
+        max_workers: int = 15,
+        timeout: int = 60
     ) -> Dict[str, Any]:
         """
         扫描单个文件
@@ -249,8 +267,8 @@ class AVDistributedClient:
         self,
         file_path: str,
         engines: List[str] = None,
-        max_workers: int = 5,
-        timeout: int = 300
+        max_workers: int = 15,
+        timeout: int = 60
     ):
         """
         流式扫描单个文件 - 每完成一个引擎就返回结果

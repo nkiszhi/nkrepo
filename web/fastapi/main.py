@@ -19,7 +19,9 @@ from app.api import (
     query_router,
     config_router,
     flowviz_streaming_router,
-    av_scan_router
+    av_scan_router,
+    av_scan_history_router,
+    dolos_router
 )
 
 # 导入vue_data生成函数
@@ -199,6 +201,8 @@ app.include_router(flowviz_streaming_router, prefix="/flowviz", tags=["FlowViz�
 app.include_router(query_router, tags=["查询"])
 app.include_router(config_router, prefix="/api", tags=["配置"])
 app.include_router(av_scan_router, prefix="/api", tags=["分布式杀毒扫描"])
+app.include_router(av_scan_history_router, prefix="/api", tags=["杀毒检测历史"])
+app.include_router(dolos_router, prefix="/api/dolos", tags=["代码相似度检测"])
 
 
 @app.get("/")

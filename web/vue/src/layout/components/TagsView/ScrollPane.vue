@@ -39,16 +39,22 @@ export default {
       this.$emit('scroll')
     },
     moveToTarget(currentTag) {
-      const $container = this.$refs.scrollContainer.$el
-      const $containerWidth = $container.offsetWidth
+      const $container = this.$refs.scrollContainer?.$el
       const $scrollWrapper = this.scrollWrapper
+      
+      // 防御性检查：确保元素存在
+      if (!$container || !$scrollWrapper) {
+        return
+      }
+      
+      const $containerWidth = $container.offsetWidth
       const tagList = this.$parent.$refs.tag
 
       let firstTag = null
       let lastTag = null
 
       // find first tag and last tag
-      if (tagList.length > 0) {
+      if (tagList && tagList.length > 0) {
         firstTag = tagList[0]
         lastTag = tagList[tagList.length - 1]
       }
@@ -59,9 +65,14 @@ export default {
         $scrollWrapper.scrollLeft = $scrollWrapper.scrollWidth - $containerWidth
       } else {
         // find preTag and nextTag
-        const currentIndex = tagList.findIndex(item => item === currentTag)
+        const currentIndex = tagList?.findIndex(item => item === currentTag) ?? -1
+        if (currentIndex === -1) return
+        
         const prevTag = tagList[currentIndex - 1]
         const nextTag = tagList[currentIndex + 1]
+        
+        // 防御性检查
+        if (!prevTag?.$el || !nextTag?.$el) return
 
         // the tag's offsetLeft after of nextTag
         const afterNextTagOffsetLeft = nextTag.$el.offsetLeft + nextTag.$el.offsetWidth + tagAndTagSpacing

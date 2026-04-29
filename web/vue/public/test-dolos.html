@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dolos测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dolos代码同源性检测测试</h1>
+    
+    <div class="test-section">
+        <h2>1. 测试后端API连接</h2>
+        <button onclick="testBackend()">测试后端连接</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 测试文件上传</h2>
+        <input type="file" id="fileInput" multiple accept=".py,.js,.java,.cpp,.c,.ts,.go,.rs,.php,.rb">
+        <button onclick="testUpload()">测试上传</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 测试完整分析流程</h2>
+        <button onclick="testFullAnalysis()">测试完整分析</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        const resultDiv = document.getElementById('result');
+        
+        function log(message) {
+            resultDiv.textContent += message + '\n';
+            console.log(message);
+        }
+        
+        async function testBackend() {
+            resultDiv.textContent = '';
+            log('测试后端连接...');
+            
+            try {
+                const response = await fetch('/api/dolos/file-types');
+                const data = await response.json();
+                log('✅ 后端连接成功！');
+                log('支持的文件类型: ' + JSON.stringify(data, null, 2));
+            } catch (error) {
+                log('❌ 后端连接失败: ' + error.message);
+            }
+        }
+        
+        async function testUpload() {
+            resultDiv.textContent = '';
+            const fileInput = document.getElementById('fileInput');
+            
+            if (fileInput.files.length < 2) {
+                log('❌ 请至少选择2个文件');
+                return;
+            }
+            
+            log('开始上传 ' + fileInput.files.length + ' 个文件...');
+            
+            const formData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                log('添加文件: ' + fileInput.files[i].name);
+                formData.append('files', fileInput.files[i]);
+            }
+            
+            try {
+                log('发送请求到 /api/dolos/analyze...');
+                const response = await fetch('/api/dolos/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                log('响应状态: ' + response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ 分析成功！');
+                    log('分析结果: ' + JSON.stringify(data, null, 2));
+                } else {
+                    const error = await response.text();
+                    log('❌ 分析失败: ' + error);
+                }
+            } catch (error) {
+                log('❌ 请求失败: ' + error.message);
+            }
+        }
+        
+        async function testFullAnalysis() {
+            resultDiv.textContent = '';
+            log('创建测试文件...');
+            
+            const file1 = new Blob(['def test():\n    print("hello")\n'], { type: 'text/plain' });
+            const file2 = new Blob(['def test():\n    print("hello")\n'], { type: 'text/plain' });
+            
+            const formData = new FormData();
+            formData.append('files', file1, 'test1.py');
+            formData.append('files', file2, 'test2.py');
+            
+            log('发送分析请求...');
+            
+            try {
+                const response = await fetch('/api/dolos/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                log('响应状态: ' + response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ 分析成功！');
+                    log('分析ID: ' + data.analysis_id);
+                    log('文件数: ' + data.files.length);
+                    log('检测对数: ' + data.pairs.length);
+                    
+                    if (data.pairs.length > 0) {
+                        log('\n相似度结果:');
+                        data.pairs.forEach((pair, i) => {
+                            log(`${i+1}. ${pair.leftFile} vs ${pair.rightFile}: ${(pair.similarity * 100).toFixed(2)}%`);
+                        });
+                    }
+                } else {
+                    const error = await response.text();
+                    log('❌ 分析失败: ' + error);
+                }
+            } catch (error) {
+                log('❌ 请求失败: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

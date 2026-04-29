@@ -1,5 +1,5 @@
 // vue/src/utils/exportExcel.js
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'  // 使用社区维护版本，修复ReDoS漏洞
 
 /**
  * 导出JSON数据到Excel文件

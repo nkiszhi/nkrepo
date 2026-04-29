@@ -33,26 +33,26 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 9528,
       host: '0.0.0.0',
-      open: true,
+      open: false,
       proxy: {
         '/dev-api': {
           target: baseApi,
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/dev-api/, '/dev-api'),
+          // 注意: 移除无效的rewrite规则（替换为自身无意义）
         },
         '/flowviz': {
           target: baseApi,
           changeOrigin: true,
           secure: false,
           ws: false,
-          rewrite: (path) => path.replace(/^\/flowviz/, '/flowviz'),
+          // 注意: 移除无效的rewrite规则（替换为自身无意义）
         },
         '/api': {
           target: baseApi,
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api/, '/api'),
+          // 注意: 移除无效的rewrite规则（替换为自身无意义）
         },
       },
     },

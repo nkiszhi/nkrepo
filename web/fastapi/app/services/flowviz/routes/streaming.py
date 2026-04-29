@@ -43,8 +43,10 @@ class StreamingFlowParser:
         """从响应文本中提取节点"""
         nodes = []
         
-        # 匹配节点JSON对象 - 更宽松的正则表达式
-        node_pattern = r'\{\s*["\']?id["\']?\s*:\s*["\']([^"\']+)["\'][^}]*["\']?type["\']?\s*:\s*["\']([^"\']+)["\'][^}]*\}'
+        # 匹配节点JSON对象 - 使用非贪婪匹配避免ReDoS
+        # 原正则: r'\{\s*["\']?id["\']?\s*:\s*["\']([^"\']+)["\'][^}]*["\']?type["\']?\s*:\s*["\']([^"\']+)["\'][^}]*\}'
+        # 优化: 使用非贪婪匹配[^}]*?替代贪婪匹配[^}]*，避免指数级回溯
+        node_pattern = r'\{\s*["\']?id["\']?\s*:\s*["\']([^"\']+)["\'][^}]*?["\']?type["\']?\s*:\s*["\']([^"\']+)["\'][^}]*?\}'
         
         matches = list(re.finditer(node_pattern, self.response_text, re.DOTALL))
         
@@ -104,8 +106,10 @@ class StreamingFlowParser:
         """从响应文本中提取边"""
         edges = []
         
-        # 匹配边JSON对象
-        edge_pattern = r'\{\s*["\']?id["\']?\s*:\s*["\']([^"\']+)["\'][^}]*["\']?source["\']?\s*:\s*["\']([^"\']+)["\'][^}]*["\']?target["\']?\s*:\s*["\']([^"\']+)["\'][^}]*\}'
+        # 匹配边JSON对象 - 使用非贪婪匹配避免ReDoS
+        # 原正则: r'\{\s*["\']?id["\']?\s*:\s*["\']([^"\']+)["\'][^}]*["\']?source["\']?\s*:\s*["\']([^"\']+)["\'][^}]*["\']?target["\']?\s*:\s*["\']([^"\']+)["\'][^}]*\}'
+        # 优化: 使用非贪婪匹配[^}]*?替代贪婪匹配[^}]*，避免指数级回溯
+        edge_pattern = r'\{\s*["\']?id["\']?\s*:\s*["\']([^"\']+)["\'][^}]*?["\']?source["\']?\s*:\s*["\']([^"\']+)["\'][^}]*?["\']?target["\']?\s*:\s*["\']([^"\']+)["\'][^}]*?\}'
         
         matches = list(re.finditer(edge_pattern, self.response_text, re.DOTALL))
         
@@ -220,6 +224,7 @@ def analyze_stream_realtime():
                 })
                 
                 ai_provider = ProviderFactory.create(provider, provider_config)
+                # 注意: 只记录提供商名称，不记录包含api_key的provider_config
                 logger.info(f"[{request_id}] AI提供商创建成功: {ai_provider.get_name()}")
                 
                 time.sleep(0.1)
@@ -321,7 +326,8 @@ def analyze_stream_realtime():
         
     except Exception as e:
         logger.error(f"❌ [{request_id}] 分析请求处理失败: {str(e)}")
-        return jsonify({'error': f'服务器内部错误: {str(e)}'}), 500
+        # 注意: 不向用户暴露详细的错误信息
+        return jsonify({'error': '服务器内部错误，请稍后重试'}), 500
 
 # 添加健康检查路由
 @bp.route('/health', methods=['GET'])

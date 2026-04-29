@@ -53,7 +53,7 @@ class OpenAIProvider(BaseProvider):
         self.node_spacing_y = 250  # 节点垂直间距
         
         logger.info(f"[OpenAI] 初始化客户端")
-        logger.info(f"[OpenAI] API URL: {self.base_url}")
+        # 注意: 不记录包含敏感信息的配置，只记录必要的调试信息
         logger.info(f"[OpenAI] 模型: {self.model}")
         logger.info(f"[OpenAI] 严格模式: {self.strict_mode}")
         logger.info(f"[OpenAI] 需要技术ID: {self.required_technique_ids}")
@@ -128,6 +128,7 @@ class OpenAIProvider(BaseProvider):
         messages = self.format_strict_prompt(text, vision_analysis, system, strict_mode, safe_max_tokens)
         
         try:
+            # 注意: 只记录模型参数，不记录包含api_key的配置信息
             logger.info(f"[OpenAI] 开始流式分析")
             logger.info(f"[OpenAI] 模型: {model}, max_tokens: {safe_max_tokens}, strict_mode: {strict_mode}")
             

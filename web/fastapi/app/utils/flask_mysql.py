@@ -14,8 +14,8 @@ class Databaseoperation:
         if not os.path.exists('config.ini'):
             raise FileNotFoundError("配置文件 config.ini 不存在，请检查路径")
         config.read('config.ini', encoding='utf-8')
-        
-        # 读取配置并设置默认值
+
+        # 读取数据库配置并设置默认值
         self.host = config.get('mysql', 'host', fallback='localhost')
         self.user = config.get('mysql', 'user', fallback='root')
         self.passwd = config.get('mysql', 'passwd', fallback='')
@@ -23,14 +23,18 @@ class Databaseoperation:
         self.db_web = config.get('mysql', 'db_web', fallback='webdatadb')
         self.charset = config.get('mysql', 'charset', fallback='utf8mb4')
 
-    def filesha256(self, name):  
+        # 读取文件路径配置
+        self.upload_dir = config.get('paths', 'upload_dir', fallback='uploads')
+        self.web_upload_dir = config.get('paths', 'web_upload_dir', fallback='../../../data/web_upload_file')
+
+    def filesha256(self, name):
         """
         计算文件SHA256/MD5，查询数据库并处理文件
         :param name: 上传的文件名
         :return: 分支1 (str_sha256, str_md5, '0') | 分支2 (data_vs, '0'/'1')
         """
-        # 构建绝对路径，避免相对路径歧义
-        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../vue/uploads', name))
+        # 使用配置文件中的上传目录
+        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', self.upload_dir, name))
         
         # 检查文件是否存在
         if not os.path.exists(file_path):
@@ -51,8 +55,9 @@ class Databaseoperation:
         data_vs = self.mysqlsha256(str_sha256, str_md5, name)
         
         # 分支1：数据库无记录 → 移动文件并返回基础信息
-        if data_vs == 0:  
-            new_dir_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../data/web_upload_file/'))
+        if data_vs == 0:
+            # 使用配置文件中的web上传目录
+            new_dir_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', self.web_upload_dir))
             os.makedirs(new_dir_path, exist_ok=True)  
             new_file_path = os.path.join(new_dir_path, str_sha256)  
             
@@ -264,7 +269,8 @@ class Databaseoperation:
                 charset=self.charset
             )
             with conn_web.cursor() as cursor:
-                sql = f"UPDATE `{table_name}` SET detection = %s, behaviour_summary = %s WHERE sha256 = %s;"  
+                # 修正字段名：detection -> has_vt, behaviour_summary -> has_vt_summary
+                sql = f"UPDATE `{table_name}` SET has_vt = %s, has_vt_summary = %s WHERE sha256 = %s;"  
                 update_data = (1, 1, str_sha256)  
                 cursor.execute(sql, update_data)  
                 conn_web.commit()  

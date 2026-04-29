@@ -57,6 +57,7 @@ class ProviderFactory:
                 'supports_strict_mode': True
             })
         
+        # 注意: 只记录提供商ID列表，不记录包含api_key的配置信息
         logger.info(f"可用提供商: {[p['id'] for p in providers]}")
         return providers
     

@@ -290,7 +290,7 @@ async def analyze_stream_realtime(
             
             # 这里需要导入ProviderFactory
             try:
-                from flowviz.providers.factory import ProviderFactory
+                from app.services.flowviz.providers.factory import ProviderFactory
                 
                 # 获取提供商配置
                 provider_config = ProviderFactory.get_provider_config(provider)

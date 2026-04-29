@@ -18,37 +18,46 @@ import * as filters from './filters/index.js'
 
 /**
  * 修复 Element Plus 遮罩层问题的工具函数
+ * 注意：不再移除 MessageBox/Dialog 相关的遮罩层
  */
 const fixElementOverlays = () => {
   try {
-    const overlays = document.querySelectorAll('.el-overlay, .el-loading-mask, .v-modal')
-    overlays.forEach(overlay => {
+    // 只移除 loading 遮罩，不移除 MessageBox/Dialog 的遮罩
+    const loadingOverlays = document.querySelectorAll('.el-loading-mask, .v-modal')
+    loadingOverlays.forEach(overlay => {
       if (overlay && overlay.parentNode === document.body) {
-        overlay.style.display = 'none'
-        overlay.style.opacity = '0'
-        overlay.style.zIndex = '-9999'
-        setTimeout(() => {
-          try {
-            if (overlay.parentNode) {
-              overlay.parentNode.removeChild(overlay)
+        // 检查是否有活跃的 MessageBox 或 Dialog
+        const hasActiveModal = document.querySelector('.el-message-box, .el-dialog')
+        if (!hasActiveModal) {
+          overlay.style.display = 'none'
+          overlay.style.opacity = '0'
+          overlay.style.zIndex = '-9999'
+          setTimeout(() => {
+            try {
+              if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay)
+              }
+            } catch (e) {
+              console.warn('移除遮罩层时出错:', e)
             }
-          } catch (e) {
-            console.warn('移除遮罩层时出错:', e)
-          }
-        }, 50)
+          }, 50)
+        }
       }
     })
     const body = document.body
     const html = document.documentElement
-    body.style.overflow = 'auto'
-    body.style.position = 'static'
-    body.style.width = 'auto'
-    body.style.height = 'auto'
-    body.style.paddingRight = '0'
-    body.style.filter = 'none'
-    body.style.opacity = '1'
-    body.classList.remove('el-popup-parent--hidden')
-    html.style.overflow = 'auto'
+    
+    // 检查是否有活跃的模态框
+    const hasActiveModal = document.querySelector('.el-message-box, .el-dialog, .el-overlay')
+    if (!hasActiveModal) {
+      body.style.overflow = 'auto'
+      body.style.position = 'static'
+      body.style.width = 'auto'
+      body.style.height = 'auto'
+      body.style.paddingRight = '0'
+      body.classList.remove('el-popup-parent--hidden')
+      html.style.overflow = 'auto'
+    }
     return true
   } catch (error) {
     console.error('修复遮罩层失败:', error)
@@ -60,6 +69,12 @@ const ensurePageInteractive = () => {
   fixElementOverlays()
   setTimeout(() => {
     try {
+      // 检查是否有活跃的模态框
+      const hasActiveModal = document.querySelector('.el-message-box, .el-dialog, .el-overlay')
+      if (hasActiveModal) {
+        // 有模态框时，不修改 pointerEvents
+        return
+      }
       const elements = document.querySelectorAll('*')
       elements.forEach(el => {
         if (el && el.style) {

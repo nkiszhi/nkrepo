@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <main>
     <div class="text-center">
       <h2 class="text-primary">基于可信度评估的多模型恶意文件检测</h2>

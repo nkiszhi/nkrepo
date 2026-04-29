@@ -85,6 +85,45 @@ export const asyncRoutes = [
         component: () => import('@/views/detect/av-scan-batch.vue'),
         name: 'AVScanBatch',
         meta: { title: '批量杀毒检测' }
+      },
+      {
+        path: 'av-scan-batch-v2',
+        component: () => import('@/views/detect/av-scan-batch-v2.vue'),
+        name: 'AVScanBatchV2',
+        meta: { title: '批量杀毒检测(可选引擎)' }
+      },
+      {
+        path: 'av-scan-history',
+        component: () => import('@/views/detect/av-scan-history.vue'),
+        name: 'AVScanHistory',
+        meta: { title: '检测历史记录' }
+      },
+      {
+        path: 'codefender',
+        component: () => import('@/views/detect/codefender-detect.vue'),
+        name: 'CodefenderDetect',
+        meta: { title: 'Codefender检测' }
+      }
+    ]
+  },
+    {
+    path: '/dolos',
+    component: Layout,
+    redirect: '/dolos/analysis',
+    name: 'Dolos',
+    meta: { title: '代码相似度检测', icon: 'detect_dolos' },
+    children: [
+      {
+        path: 'analysis',
+        component: () => import('@/views/dolos/DolosAnalysis.vue'),
+        name: 'DolosAnalysis',
+        meta: { title: '代码检测' }
+      },
+      {
+        path: 'history',
+        component: () => import('@/views/dolos/DolosHistory.vue'),
+        name: 'DolosHistory',
+        meta: { title: '检测历史' }
       }
     ]
   },
