@@ -18,7 +18,7 @@ pyjwt>=2.12.0  # 修复crit头验证漏洞 (CVE-2025-XXXX)
 # ============================================
 # 数据库
 # ============================================
-pymysql==1.1.0
+pymysql==1.1.1
 mysql-connector-python==8.3.0
 cryptography>=46.0.5  # 修复SECT曲线子群攻击漏洞 (CVE-2024-XXXX)
 sqlalchemy==2.0.36
