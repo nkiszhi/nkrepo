@@ -292,7 +292,20 @@ def get_existing_sample_path(sha256):
     """查找样本文件路径 - 从config.ini读取配置"""
     # 验证SHA256格式，防止路径遍历攻击
     import re
-    if not sha256 or not re.fullmatch(r"[0-9a-fA-F]{64}", sha256):
+    
+    def is_valid_sha256(value: str) -> bool:
+        """验证SHA256值是否有效且安全"""
+        if not value:
+            return False
+        # SHA256必须是64个十六进制字符
+        if not re.fullmatch(r"[0-9a-fA-F]{64}", value):
+            return False
+        # 检查是否包含路径遍历字符（额外保护）
+        if '..' in value or '/' in value or '\\' in value:
+            return False
+        return True
+    
+    if not is_valid_sha256(sha256):
         logger.error(f"无效的SHA256值: {sha256}")
         return None, None
     
