@@ -11,7 +11,7 @@ python-multipart>=0.0.26  # 修复任意文件写入漏洞 (CVE-2024-XXXX)
 # ============================================
 # 认证和安全
 # ============================================
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]>=3.4.0  # 修复ECDSA密钥混淆漏洞 (CVE-2022-29217类似)
 passlib[bcrypt]==1.7.4
 pyjwt>=2.12.0  # 修复crit头验证漏洞 (CVE-2025-XXXX)
 
