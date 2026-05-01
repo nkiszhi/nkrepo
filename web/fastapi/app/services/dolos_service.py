@@ -241,33 +241,60 @@ class DolosAnalyzer:
         # 验证URL，防止SSRF攻击
         from urllib.parse import urlparse
         import re
+        import ipaddress
         
         ALLOWED_SCHEMES = ['http', 'https']
-        BLOCKED_PATTERNS = [
-            r'^127\.',
-            r'^10\.',
-            r'^172\.(1[6-9]|2[0-9]|3[0-1])\.',
-            r'^192\.168\.',
-            r'^localhost$',
-            r'^0\.0\.0\.0$',
-            r'^::1$',
-        ]
         
-        validated_urls = []
-        for url in urls:
+        def is_safe_url(url: str) -> bool:
+            """验证URL是否安全，防止SSRF攻击"""
             try:
                 parsed = urlparse(url)
+                
+                # 只允许http和https协议
                 if parsed.scheme.lower() not in ALLOWED_SCHEMES:
-                    raise ValueError(f"不支持的协议: {parsed.scheme}")
+                    return False
+                
+                # 检查hostname
                 hostname = parsed.hostname
-                if hostname:
-                    for pattern in BLOCKED_PATTERNS:
-                        if re.match(pattern, hostname):
-                            raise ValueError(f"禁止访问内网地址: {hostname}")
-                validated_urls.append(url)
-            except Exception as e:
-                logger.error(f"URL验证失败 {url}: {str(e)}")
-                raise ValueError(f"无效的URL: {url} - {str(e)}")
+                if not hostname:
+                    return False
+                
+                # 阻止localhost和特殊地址
+                if hostname.lower() in ['localhost', '0.0.0.0', '::1']:
+                    return False
+                
+                # 尝试解析为IP地址并检查是否为私有地址
+                try:
+                    ip = ipaddress.ip_address(hostname)
+                    if ip.is_private or ip.is_loopback or ip.is_link_local:
+                        return False
+                except ValueError:
+                    # 不是IP地址，是域名，继续检查
+                    pass
+                
+                # 检查私有IP模式（域名形式）
+                private_patterns = [
+                    r'^127\.',
+                    r'^10\.',
+                    r'^172\.(1[6-9]|2[0-9]|3[0-1])\.',
+                    r'^192\.168\.',
+                    r'^169\.254\.',
+                ]
+                for pattern in private_patterns:
+                    if re.match(pattern, hostname):
+                        return False
+                
+                return True
+            except Exception:
+                return False
+        
+        # 验证所有URL
+        validated_urls = []
+        for url in urls:
+            if not is_safe_url(url):
+                logger.error(f"URL验证失败: {url}")
+                raise ValueError(f"无效或不安全的URL: {url}")
+            validated_urls.append(url)
         
         # 下载文件
         file_paths = []
