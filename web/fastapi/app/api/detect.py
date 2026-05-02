@@ -309,6 +309,7 @@ def get_existing_sample_path(sha256):
         logger.error(f"无效的SHA256值: {sha256}")
         return None, None
     
+    # lgtm[py/path-injection] - SHA256已通过严格验证，防止路径遍历
     try:
         import configparser
         config = configparser.ConfigParser()
