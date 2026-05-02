@@ -331,9 +331,11 @@ def get_existing_sample_path(sha256):
         new_sample_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', web_upload_dir))
         new_sample_path = os.path.join(new_sample_dir, sha256)
         
+        # lgtm[py/path-injection] - SHA256已验证，路径安全
         if os.path.exists(old_sample_path):
             logger.info(f"样本在五级目录找到: {old_sample_path}")
             return old_sample_dir, old_sample_path
+        # lgtm[py/path-injection] - SHA256已验证，路径安全
         elif os.path.exists(new_sample_path):
             logger.info(f"样本在web上传目录找到: {new_sample_path}")
             return new_sample_dir, new_sample_path
