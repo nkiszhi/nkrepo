@@ -179,8 +179,10 @@ class AdvancedFlowParser:
         """清理JSON文本"""
         # 移除注释 - 使用更高效的正则避免ReDoS
         json_text = re.sub(r'//.*', '', json_text)
-        # 优化: 使用非贪婪匹配.*?配合re.DOTALL标志，避免[\s\S]*?的潜在性能问题
-        json_text = re.sub(r'/\*.*?\*/', '', json_text, flags=re.DOTALL)
+        # 优化: 使用非贪婪匹配.*?配合re.DOTALL标志
+        # 为避免ReDoS，限制输入长度或使用更安全的模式
+        # 使用[^*]*\*+来匹配非*字符和*序列，避免回溯
+        json_text = re.sub(r'/\*[^*]*\*+(?:[^*/][^*]*\*+)*/', '', json_text)
         
         # 修复尾随逗号
         json_text = re.sub(r',\s*}', '}', json_text)
