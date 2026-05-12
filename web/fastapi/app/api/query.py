@@ -222,6 +222,10 @@ def custom_mysql_query(table_name: str, db_name: str, limit: int = 20):
         # 只允许字母、数字、下划线（符合MySQL表名规范）
         if not regex.match(r'^[a-zA-Z0-9_]+$', table_name):
             raise ValueError(f"表名包含非法字符: {table_name}")
+        
+        # 执行查询
+        query = f"SELECT sha256 FROM {table_name} ORDER BY RAND() LIMIT {limit}"
+        cursor.execute(query)
         results = cursor.fetchall()
         
         # 提取sha256列表
