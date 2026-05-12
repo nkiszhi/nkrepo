@@ -6,13 +6,151 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
 from datetime import datetime
+from dataclasses import dataclass
 import uuid
 import logging
 import httpx
 import os
 import re
+import ipaddress
+import socket
+from urllib.parse import unquote, urlparse
 
 logger = logging.getLogger(__name__)
+
+ALLOWED_DOLOS_URL_SCHEMES = {"https"}
+BLOCKED_DOLOS_HOSTNAMES = {
+    "localhost",
+    "localhost.localdomain",
+    "ip6-localhost",
+    "ip6-loopback",
+}
+
+
+@dataclass(frozen=True)
+class SafeDownloadURL:
+    """URL value that has passed SSRF validation."""
+
+    url: str
+    filename: str
+
+
+def _is_public_ip(value: str) -> bool:
+    try:
+        return ipaddress.ip_address(value).is_global
+    except ValueError:
+        return False
+
+
+def _validate_public_host(hostname: str) -> str:
+    if not hostname:
+        raise ValueError("URL hostname is required")
+
+    normalized = hostname.rstrip(".").lower()
+    if normalized in BLOCKED_DOLOS_HOSTNAMES or normalized.endswith(".localhost"):
+        raise ValueError("Internal hostnames are not allowed")
+
+    try:
+        ip_obj = ipaddress.ip_address(normalized)
+    except ValueError:
+        ip_obj = None
+
+    if ip_obj is not None:
+        if not ip_obj.is_global:
+            raise ValueError("Only public IP addresses are allowed")
+        return normalized
+
+    try:
+        address_infos = socket.getaddrinfo(normalized, None, type=socket.SOCK_STREAM)
+    except socket.gaierror as exc:
+        raise ValueError(f"Unable to resolve hostname: {hostname}") from exc
+
+    resolved_ips = {info[4][0] for info in address_infos}
+    if not resolved_ips:
+        raise ValueError(f"Unable to resolve hostname: {hostname}")
+    if any(not _is_public_ip(ip) for ip in resolved_ips):
+        raise ValueError("Host resolves to a non-public address")
+
+    return normalized
+
+
+def _allowed_dolos_base_url(hostname: str) -> str:
+    if hostname == "raw.githubusercontent.com":
+        return "https://raw.githubusercontent.com"
+    if hostname == "gist.githubusercontent.com":
+        return "https://gist.githubusercontent.com"
+    if hostname == "github.com":
+        return "https://github.com"
+    if hostname == "gitlab.com":
+        return "https://gitlab.com"
+    if hostname == "bitbucket.org":
+        return "https://bitbucket.org"
+    if hostname == "gitee.com":
+        return "https://gitee.com"
+    raise ValueError(f"URL host is not allowed: {hostname}")
+
+
+def _validate_dolos_path(path: str) -> str:
+    normalized_path = path or "/"
+    decoded_path = unquote(normalized_path)
+
+    if not normalized_path.startswith("/"):
+        raise ValueError("URL path must be absolute")
+    if "\\" in decoded_path or "\x00" in decoded_path:
+        raise ValueError("URL path contains invalid characters")
+    if "/../" in decoded_path or decoded_path.startswith("/../") or decoded_path.endswith("/.."):
+        raise ValueError("URL path traversal is not allowed")
+    if not re.fullmatch(r"/[A-Za-z0-9._~!$&'()*+,;=:@%/-]*", normalized_path):
+        raise ValueError("URL path contains invalid characters")
+
+    return normalized_path
+
+
+def _validate_dolos_query(query: str) -> str:
+    if len(query) > 2048:
+        raise ValueError("URL query is too long")
+    if query and not re.fullmatch(r"[A-Za-z0-9._~!$&'()*+,;=:@%/?-]*", query):
+        raise ValueError("URL query contains invalid characters")
+    return query
+
+
+def _validate_dolos_download_url(url: str) -> SafeDownloadURL:
+    parsed = urlparse(url)
+    if not parsed.scheme or not parsed.netloc:
+        raise ValueError("Invalid URL")
+
+    scheme = parsed.scheme.lower()
+    if parsed.username or parsed.password:
+        raise ValueError("URL credentials are not allowed")
+
+    if scheme not in ALLOWED_DOLOS_URL_SCHEMES:
+        raise ValueError("Only HTTPS URLs are allowed")
+
+    hostname = _validate_public_host(parsed.hostname)
+    base_url = _allowed_dolos_base_url(hostname)
+
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError("Invalid URL port") from exc
+
+    if port not in (None, 443):
+        raise ValueError("Only the default HTTPS port is allowed")
+
+    safe_path = _validate_dolos_path(parsed.path)
+    safe_query = _validate_dolos_query(parsed.query)
+    safe_path_and_query = safe_path
+    if safe_query:
+        safe_path_and_query = f"{safe_path}?{safe_query}"
+
+    normalized_url = f"{base_url}{safe_path_and_query}"
+
+    filename = Path(unquote(parsed.path)).name
+    filename = re.sub(r"[^A-Za-z0-9._-]", "_", filename)
+    if not filename or filename in {".", ".."}:
+        filename = f"file_{uuid.uuid4().hex}"
+
+    return SafeDownloadURL(url=normalized_url, filename=filename)
 
 
 class DolosAnalyzer:
@@ -238,78 +376,35 @@ class DolosAnalyzer:
         Returns:
             分析结果
         """
-        # 验证URL，防止SSRF攻击
-        from urllib.parse import urlparse
-        import re
-        import ipaddress
-        
-        ALLOWED_SCHEMES = ['http', 'https']
-        
-        def is_safe_url(url: str) -> bool:
-            """验证URL是否安全，防止SSRF攻击"""
-            try:
-                parsed = urlparse(url)
-                
-                # 只允许http和https协议
-                if parsed.scheme.lower() not in ALLOWED_SCHEMES:
-                    return False
-                
-                # 检查hostname
-                hostname = parsed.hostname
-                if not hostname:
-                    return False
-                
-                # 阻止localhost和特殊地址
-                if hostname.lower() in ['localhost', '0.0.0.0', '::1']:
-                    return False
-                
-                # 尝试解析为IP地址并检查是否为私有地址
-                try:
-                    ip = ipaddress.ip_address(hostname)
-                    if ip.is_private or ip.is_loopback or ip.is_link_local:
-                        return False
-                except ValueError:
-                    # 不是IP地址，是域名，继续检查
-                    pass
-                
-                # 检查私有IP模式（域名形式）
-                private_patterns = [
-                    r'^127\.',
-                    r'^10\.',
-                    r'^172\.(1[6-9]|2[0-9]|3[0-1])\.',
-                    r'^192\.168\.',
-                    r'^169\.254\.',
-                ]
-                for pattern in private_patterns:
-                    if re.match(pattern, hostname):
-                        return False
-                
-                return True
-            except Exception:
-                return False
-        
-        # 验证所有URL
-        validated_urls = []
+        # Validate all URLs before making any outbound request.
+        validated_urls: List[SafeDownloadURL] = []
         for url in urls:
-            if not is_safe_url(url):
+            try:
+                safe_url = _validate_dolos_download_url(url)
+            except ValueError:
                 logger.error(f"URL验证失败: {url}")
                 raise ValueError(f"无效或不安全的URL: {url}")
-            # URL已通过安全验证，可以安全使用
-            validated_urls.append(url)
+            validated_urls.append(safe_url)
         
         # 下载文件
-        # 注意: validated_urls中的所有URL都已通过is_safe_url验证
-        # 验证确保: 1) 只允许http/https协议 2) 阻止私有IP 3) 阻止localhost
-        # lgtm[py/full-ssrf] - URL已通过严格验证，防止SSRF攻击
         file_paths = []
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for url in validated_urls:  # url is validated and safe
+        async with httpx.AsyncClient(
+            timeout=30.0,
+            follow_redirects=False,
+            trust_env=False,
+        ) as client:
+            for index, safe_url in enumerate(validated_urls):
                 try:
-                    response = await client.get(url)
+                    response = await client.get(
+                        safe_url.url,
+                        follow_redirects=False,
+                    )
+                    if response.is_redirect:
+                        raise ValueError("URL重定向被禁止")
                     response.raise_for_status()
                     
                     # 保存文件
-                    filename = url.split('/')[-1] or f"file_{len(file_paths)}"
+                    filename = f"{index}_{safe_url.filename}"
                     file_path = self.temp_dir / filename
                     
                     with open(file_path, 'wb') as f:
@@ -317,8 +412,8 @@ class DolosAnalyzer:
                     
                     file_paths.append(str(file_path))
                 except Exception as e:
-                    logger.error(f"下载文件失败 {url}: {str(e)}")
-                    raise Exception(f"下载文件失败: {url}")
+                    logger.error(f"下载文件失败 {safe_url.url}: {str(e)}")
+                    raise Exception(f"下载文件失败: {safe_url.url}")
         
         # 执行分析
         result = await self.analyze(file_paths)
