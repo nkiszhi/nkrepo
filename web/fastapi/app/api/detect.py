@@ -13,6 +13,8 @@ import numpy as np
 import hashlib
 import shutil
 import configparser
+import re
+from pathlib import Path
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -26,6 +28,35 @@ from app.utils.flask_mysql import Databaseoperation
 
 db_op = Databaseoperation()
 dga_detector = None  # 延迟初始化
+
+CONFIG_PATH = Path(__file__).resolve().parents[2] / "config.ini"
+
+
+def _is_valid_sha256(value: str) -> bool:
+    """校验SHA256格式。"""
+    return bool(re.fullmatch(r"[0-9a-fA-F]{64}", value or ""))
+
+
+def _safe_resolve_path(root: Path, *parts: str) -> Path:
+    """在固定根目录下解析路径，防止目录穿越。"""
+    root_resolved = root.resolve()
+    candidate = root_resolved.joinpath(*parts).resolve()
+    candidate.relative_to(root_resolved)
+    return candidate
+
+
+def _load_sample_roots() -> tuple[Path, Path]:
+    """读取样本根目录配置。"""
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH, encoding='utf-8')
+
+    base_dir = CONFIG_PATH.parent
+    samples_dir = config.get('paths', 'sample_root', fallback='../../../data/samples')
+    web_upload_dir = config.get('paths', 'web_upload_dir', fallback='../../../data/web_upload_file')
+
+    samples_root = (base_dir / samples_dir).resolve()
+    web_upload_root = (base_dir / web_upload_dir).resolve()
+    return samples_root, web_upload_root
 
 def get_dga_detector():
     """获取DGA检测器(延迟初始化)"""
@@ -290,55 +321,26 @@ async def get_detection_API(sha256: str, current_user: dict = Depends(get_curren
 
 def get_existing_sample_path(sha256):
     """查找样本文件路径 - 从config.ini读取配置"""
-    # 验证SHA256格式，防止路径遍历攻击
-    import re
-    
-    def is_valid_sha256(value: str) -> bool:
-        """验证SHA256值是否有效且安全"""
-        if not value:
-            return False
-        # SHA256必须是64个十六进制字符
-        if not re.fullmatch(r"[0-9a-fA-F]{64}", value):
-            return False
-        # 检查是否包含路径遍历字符（额外保护）
-        if '..' in value or '/' in value or '\\' in value:
-            return False
-        return True
-    
-    if not is_valid_sha256(sha256):
+    sha256 = (sha256 or '').strip().lower()
+    if not _is_valid_sha256(sha256):
         logger.error(f"无效的SHA256值: {sha256}")
         return None, None
-    
-    # lgtm[py/path-injection] - SHA256已通过严格验证，防止路径遍历
+
     try:
-        import configparser
-        config = configparser.ConfigParser()
-        config_path = os.path.join(os.path.dirname(__file__), '../../config.ini')
-        config.read(config_path, encoding='utf-8')
-        
-        # 从配置文件读取路径
-        samples_dir = config.get('paths', 'sample_root', fallback='../../../data/samples')
-        web_upload_dir = config.get('paths', 'web_upload_dir', fallback='../../../data/web_upload_file')
-        
-        # 五级目录结构: {samples_dir}/{sha256[0]}/{sha256[1]}/{sha256[2]}/{sha256[3]}/{sha256[4]}/{sha256}
-        prefix_parts = [sha256[0], sha256[1], sha256[2], sha256[3], sha256[4]]
-        
-        # 路径1: 五级目录（已有恶意样本库）
-        old_sample_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', samples_dir, *prefix_parts))
-        old_sample_path = os.path.join(old_sample_dir, sha256)
-        
-        # 路径2: web上传目录
-        new_sample_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', web_upload_dir))
-        new_sample_path = os.path.join(new_sample_dir, sha256)
-        
-        # lgtm[py/path-injection] - SHA256已验证，路径安全
-        if os.path.exists(old_sample_path):
+        samples_root, web_upload_root = _load_sample_roots()
+
+        prefix_parts = list(sha256[:5])
+        old_sample_dir = _safe_resolve_path(samples_root, *prefix_parts)
+        old_sample_path = _safe_resolve_path(samples_root, *prefix_parts, sha256)
+        new_sample_dir = _safe_resolve_path(web_upload_root)
+        new_sample_path = _safe_resolve_path(web_upload_root, sha256)
+
+        if old_sample_path.exists():
             logger.info(f"样本在五级目录找到: {old_sample_path}")
-            return old_sample_dir, old_sample_path
-        # lgtm[py/path-injection] - SHA256已验证，路径安全
-        elif os.path.exists(new_sample_path):
+            return str(old_sample_dir), str(old_sample_path)
+        elif new_sample_path.exists():
             logger.info(f"样本在web上传目录找到: {new_sample_path}")
-            return new_sample_dir, new_sample_path
+            return str(new_sample_dir), str(new_sample_path)
         else:
             logger.warning(f"样本文件不存在: 五级目录={old_sample_path}, web目录={new_sample_path}")
             return None, None
@@ -353,9 +355,7 @@ async def detect_by_sha256(request: dict, current_user: dict = Depends(get_curre
     try:
         sha256 = request.get('sha256', '').strip().lower()
         
-        # 验证SHA256格式，防止路径遍历攻击
-        import re
-        if not sha256 or not re.fullmatch(r"[0-9a-fA-F]{64}", sha256):
+        if not _is_valid_sha256(sha256):
             raise HTTPException(status_code=400, detail="无效的SHA256值")
         
         logger.info(f"SHA256检测请求: {sha256}")
@@ -420,7 +420,8 @@ async def get_behaviour_API(sha256: str, current_user: dict = Depends(get_curren
     """VT行为查询 - 完全按照旧Flask实现"""
     try:
         # 验证SHA256
-        if not sha256 or sha256.lower() == 'undefined' or len(sha256) != 64:
+        sha256 = (sha256 or '').strip().lower()
+        if not _is_valid_sha256(sha256):
             logger.error(f"无效的SHA256值: {sha256}")
             raise HTTPException(status_code=400, detail="无效的SHA256值（长度必须为64位）")
         

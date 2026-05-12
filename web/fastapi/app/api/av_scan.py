@@ -11,6 +11,7 @@ import os
 import logging
 import json
 import csv
+import re
 import uuid
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -37,6 +38,8 @@ except Exception as e:
 
 # 批量任务存储(生产环境应使用Redis)
 batch_tasks: Dict[str, Dict[str, Any]] = {}
+BATCH_TASK_ID_RE = re.compile(r"^batch_\d{8}_\d{6}_[0-9a-f]{8}$")
+BATCH_TASKS_ROOT = (Path(settings.UPLOAD_DIR) / "batch_tasks").resolve()
 
 # 杀软引擎列表
 AV_ENGINES = [
@@ -44,6 +47,19 @@ AV_ENGINES = [
     "FProtect", "Vba32", "ClamAV", "Kaspersky", "ESET",
     "DrWeb", "Avast", "AVG", "AdAware", "FSecure"
 ]
+
+
+def _is_valid_batch_task_id(task_id: str) -> bool:
+    """校验批量任务ID格式。"""
+    return bool(BATCH_TASK_ID_RE.fullmatch(task_id or ""))
+
+
+def _safe_resolve_path(root: Path, *parts: str) -> Path:
+    """在固定根目录下解析路径，防止目录穿越。"""
+    root_resolved = root.resolve()
+    candidate = root_resolved.joinpath(*parts).resolve()
+    candidate.relative_to(root_resolved)
+    return candidate
 
 
 @router.post("/av_scan_single")
@@ -251,7 +267,7 @@ async def batch_upload_files(
         task_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
 
         # 创建任务目录
-        task_dir = Path(settings.UPLOAD_DIR) / "batch_tasks" / task_id
+        task_dir = _safe_resolve_path(BATCH_TASKS_ROOT, task_id)
         task_dir.mkdir(parents=True, exist_ok=True)
 
         # 保存上传的文件
@@ -294,7 +310,8 @@ async def batch_upload_files(
             "results": [],
             "error": None,
             "selected_engines": selected_engines,  # 新增：选择的引擎
-            "user_id": current_user.get("id", 0)  # 新增：用户ID
+            "user_id": current_user.get("id", 0),  # 新增：用户ID
+            "task_dir": str(task_dir)
         }
 
         logger.info(f"批量上传完成: task_id={task_id}, files={len(files)}, engines={len(selected_engines)}")
@@ -548,9 +565,7 @@ async def download_batch_scan_report(
     """
     下载批量检测CSV报告
     """
-    # 验证task_id格式，防止路径遍历攻击
-    import re
-    if not re.fullmatch(r"[a-zA-Z0-9_\-]+", task_id):
+    if not _is_valid_batch_task_id(task_id):
         raise HTTPException(status_code=400, detail="无效的任务ID格式")
     
     if task_id not in batch_tasks:
@@ -563,7 +578,12 @@ async def download_batch_scan_report(
 
     try:
         # 生成CSV文件
-        csv_path = Path(settings.UPLOAD_DIR) / "batch_tasks" / task_id / "report.csv"
+        task_dir_str = task.get('task_dir', '')
+        if not task_dir_str:
+            raise HTTPException(status_code=404, detail="任务目录不存在")
+
+        task_dir = _safe_resolve_path(BATCH_TASKS_ROOT, Path(task_dir_str).name)
+        csv_path = task_dir / "report.csv"
         
         # 获取选择的引擎列表
         selected_engines = task.get('selected_engines', AV_ENGINES)
@@ -596,7 +616,7 @@ async def download_batch_scan_report(
 
         # 返回文件下载
         return FileResponse(
-            path=csv_path,
+            path=str(csv_path),
             filename=f"av_scan_report_{task_id}.csv",
             media_type='text/csv'
         )

@@ -1,12 +1,11 @@
 from flask import Blueprint, request, jsonify
-import requests
 import base64
 from urllib.parse import urlparse
-import time
-import mimetypes
 import imghdr
 from bs4 import BeautifulSoup
 import logging
+
+from ..utils.security import validate_url, secure_fetch
 
 bp = Blueprint('fetch', __name__)
 logger = logging.getLogger(__name__)
@@ -69,36 +68,6 @@ class SimpleReadability:
                 'content': html,
                 'summary': html[:200]
             }
-
-def validate_url(url_str):
-    """验证URL"""
-    try:
-        parsed = urlparse(url_str)
-        if not parsed.scheme or not parsed.netloc:
-            raise ValueError('Invalid URL')
-        if parsed.scheme not in ['http', 'https']:
-            raise ValueError('Only HTTP and HTTPS URLs are allowed')
-        return url_str
-    except Exception as e:
-        raise ValueError(f'Invalid URL: {str(e)}')
-
-def secure_fetch(url, options=None):
-    """安全获取网页内容"""
-    if options is None:
-        options = {}
-    
-    timeout = options.get('timeout', 30)
-    headers = options.get('headers', {})
-    headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    })
-    
-    try:
-        response = requests.get(url, headers=headers, timeout=timeout, stream=True)
-        return response
-    except requests.RequestException as e:
-        logger.error(f'Fetch error: {e}')
-        raise
 
 @bp.route('/fetch-image', methods=['GET'])
 def fetch_image():

@@ -177,12 +177,8 @@ class AdvancedFlowParser:
     
     def clean_json_text(self, json_text: str) -> str:
         """清理JSON文本"""
-        # 移除注释 - 使用更高效的正则避免ReDoS
-        json_text = re.sub(r'//.*', '', json_text)
-        # 优化: 使用非贪婪匹配.*?配合re.DOTALL标志
-        # 为避免ReDoS，限制输入长度或使用更安全的模式
-        # 使用[^*]*\*+来匹配非*字符和*序列，避免回溯
-        json_text = re.sub(r'/\*[^*]*\*+(?:[^*/][^*]*\*+)*/', '', json_text)
+        # 移除注释，避免正则在恶意输入上发生回溯
+        json_text = self._strip_json_comments(json_text)
         
         # 修复尾随逗号
         json_text = re.sub(r',\s*}', '}', json_text)
@@ -194,6 +190,62 @@ class AdvancedFlowParser:
         json_text = re.sub(r':\s*None\b', ': null', json_text)
         
         return json_text
+
+    def _strip_json_comments(self, text: str) -> str:
+        """线性移除 // 和 /* */ 注释，避免正则回溯。"""
+        if not text:
+            return text
+
+        result = []
+        i = 0
+        length = len(text)
+        in_string = False
+        string_quote = ''
+        escaped = False
+
+        while i < length:
+            char = text[i]
+            next_char = text[i + 1] if i + 1 < length else ''
+
+            if in_string:
+                result.append(char)
+                if escaped:
+                    escaped = False
+                elif char == '\\':
+                    escaped = True
+                elif char == string_quote:
+                    in_string = False
+                    string_quote = ''
+                i += 1
+                continue
+
+            if char in ('"', "'"):
+                in_string = True
+                string_quote = char
+                result.append(char)
+                i += 1
+                continue
+
+            if char == '/' and next_char == '/':
+                i += 2
+                while i < length and text[i] not in '\r\n':
+                    i += 1
+                continue
+
+            if char == '/' and next_char == '*':
+                i += 2
+                while i + 1 < length and not (text[i] == '*' and text[i + 1] == '/'):
+                    i += 1
+                if i + 1 < length:
+                    i += 2
+                else:
+                    i = length
+                continue
+
+            result.append(char)
+            i += 1
+
+        return ''.join(result)
     
     def save_debug_file(self, raw_text: str):
         """保存调试文件 - 仅在调试模式下启用"""

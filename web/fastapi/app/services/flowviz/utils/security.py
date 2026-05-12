@@ -1,6 +1,7 @@
 # flowviz/utils/security.py
-import re
-from urllib.parse import urlparse
+import ipaddress
+import socket
+from urllib.parse import urljoin, urlparse
 from functools import wraps
 from flask import request, jsonify
 from datetime import datetime, timedelta
@@ -11,33 +12,92 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_URL_SCHEMES = {'http', 'https'}
+BLOCKED_HOSTNAMES = {
+    'localhost',
+    'localhost.localdomain',
+    'ip6-localhost',
+    'ip6-loopback',
+}
+MAX_SAFE_REDIRECTS = 5
+
+
+def _is_public_ip(value: str) -> bool:
+    try:
+        return ipaddress.ip_address(value).is_global
+    except ValueError:
+        return False
+
+
+def _validate_public_host(hostname: str):
+    if not hostname:
+        raise ValueError('URL hostname is required')
+
+    normalized = hostname.rstrip('.').lower()
+    if normalized in BLOCKED_HOSTNAMES or normalized.endswith('.localhost'):
+        raise ValueError('Internal hostnames are not allowed')
+
+    try:
+        ip_obj = ipaddress.ip_address(normalized)
+    except ValueError:
+        ip_obj = None
+
+    if ip_obj is not None:
+        if not ip_obj.is_global:
+            raise ValueError('Only public IP addresses are allowed')
+        return
+
+    try:
+        address_infos = socket.getaddrinfo(normalized, None, type=socket.SOCK_STREAM)
+    except socket.gaierror as exc:
+        raise ValueError(f'Unable to resolve hostname: {hostname}') from exc
+
+    resolved_ips = {info[4][0] for info in address_infos}
+    if not resolved_ips:
+        raise ValueError(f'Unable to resolve hostname: {hostname}')
+    if any(not _is_public_ip(ip) for ip in resolved_ips):
+        raise ValueError('Host resolves to a non-public address')
+
 def validate_url(url_str):
     """Validate URL to prevent SSRF attacks"""
     try:
         parsed = urlparse(url_str)
-        
-        # Check protocol
-        if parsed.scheme not in ['http', 'https']:
+
+        if not parsed.scheme or not parsed.netloc:
+            raise ValueError('Invalid URL')
+
+        if parsed.scheme.lower() not in ALLOWED_URL_SCHEMES:
             raise ValueError('Only HTTP and HTTPS URLs are allowed')
-        
-        # Check if internal address
-        if parsed.hostname in ['localhost', '127.0.0.1', '::1', '0.0.0.0']:
-            raise ValueError('Internal addresses are not allowed')
-        
-        # Check private IP addresses
-        if parsed.hostname:
-            # IPv4 private ranges
-            ip_pattern = re.compile(r'^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|169\.254\.)')
-            if ip_pattern.match(parsed.hostname):
-                raise ValueError('Private IP addresses are not allowed')
-            
-            # Check for other dangerous schemes
-            if parsed.hostname.startswith(('0.', '224.', '240.')):
-                raise ValueError('Invalid IP range')
-        
+
+        _validate_public_host(parsed.hostname)
         return url_str
     except Exception as e:
         raise ValueError(f'Invalid URL: {str(e)}')
+
+
+def _request_with_safe_redirects(url, headers, timeout, stream=True, verify=True, max_redirects=MAX_SAFE_REDIRECTS):
+    current_url = validate_url(url)
+
+    for _ in range(max_redirects + 1):
+        response = requests.get(
+            current_url,
+            headers=headers,
+            timeout=timeout,
+            stream=stream,
+            verify=verify,
+            allow_redirects=False,
+        )
+
+        if not response.is_redirect:
+            return response
+
+        location = response.headers.get('Location')
+        if not location:
+            return response
+
+        current_url = validate_url(urljoin(current_url, location))
+
+    raise ValueError('Too many redirects')
 
 def secure_fetch(url, options=None):
     """Secure web content fetching (optimized version)"""
@@ -68,12 +128,12 @@ def secure_fetch(url, options=None):
         # Random delay to avoid being identified as a crawler
         time.sleep(random.uniform(0.5, 1.5))
         
-        response = requests.get(
-            url, 
-            headers=headers, 
+        response = _request_with_safe_redirects(
+            url,
+            headers=headers,
             timeout=timeout,
-            stream=True,  # Stream to avoid large file issues
-            verify=True  # Verify SSL certificate
+            stream=True,
+            verify=True,
         )
         
         # Check response size
@@ -88,12 +148,12 @@ def secure_fetch(url, options=None):
     except requests.exceptions.SSLError:
         # If SSL error, try without certificate verification
         try:
-            response = requests.get(
-                url, 
-                headers=headers, 
+            response = _request_with_safe_redirects(
+                url,
+                headers=headers,
                 timeout=timeout,
                 stream=True,
-                verify=False
+                verify=False,
             )
             return response
         except:

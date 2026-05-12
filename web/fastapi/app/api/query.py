@@ -9,11 +9,45 @@ import logging
 import sys
 import os
 import re
+from pathlib import Path
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 db_op = Databaseoperation()
+
+CONFIG_PATH = Path(__file__).resolve().parents[2] / "config.ini"
+
+
+def _is_valid_sha256(value: str) -> bool:
+    """校验SHA256格式。"""
+    return bool(re.fullmatch(r"[0-9a-fA-F]{64}", value or ""))
+
+
+def _safe_resolve_path(root: Path, *parts: str) -> Path:
+    """在固定根目录下解析路径，防止目录穿越。"""
+    root_resolved = root.resolve()
+    candidate = root_resolved.joinpath(*parts).resolve()
+    candidate.relative_to(root_resolved)
+    return candidate
+
+
+def _load_query_path_roots() -> tuple[Path, Path, Path]:
+    """加载样本、上传和zip目录根路径。"""
+    import configparser
+
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH, encoding='utf-8')
+
+    base_dir = CONFIG_PATH.parent
+    samples_dir = config.get('paths', 'sample_root', fallback='../../../data/samples')
+    web_upload_dir = config.get('paths', 'web_upload_dir', fallback='../../../data/web_upload_file')
+    zips_dir = config.get('paths', 'zips_dir', fallback='../../../data/zips')
+
+    samples_root = (base_dir / samples_dir).resolve()
+    web_upload_root = (base_dir / web_upload_dir).resolve()
+    zips_root = (base_dir / zips_dir).resolve()
+    return samples_root, web_upload_root, zips_root
 
 
 def convert_to_serializable(obj):
@@ -186,7 +220,8 @@ def custom_mysql_query(table_name: str, db_name: str, limit: int = 20):
         if not table_name or not isinstance(table_name, str) or len(table_name) > 100:
             raise ValueError(f"非法表名: {table_name}")
         # 只允许字母、数字、下划线（符合MySQL表名规范）
-        if not regex.match(r'^[a-zA-Z0-9_]+
+        if not regex.match(r'^[a-zA-Z0-9_]+$', table_name):
+            raise ValueError(f"表名包含非法字符: {table_name}")
         results = cursor.fetchall()
         
         # 提取sha256列表
@@ -487,11 +522,12 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
     - {zips_dir}/{sha256}.zip
     """
     import subprocess
-    import configparser
     
     try:
+        sha256 = (sha256 or '').strip().lower()
+
         # 校验SHA256格式: 必须为64位十六进制字符串
-        if not sha256 or not re.fullmatch(r"[0-9a-fA-F]{64}", sha256):
+        if not _is_valid_sha256(sha256):
             logger.error(f"无效的SHA256值: {sha256}")
             return None
         
@@ -504,32 +540,24 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
             logger.error(f"无效的压缩密码格式")
             return None
         
-        # 从配置文件读取路径
-        config = configparser.ConfigParser()
-        config_path = os.path.join(os.path.dirname(__file__), '../../config.ini')
-        config.read(config_path, encoding='utf-8')
-        
-        samples_dir = config.get('paths', 'sample_root', fallback='../../../data/samples')
-        web_upload_dir = config.get('paths', 'web_upload_dir', fallback='../../../data/web_upload_file')
-        zips_dir = config.get('paths', 'zips_dir', fallback='../../../data/zips')
-        
         # 五级目录结构: {sha256[0]}/{sha256[1]}/{sha256[2]}/{sha256[3]}/{sha256[4]}
-        prefix_parts = [sha256[0], sha256[1], sha256[2], sha256[3], sha256[4]]
-        
+        prefix_parts = list(sha256[:5])
+        samples_root, web_upload_root, zips_root = _load_query_path_roots()
+
         # 样本文件路径1: 五级目录
-        original_sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', samples_dir, *prefix_parts, sha256))
-        
+        original_sample_path = _safe_resolve_path(samples_root, *prefix_parts, sha256)
+
         # 样本文件路径2: web上传目录
-        web_upload_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', web_upload_dir, sha256))
-        
+        web_upload_path = _safe_resolve_path(web_upload_root, sha256)
+
         # 压缩文件路径
-        zip_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', zips_dir, sha256 + '.zip'))
+        zip_file_path = _safe_resolve_path(zips_root, f"{sha256}.zip")
         
         # 检查样本文件是否存在
-        if os.path.exists(original_sample_path):
+        if original_sample_path.exists():
             target_file_path = original_sample_path
             logger.info(f"找到样本文件(五级目录): {original_sample_path}")
-        elif os.path.exists(web_upload_path):
+        elif web_upload_path.exists():
             target_file_path = web_upload_path
             logger.info(f"找到样本文件(web上传目录): {web_upload_path}")
         else:
@@ -537,12 +565,12 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
             return None
         
         # 如果压缩文件已存在,直接返回
-        if os.path.exists(zip_file_path):
+        if zip_file_path.exists():
             logger.info(f"压缩文件已存在: {zip_file_path}")
-            return zip_file_path
+            return str(zip_file_path)
         
         # 创建zips目录
-        os.makedirs(os.path.dirname(zip_file_path), exist_ok=True)
+        os.makedirs(zip_file_path.parent, exist_ok=True)
         
         # 使用7z压缩文件
         command = [
@@ -554,7 +582,7 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         logger.info(f"文件压缩成功: sha256={sha256}, zip_path={zip_file_path}")
         
-        return zip_file_path
+        return str(zip_file_path)
         
     except subprocess.CalledProcessError as e:
         logger.error(f"压缩文件失败: sha256={sha256}, error={e.stderr}")
@@ -562,36 +590,6 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
     except Exception as e:
         logger.error(f"压缩文件异常: {str(e)}")
         return None
-, table_name):
-            raise ValueError(f"表名包含非法字符: {table_name}")
-        
-        # 执行查询：随机获取指定数量的sha256
-        # 使用参数化查询防止SQL注入
-        query_sql = f"""
-            SELECT sha256 FROM `{table_name}` 
-            ORDER BY RAND() 
-            LIMIT %s
-        """
-        cursor.execute(query_sql, (limit,))
-        results = cursor.fetchall()
-        
-        # 提取sha256列表
-        sha256_list = [item.get('sha256', '').strip() for item in results if item.get('sha256')]
-        sha256_list = list(filter(None, sha256_list))  # 过滤空值
-        
-        logger.info(f"自定义查询成功：db={db_name}, table={table_name}, 找到{len(sha256_list)}个sha256")
-        return sha256_list
-        
-    except Exception as e:
-        logger.error(f"自定义查询失败：db={db_name}, table={table_name}, error={str(e)}")
-        return None
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-
 @router.post("/query_platform")
 async def query_platform(request: dict, current_user: dict = Depends(get_current_user)):
     """平台查询 - 完全按照旧Flask实现"""
@@ -873,11 +871,12 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
     - {zips_dir}/{sha256}.zip
     """
     import subprocess
-    import configparser
     
     try:
+        sha256 = (sha256 or '').strip().lower()
+
         # 校验SHA256格式: 必须为64位十六进制字符串
-        if not sha256 or not re.fullmatch(r"[0-9a-fA-F]{64}", sha256):
+        if not _is_valid_sha256(sha256):
             logger.error(f"无效的SHA256值: {sha256}")
             return None
         
@@ -890,32 +889,24 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
             logger.error(f"无效的压缩密码格式")
             return None
         
-        # 从配置文件读取路径
-        config = configparser.ConfigParser()
-        config_path = os.path.join(os.path.dirname(__file__), '../../config.ini')
-        config.read(config_path, encoding='utf-8')
-        
-        samples_dir = config.get('paths', 'sample_root', fallback='../../../data/samples')
-        web_upload_dir = config.get('paths', 'web_upload_dir', fallback='../../../data/web_upload_file')
-        zips_dir = config.get('paths', 'zips_dir', fallback='../../../data/zips')
-        
         # 五级目录结构: {sha256[0]}/{sha256[1]}/{sha256[2]}/{sha256[3]}/{sha256[4]}
-        prefix_parts = [sha256[0], sha256[1], sha256[2], sha256[3], sha256[4]]
-        
+        prefix_parts = list(sha256[:5])
+        samples_root, web_upload_root, zips_root = _load_query_path_roots()
+
         # 样本文件路径1: 五级目录
-        original_sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', samples_dir, *prefix_parts, sha256))
-        
+        original_sample_path = _safe_resolve_path(samples_root, *prefix_parts, sha256)
+
         # 样本文件路径2: web上传目录
-        web_upload_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', web_upload_dir, sha256))
-        
+        web_upload_path = _safe_resolve_path(web_upload_root, sha256)
+
         # 压缩文件路径
-        zip_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', zips_dir, sha256 + '.zip'))
+        zip_file_path = _safe_resolve_path(zips_root, f"{sha256}.zip")
         
         # 检查样本文件是否存在
-        if os.path.exists(original_sample_path):
+        if original_sample_path.exists():
             target_file_path = original_sample_path
             logger.info(f"找到样本文件(五级目录): {original_sample_path}")
-        elif os.path.exists(web_upload_path):
+        elif web_upload_path.exists():
             target_file_path = web_upload_path
             logger.info(f"找到样本文件(web上传目录): {web_upload_path}")
         else:
@@ -923,12 +914,12 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
             return None
         
         # 如果压缩文件已存在,直接返回
-        if os.path.exists(zip_file_path):
+        if zip_file_path.exists():
             logger.info(f"压缩文件已存在: {zip_file_path}")
-            return zip_file_path
+            return str(zip_file_path)
         
         # 创建zips目录
-        os.makedirs(os.path.dirname(zip_file_path), exist_ok=True)
+        os.makedirs(zip_file_path.parent, exist_ok=True)
         
         # 使用7z压缩文件
         command = [
@@ -940,7 +931,7 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         logger.info(f"文件压缩成功: sha256={sha256}, zip_path={zip_file_path}")
         
-        return zip_file_path
+        return str(zip_file_path)
         
     except subprocess.CalledProcessError as e:
         logger.error(f"压缩文件失败: sha256={sha256}, error={e.stderr}")
