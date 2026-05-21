@@ -55,16 +55,11 @@ export function ensurePageInteractive() {
   // 修复遮罩层
   fixElementOverlays()
   
-  // 确保所有元素可交互
+  // 确保页面容器可交互，避免遍历所有DOM节点造成卡顿
   setTimeout(() => {
     try {
-      const elements = document.querySelectorAll('*')
-      elements.forEach(el => {
-        if (el && el.style) {
-          el.style.pointerEvents = 'auto'
-          el.style.cursor = 'auto'
-        }
-      })
+      document.body.style.pointerEvents = 'auto'
+      document.body.style.cursor = 'auto'
     } catch (error) {
       console.warn('设置元素交互性时出错:', error)
     }

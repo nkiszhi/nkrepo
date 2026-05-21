@@ -75,13 +75,8 @@ const ensurePageInteractive = () => {
         // 有模态框时，不修改 pointerEvents
         return
       }
-      const elements = document.querySelectorAll('*')
-      elements.forEach(el => {
-        if (el && el.style) {
-          el.style.pointerEvents = 'auto'
-          el.style.cursor = 'auto'
-        }
-      })
+      document.body.style.pointerEvents = 'auto'
+      document.body.style.cursor = 'auto'
     } catch (error) {
       console.warn('设置元素交互性时出错:', error)
     }
@@ -124,9 +119,13 @@ const createRouterGuard = (router) => {
  * 监听页面变化，自动修复遮罩层
  */
 const setupOverlayObserver = () => {
+  let scheduled = false
   const observer = new MutationObserver(() => {
-    const overlays = document.querySelectorAll('.el-overlay, .el-loading-mask, .v-modal')
-    overlays.forEach(overlay => {
+    if (scheduled) return
+    scheduled = true
+    window.requestAnimationFrame(() => {
+      scheduled = false
+      const overlay = document.querySelector('.el-loading-mask, .v-modal')
       if (overlay && overlay.style && overlay.style.display !== 'none') {
         fixElementOverlays()
       }

@@ -64,7 +64,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             'element-plus': ['element-plus'],
-            'echarts': ['echarts', 'echarts-gl', 'echarts-map'],
+            'echarts': ['echarts'],
             'vue-vendor': ['vue', 'vue-router', 'vuex'],
           },
         },

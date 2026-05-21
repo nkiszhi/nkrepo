@@ -70,11 +70,16 @@
 
 <script>
 import CountTo from '@/components/CountTo/index.vue'
-import chartData from '@/data/chart_data.js'
 
 export default {
   components: {
     CountTo
+  },
+  props: {
+    summary: {
+      type: Object,
+      default: () => ({})
+    }
   },
   data() {
     return {
@@ -83,6 +88,14 @@ export default {
         year_amount: { value: 0, dateRange: '' },
         benign_samples: { value: 0, dateRange: '' },
         malicious_samples: { value: 0, dateRange: '' }
+      }
+    }
+  },
+  watch: {
+    summary: {
+      deep: true,
+      handler() {
+        this.initData()
       }
     }
   },
@@ -96,15 +109,7 @@ export default {
     
     initData() {
       try {
-        console.log('正在加载chart_data.js数据...')
-        
-        if (!chartData) {
-          console.error('数据格式错误，无法找到chartData字段')
-          return
-        }
-
-        const summary = chartData.summary || {}
-        const lineChartData = chartData.lineChartData || {}
+        const summary = this.summary || {}
 
         // 处理总数量数据
         if (summary.total_samples) {

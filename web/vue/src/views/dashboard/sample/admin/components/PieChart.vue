@@ -6,8 +6,6 @@
 import * as echarts from 'echarts'
 // ECharts theme // echarts theme
 import resize from './mixins/resize.js'
-// 导入生成的JS数据文件
-import chartData from '@/data/chart_data.js'
 
 export default {
   mixins: [resize],
@@ -23,6 +21,10 @@ export default {
     height: {
       type: String,
       default: '300px'
+    },
+    chartData: {
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -30,12 +32,17 @@ export default {
       chart: null
     }
   },
+  watch: {
+    chartData() {
+      this.setOptions()
+    }
+  },
   mounted() {
     this.$nextTick(() => {
       this.initChart()
     })
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (!this.chart) {
       return
     }
@@ -45,7 +52,10 @@ export default {
   methods: {
     initChart() {
       this.chart = echarts.init(this.$el, 'macarons')
-
+      this.setOptions()
+    },
+    setOptions() {
+      if (!this.chart) return
       this.chart.setOption({
         tooltip: {
           trigger: 'item',
@@ -67,8 +77,7 @@ export default {
             roseType: 'radius',
             radius: [15, 95],
             center: ['50%', '42%'],
-            // 从JS文件读取platform的Top10+Others数据
-            data: chartData.pieTop10Data.platform,
+            data: this.chartData,
             animationEasing: 'cubicInOut',
             animationDuration: 2600,
             // 优化标签显示

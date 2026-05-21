@@ -1,6 +1,9 @@
 <template>
   <div class="dashboard-editor-container">
-    <panel-group @handleSetLineChartData="handleSetLineChartData" />
+    <panel-group
+      :summary="chartData.summary"
+      @handleSetLineChartData="handleSetLineChartData"
+    />
 
     <!-- 折线图区域 -->
     <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px; min-height: 400px; border-radius: 4px; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);">
@@ -8,7 +11,8 @@
       <div class="chart-header" style="margin-bottom: 16px; padding-bottom: 12px;">
         <h3 class="chart-title">{{ lineChartTitle }}</h3>
       </div>
-      <line-chart :chart-data="lineChartData" />
+      <line-chart v-if="chartDataReady" :chart-data="lineChartData" />
+      <el-skeleton v-else :rows="6" animated />
     </el-row>
 
     <!-- 恶意文件样本类型top10 -->
@@ -19,7 +23,8 @@
             <h3 class="chart-title">恶意文件类型(Category)Top10</h3>
           </div>
           <div style="height: calc(100% - 40px);">
-            <pie1-chart />
+            <pie1-chart v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" />
+            <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
       </el-col>
@@ -33,7 +38,8 @@
             <h3 class="chart-title">恶意文件平台(Platform)Top10</h3>
           </div>
           <div style="height: calc(100% - 40px);">
-            <pie-chart />
+            <pie-chart v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" />
+            <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
       </el-col>
@@ -47,7 +53,8 @@
             <h3 class="chart-title">恶意文件家族(Family)Top10</h3>
           </div>
           <div style="height: calc(100% - 40px);">
-            <bar-chart />
+            <bar-chart v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" />
+            <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
       </el-col>
@@ -56,27 +63,36 @@
 </template>
 
 <script>
-import PanelGroup from './components/PanelGroup.vue'
-import LineChart from './components/LineChart.vue'
-import PieChart from './components/PieChart.vue'
-import Pie1Chart from './components/Pie1Chart.vue'
-import BarChart from './components/BarChart.vue'
+import { defineAsyncComponent } from 'vue'
 
-import chartData from '@/data/chart_data.js'
+const emptyChartData = {
+  summary: {},
+  lineChartData: {
+    total_amount: { date_data: [], amount_data: [] },
+    year_amount: { date_data: [], amount_data: [] }
+  },
+  pieTop10Data: {
+    category: [],
+    platform: [],
+    family: []
+  }
+}
 
 export default {
   name: 'DashboardAdmin',
   components: {
-    PanelGroup,
-    LineChart,
-    PieChart,
-    Pie1Chart,
-    BarChart
+    PanelGroup: defineAsyncComponent(() => import('./components/PanelGroup.vue')),
+    LineChart: defineAsyncComponent(() => import('./components/LineChart.vue')),
+    PieChart: defineAsyncComponent(() => import('./components/PieChart.vue')),
+    Pie1Chart: defineAsyncComponent(() => import('./components/Pie1Chart.vue')),
+    BarChart: defineAsyncComponent(() => import('./components/BarChart.vue'))
   },
   data() {
     return {
-      lineChartData: chartData.lineChartData.total_amount,
-      pieData: chartData.pieTop10Data,
+      chartData: emptyChartData,
+      chartDataReady: false,
+      lineChartData: emptyChartData.lineChartData.total_amount,
+      pieData: emptyChartData.pieTop10Data,
       currentChartType: 'total_amount'
     }
   },
@@ -89,9 +105,23 @@ export default {
       return titles[this.currentChartType] || '恶意文件数量统计'
     }
   },
+  mounted() {
+    this.loadChartData()
+  },
   methods: {
+    async loadChartData() {
+      try {
+        const module = await import('@/data/chart_data.js')
+        this.chartData = module.default || module
+        this.pieData = this.chartData.pieTop10Data || emptyChartData.pieTop10Data
+        this.lineChartData = this.chartData.lineChartData?.[this.currentChartType] || emptyChartData.lineChartData.total_amount
+        this.chartDataReady = true
+      } catch (error) {
+        console.error('加载图表数据失败:', error)
+      }
+    },
     handleSetLineChartData(type) {
-      this.lineChartData = chartData.lineChartData[type]
+      this.lineChartData = this.chartData.lineChartData?.[type] || emptyChartData.lineChartData.total_amount
       this.currentChartType = type
     },
     getYearAmountTitle() {

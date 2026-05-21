@@ -226,6 +226,7 @@ export default {
               localStorage.setItem('token', token)
               sessionStorage.setItem('token', token)
               store.commit('user/SET_TOKEN', token)
+              store.commit('user/SET_ROLES', ['admin'])
 
               const newRoutes = asyncRoutes.filter(route =>
                 !router.options.routes.some(r => r.path === route.path)
@@ -235,11 +236,8 @@ export default {
               })
               router.options.routes = [...router.options.routes, ...newRoutes]
 
-              this.$message.success('登录成功，马上跳转！')
-              setTimeout(() => {
-                window.location.href = '#/sample'
-                window.location.reload()
-              }, 300)
+              this.$message.success('登录成功')
+              router.replace('/sample')
             } else {
               this.loading = false
               this.$message.error('登录失败：未获取到Token')
