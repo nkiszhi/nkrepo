@@ -28,7 +28,7 @@ sqlalchemy==2.0.36
 # ============================================
 pydantic==2.10.0
 pydantic-settings==2.6.0
-python-dotenv==1.0.0
+python-dotenv==1.2.2
 
 # ============================================
 # 异步支持
@@ -88,4 +88,3 @@ requests-toolbelt==1.0.0
 # 注意：Dolos需要Node.js环境，请先安装Node.js
 # 安装命令: npm install -g @dodona/dolos
 # 或使用Python包装器: pip install dolos-cli
-

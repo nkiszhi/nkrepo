@@ -22,7 +22,7 @@
     "element-plus": "^2.5.0",
     "highlight.js": "^11.11.1",
     "html2canvas": "^1.4.1",
-    "js-cookie": "3.0.5",
+    "js-cookie": "3.0.7",
     "jszip": "^3.8.0",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",
@@ -43,9 +43,12 @@
     "eslint-plugin-vue": "^9.19.2",
     "fast-glob": "^3.3.2",
     "sass": "^1.69.5",
-    "svg-sprite-loader": "^6.0.11",
     "vite": "^6.4.2",
     "vite-plugin-svg-icons": "^2.0.1"
+  },
+  "overrides": {
+    "braces": "^3.0.3",
+    "micromatch": "^4.0.8"
   },
   "browserslist": [
     "> 1%",
