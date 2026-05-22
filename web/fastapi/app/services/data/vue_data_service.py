@@ -8,6 +8,7 @@ import mysql.connector
 from mysql.connector import Error, pooling
 from datetime import datetime, timedelta
 from collections import defaultdict, Counter
+from pathlib import Path
 import logging
 
 # ---------------------- 日志配置（与主程序统一） ----------------------
@@ -150,11 +151,20 @@ def ensure_directory_exists(path):
     return path
 
 def get_save_path():
-    """获取保存文件的路径（项目根目录/../vue/src/data）"""
-    # 当前文件在new_flask/app/services/data/,需要向上4级到技术路线还原目录,然后进入vue/src/data
-    current_dir = os.path.dirname(__file__)
-    save_dir = os.path.join(current_dir, '../../../../vue/src/data')
-    save_dir = os.path.normpath(save_dir)
+    """获取前端数据保存目录：web/vue/src/data。"""
+    current_file = Path(__file__).resolve()
+    save_dir = None
+
+    for parent in current_file.parents:
+        candidate = parent / 'vue' / 'src' / 'data'
+        if (parent / 'fastapi').is_dir() and candidate.parent.is_dir():
+            save_dir = candidate
+            break
+
+    if save_dir is None:
+        save_dir = current_file.parents[4] / 'vue' / 'src' / 'data'
+
+    save_dir = str(save_dir)
     ensure_directory_exists(save_dir)
     logger.info(f"数据保存目录: {save_dir}")
     return save_dir
