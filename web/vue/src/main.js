@@ -14,7 +14,6 @@ import { registerIcons } from './icons'
 import 'virtual:svg-icons-register'  // 导入SVG图标注册
 import './permission'
 import { setupErrorHandler } from './utils/error-log.js'
-import * as filters from './filters/index.js'
 
 /**
  * 修复 Element Plus 遮罩层问题的工具函数
@@ -150,11 +149,6 @@ app.use(ElementPlus, {
 
 // 设置错误处理
 setupErrorHandler(app)
-
-// 注册全局工具过滤器
-Object.keys(filters).forEach(key => {
-  app.config.globalProperties[`$${key}`] = filters[key]
-})
 
 // 使用路由和状态管理
 app.use(store)

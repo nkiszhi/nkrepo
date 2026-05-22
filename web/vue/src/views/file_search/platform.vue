@@ -16,7 +16,7 @@
     </div>
 
     <div class="chart-wrapper" style="width:100%; height:200%;">
-      <pie-chart />
+      <pie-platform :chart-data="piePlatformData" />
     </div>
     <div v-if="isSearchElLoading" class="search-status">
       <svg-icon icon-class="file_search" class="result-icon" />
@@ -56,7 +56,8 @@
 
 <script>
 import axios from 'axios'
-import pieChart from '../dashboard/sample/admin/components/PieChart.vue'
+import PiePlatform from '../dashboard/sample/admin/components/pie-platform.vue'
+import chartData from '@/data/chart_data.js'
 
 // 创建统一axios实例（10分钟超时 + 自动携带Token）
 const apiService = axios.create({
@@ -80,7 +81,7 @@ apiService.interceptors.request.use(
 
 export default {
   components: {
-    pieChart
+    PiePlatform
   },
   data() {
     return {
@@ -93,6 +94,7 @@ export default {
       isSearchElLoading: false, // 仅搜索时的加载状态
       loadingDetails: {}, // 单条数据的加载状态
       searchResults: [],
+      piePlatformData: chartData.pieTop10Data?.platform || [],
       apiBaseUrl: 'http://10.134.13.242:5005', // 兜底地址
       searchTriggered: false // 标记是否触发过搜索
     }
@@ -194,29 +196,34 @@ export default {
 
     toggleDetails(sha256) {
       // 切换详情显示状态
-      this.$set(this.showDetails, sha256, !this.showDetails[sha256])
+      if (!Object.prototype.hasOwnProperty.call(this.showDetails, sha256)) {
+        this.showDetails = { ...this.showDetails, [sha256]: false }
+      }
+      this.showDetails[sha256] = !this.showDetails[sha256]
       // 如果是关闭详情，直接返回
       if (!this.showDetails[sha256]) return
 
       // 仅标记当前条目的加载状态，不影响全局
-      this.$set(this.loadingDetails, sha256, true)
+      if (!Object.prototype.hasOwnProperty.call(this.loadingDetails, sha256)) {
+        this.loadingDetails = { ...this.loadingDetails, [sha256]: false }
+      }
+      this.loadingDetails[sha256] = true
 
       // 使用动态API地址
       apiService.get(`${this.apiBaseUrl}/detail_platform/${sha256}`)
         .then(response => {
-          const result = response.data.query_result || {}
-          this.$set(this.details, sha256, result)
-          this.$forceUpdate()
+          const result = response.data.data || response.data.query_result || {}
+          this.details = { ...this.details, [sha256]: result }
           console.log(this.details[sha256])
         })
         .catch(error => {
           console.error('获取样本详情失败:', error)
           this.$message?.error('获取样本详情失败：' + error.message) || alert('获取样本详情失败：' + error.message)
-          this.$set(this.showDetails, sha256, false)
+          this.showDetails[sha256] = false
         })
         .finally(() => {
           // 清除当前条目的加载状态
-          this.$set(this.loadingDetails, sha256, false)
+          this.loadingDetails[sha256] = false
         })
     },
 

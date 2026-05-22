@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-editor-container">
-    <panel-group
+    <sample-summary-panels
       :summary="chartData.summary"
       @handleSetLineChartData="handleSetLineChartData"
     />
@@ -11,7 +11,7 @@
       <div class="chart-header" style="margin-bottom: 16px; padding-bottom: 12px;">
         <h3 class="chart-title">{{ lineChartTitle }}</h3>
       </div>
-      <line-chart v-if="chartDataReady" :chart-data="lineChartData" />
+      <line-sample-trend v-if="chartDataReady" :chart-data="lineChartData" />
       <el-skeleton v-else :rows="6" animated />
     </el-row>
 
@@ -23,7 +23,7 @@
             <h3 class="chart-title">恶意文件类型(Category)Top10</h3>
           </div>
           <div style="height: calc(100% - 40px);">
-            <pie1-chart v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" />
+            <pie-category v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -38,7 +38,7 @@
             <h3 class="chart-title">恶意文件平台(Platform)Top10</h3>
           </div>
           <div style="height: calc(100% - 40px);">
-            <pie-chart v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" />
+            <pie-platform v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -53,7 +53,7 @@
             <h3 class="chart-title">恶意文件家族(Family)Top10</h3>
           </div>
           <div style="height: calc(100% - 40px);">
-            <bar-chart v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" />
+            <pie-family v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -81,18 +81,17 @@ const emptyChartData = {
 export default {
   name: 'DashboardAdmin',
   components: {
-    PanelGroup: defineAsyncComponent(() => import('./components/PanelGroup.vue')),
-    LineChart: defineAsyncComponent(() => import('./components/LineChart.vue')),
-    PieChart: defineAsyncComponent(() => import('./components/PieChart.vue')),
-    Pie1Chart: defineAsyncComponent(() => import('./components/Pie1Chart.vue')),
-    BarChart: defineAsyncComponent(() => import('./components/BarChart.vue'))
+    SampleSummaryPanels: defineAsyncComponent(() => import('./components/sample-summary-panels.vue')),
+    LineSampleTrend: defineAsyncComponent(() => import('./components/line-sample-trend.vue')),
+    PiePlatform: defineAsyncComponent(() => import('./components/pie-platform.vue')),
+    PieCategory: defineAsyncComponent(() => import('./components/pie-category.vue')),
+    PieFamily: defineAsyncComponent(() => import('./components/pie-family.vue'))
   },
   data() {
     return {
       chartData: emptyChartData,
       chartDataReady: false,
       lineChartData: emptyChartData.lineChartData.total_amount,
-      pieData: emptyChartData.pieTop10Data,
       currentChartType: 'total_amount'
     }
   },
@@ -113,7 +112,6 @@ export default {
       try {
         const module = await import('@/data/chart_data.js')
         this.chartData = module.default || module
-        this.pieData = this.chartData.pieTop10Data || emptyChartData.pieTop10Data
         this.lineChartData = this.chartData.lineChartData?.[this.currentChartType] || emptyChartData.lineChartData.total_amount
         this.chartDataReady = true
       } catch (error) {

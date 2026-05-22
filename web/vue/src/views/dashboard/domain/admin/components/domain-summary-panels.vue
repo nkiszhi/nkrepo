@@ -80,7 +80,7 @@ import CountTo from '@/components/CountTo/index.vue'
 import chartData from '@/data/chart_data.js'
 
 export default {
-  name: 'PanelGroup',
+  name: 'DomainSummaryPanels',
   components: {
     CountTo
   },

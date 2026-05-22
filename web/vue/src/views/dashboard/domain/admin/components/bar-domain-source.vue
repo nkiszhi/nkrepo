@@ -4,9 +4,7 @@
 
 <script>
 import * as echarts from 'echarts'
-// ECharts theme
 import resize from './mixins/resize.js'
-import chartData from '@/data/chart_data.js' // 导入数据
 
 const animationDuration = 6000
 
@@ -24,6 +22,10 @@ export default {
     height: {
       type: String,
       default: '400px'
+    },
+    chartData: {
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -31,37 +33,32 @@ export default {
       chart: null
     }
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.initChart()
-    })
-  },
-  beforeDestroy() {
-    if (!this.chart) {
-      return
+  watch: {
+    chartData() {
+      this.setOptions()
     }
+  },
+  mounted() {
+    this.$nextTick(this.initChart)
+  },
+  beforeUnmount() {
+    if (!this.chart) return
     this.chart.dispose()
     this.chart = null
   },
   methods: {
     initChart() {
       this.chart = echarts.init(this.$el, 'macarons')
+      this.setOptions()
+    },
+    setOptions() {
+      if (!this.chart) return
 
-      // 从导入的数据中获取top10Source
-      const top10Data = chartData.top10Source || []
-
-      // 提取sources和counts，并按count降序排列（如果数据未排序）
-      const sortedData = [...top10Data].sort((a, b) => b.count - a.count)
-
-      // 提取前10个数据
-      const displayData = sortedData.slice(0, 10)
-
-      // 将count转换为百万单位，并保留1位小数（根据需要调整）
-      // 这里直接使用原始count值，如果数值太大可以考虑转换
+      const displayData = [...this.chartData]
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
       const sources = displayData.map(item => item.source)
-      const values = displayData.map(item => item.count / 1000000) // 转换为百万单位
-
-      // 使用 ECharts 默认的鲜艳彩色系列
+      const values = displayData.map(item => item.count / 1000000)
       const colors = [
         '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
         '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#60acfc'
@@ -73,7 +70,7 @@ export default {
           axisPointer: {
             type: 'shadow'
           },
-          formatter: function(params) {
+          formatter(params) {
             const param = params[0]
             const originalData = displayData[param.dataIndex]
             const originalCount = originalData ? originalData.count.toLocaleString() : param.value
@@ -84,7 +81,7 @@ export default {
           left: '3%',
           right: '3%',
           top: '15%',
-          bottom: '25%', // 增加底部留白以适应长标签
+          bottom: '25%',
           containLabel: true
         },
         xAxis: {
@@ -102,15 +99,11 @@ export default {
           axisLabel: {
             interval: 0,
             rotate: 45,
-            fontSize: 10, // 稍微减小字体大小以适应长标签
+            fontSize: 10,
             margin: 15,
             color: '#666',
-            formatter: function(value) {
-              // 如果标签太长，可以截断并添加省略号
-              if (value.length > 20) {
-                return value.substring(0, 20) + '...'
-              }
-              return value
+            formatter(value) {
+              return value.length > 20 ? `${value.substring(0, 20)}...` : value
             }
           }
         },
@@ -124,7 +117,7 @@ export default {
               color: '#e0e0e0'
             }
           },
-          name: '数量（百万）', // 修改单位说明
+          name: '数量（百万）',
           nameTextStyle: {
             fontSize: 12,
             padding: [0, 0, 0, 10],
@@ -138,10 +131,7 @@ export default {
           },
           axisLabel: {
             color: '#666',
-            fontSize: 11,
-            formatter: function(value) {
-              return value
-            }
+            fontSize: 11
           }
         },
         series: [{
@@ -149,7 +139,7 @@ export default {
           type: 'bar',
           barWidth: '40%',
           data: values.map((value, index) => ({
-            value: value,
+            value,
             itemStyle: {
               color: colors[index],
               borderRadius: [2, 2, 0, 0]
@@ -160,9 +150,8 @@ export default {
           label: {
             show: true,
             position: 'top',
-            formatter: function(params) {
+            formatter(params) {
               const originalData = displayData[params.dataIndex]
-              // 显示原始count值（已转换为百万单位并保留1位小数）
               return originalData ? (originalData.count / 1000000).toFixed(1) : params.value.toFixed(1)
             },
             fontSize: 10,

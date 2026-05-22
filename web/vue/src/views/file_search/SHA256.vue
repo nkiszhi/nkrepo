@@ -15,7 +15,7 @@
       </button>
     </div>
     <div class="chart-wrapper" style="width:100%; height:200%;background:#fff;padding:16px 16px 0;margin-bottom:32px;">
-      <line-chart :chart-data="lineChartData" />
+      <line-sample-trend :chart-data="lineChartData" />
     </div>
 
     <div>
@@ -51,7 +51,7 @@
 
 <script>
 import axios from 'axios'
-import LineChart from '../dashboard/sample/admin/components/LineChart.vue'
+import LineSampleTrend from '../dashboard/sample/admin/components/line-sample-trend.vue'
 import chartData from '@/data/chart_data.js'
 
 // 创建统一axios实例
@@ -76,7 +76,7 @@ apiService.interceptors.request.use(
 
 export default {
   components: {
-    LineChart
+    LineSampleTrend
   },
   data() {
     return {

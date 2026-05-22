@@ -45,9 +45,9 @@ export const constantRoutes = [
         meta: { title: '函数详情', affix: true }
       },
       {
-        path: 'domain-map',
-        component: () => import('@/views/dashboard/domain-map.vue'),
-        name: 'DomainMap',
+        path: 'domain',
+        component: () => import('@/views/dashboard/domain.vue'),
+        name: 'DomainDashboard',
         meta: { title: '恶意域名样本数据展示', affix: true }
       }
     ]

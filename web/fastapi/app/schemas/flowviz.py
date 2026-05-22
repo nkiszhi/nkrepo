@@ -16,6 +16,7 @@ class ProviderResponse(BaseModel):
     """Provider响应"""
     success: bool = Field(..., description="是否成功")
     providers: Optional[List[Dict[str, Any]]] = Field(None, description="Provider列表")
+    defaultProvider: Optional[str] = Field(None, description="默认Provider")
 
 
 class AnalysisRequest(BaseModel):

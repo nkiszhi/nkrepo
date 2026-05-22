@@ -8,17 +8,12 @@
         <tags-view v-if="needTagsView" />
       </div>
       <app-main />
-      <!-- 隐藏右侧设置面板,已移到系统设置菜单中 -->
-      <!-- <right-panel v-if="showSettings">
-        <settings />
-      </right-panel> -->
     </div>
   </div>
 </template>
 
 <script>
-import RightPanel from '@/components/RightPanel/index.vue'
-import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components/index.js'
+import { AppMain, Navbar, Sidebar, TagsView } from './components/index.js'
 import ResizeMixin from './mixin/ResizeHandler.js'
 import { mapState } from 'vuex'
 
@@ -27,8 +22,6 @@ export default {
   components: {
     AppMain,
     Navbar,
-    RightPanel,
-    Settings,
     Sidebar,
     TagsView
   },
@@ -37,7 +30,6 @@ export default {
     ...mapState({
       sidebar: state => state.app.sidebar,
       device: state => state.app.device,
-      showSettings: state => state.settings.showSettings,
       needTagsView: state => state.settings.tagsView,
       fixedHeader: state => state.settings.fixedHeader
     }),

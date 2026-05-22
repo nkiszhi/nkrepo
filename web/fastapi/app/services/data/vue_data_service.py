@@ -826,7 +826,7 @@ def convert_decimal_to_int(obj):
 
 # ---------------------- 文件生成（新增域名数据+12个月明细写入） ----------------------
 def save_to_js(data, filename='chart_data.js'):
-    """生成Vue可用的JS文件（完全匹配要求的格式，新增域名相关数据）"""
+    """生成Vue可用的轻量JS文件，仅写入前端实际使用的数据。"""
     try:
         save_dir = get_save_path()
         file_path = os.path.join(save_dir, filename)
@@ -835,9 +835,6 @@ def save_to_js(data, filename='chart_data.js'):
         data_converted = {
             'lineChartData': convert_decimal_to_int(data['lineChartData']),
             'pieTop10Data': convert_decimal_to_int(data['pieTop10Data']),
-            'pieFullData': convert_decimal_to_int(data['pieFullData']),
-            'filetypeStats': convert_decimal_to_int(data['filetypeStats']),
-            'behaviorStats': convert_decimal_to_int(data['behaviorStats']),
             'lineChartDataDomain': convert_decimal_to_int(data['lineChartDataDomain']),
             'top10Source': convert_decimal_to_int(data['top10Source']),
             'top10Category': convert_decimal_to_int(data['top10Category']),
@@ -863,37 +860,8 @@ def save_to_js(data, filename='chart_data.js'):
             f.write(f"    platform: {json.dumps(pie_data['platform'], ensure_ascii=False)},\n")
             f.write(f"    family: {json.dumps(pie_data['family'], ensure_ascii=False)}\n")
             f.write("  },\n")
-            
-            # 3. 完整饼图数据
-            f.write("  pieFullData: {\n")
-            pie_full_data = data_converted['pieFullData']
-            f.write(f"    category: {json.dumps(pie_full_data['category'], ensure_ascii=False)},\n")
-            f.write(f"    platform: {json.dumps(pie_full_data['platform'], ensure_ascii=False)},\n")
-            f.write(f"    family: {json.dumps(pie_full_data['family'], ensure_ascii=False)}\n")
-            f.write("  },\n")
-            
-            # 4. 文件类型统计
-            f.write("  filetypeStats: {\n")
-            filetype_data = data_converted['filetypeStats']
-            for ft in ['exe32', 'exe64', 'dll32', 'dll64', 'total']:
-                stats = filetype_data[ft]
-                f.write(f"    {ft}: {{\n")
-                f.write(f"      total: {stats['total']},\n")
-                f.write(f"      hasResult: {stats['hasResult']},\n")
-                f.write(f"      noResult: {stats['noResult']},\n")
-                f.write(f"      percentage: {stats['percentage']}\n")
-                f.write(f"    }},\n")
-            f.write("  },\n")
-            
-            # 5. 行为统计
-            f.write("  behaviorStats: {\n")
-            behavior_data = data_converted['behaviorStats']
-            f.write(f"    detection1: {behavior_data['detection1']},\n")
-            f.write(f"    behaviourSummary1: {behavior_data['behaviourSummary1']},\n")
-            f.write(f"    behaviourMitreTrees1: {behavior_data['behaviourMitreTrees1']}\n")
-            f.write("  },\n")
-            
-            # 6. 新增：域名折线图数据（符合Vue前端格式要求）
+
+            # 3. 域名折线图数据（符合Vue前端格式要求）
             f.write("  lineChartDataDomain: {\n")
             domain_line_data = data_converted['lineChartDataDomain']
             
@@ -909,8 +877,8 @@ def save_to_js(data, filename='chart_data.js'):
             purchases = domain_line_data['purchases']
             f.write(f"    purchases: {{'name': '{purchases['name']}', 'date_data': {json.dumps(purchases['date_data'], ensure_ascii=False)}, 'amount_data': {json.dumps(purchases['amount_data'])}}}\n")
             f.write("  },\n")
-            
-            # 7. 新增：Top10 Source
+
+            # 4. Top10 Source
             top10_source_data = data_converted['top10Source']
             f.write("  top10Source: [")
             for i, item in enumerate(top10_source_data):
@@ -919,8 +887,8 @@ def save_to_js(data, filename='chart_data.js'):
                 if i < len(top10_source_data) - 1:
                     f.write(", ")
             f.write("],\n")
-            
-            # 8. 新增：Top10 Category
+
+            # 5. Top10 Category
             top10_category_data = data_converted['top10Category']
             f.write("  top10Category: [")
             for i, item in enumerate(top10_category_data):
@@ -928,8 +896,8 @@ def save_to_js(data, filename='chart_data.js'):
                 if i < len(top10_category_data) - 1:
                     f.write(", ")
             f.write("],\n")
-            
-            # 9. 汇总信息
+
+            # 6. 汇总信息
             summary = data_converted['summary']
             f.write("  summary: {\n")
             f.write(f"    total_samples: {summary['total_samples']},\n")

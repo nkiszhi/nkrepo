@@ -1,16 +1,20 @@
 """
 FlowViz攻击流可视化API
 """
+import json
+import logging
+import os
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import HTMLResponse
 from app.api.auth import get_current_user
 from app.schemas.flowviz import FlowVizResponse, ProviderResponse, AnalysisRequest, AnalysisResponse
 from app.services.flowviz_service import flowviz_service
-import logging
-import os
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+FLOWVIZ_DIR = Path(__file__).resolve().parents[1] / "services" / "flowviz" / "data"
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -20,8 +24,8 @@ async def flowviz_root():
     FlowViz主页
     """
     try:
-        index_file = os.path.join(FLOWVIZ_DIR, 'index.html')
-        if os.path.exists(index_file):
+        index_file = FLOWVIZ_DIR / 'index.html'
+        if index_file.exists():
             with open(index_file, 'r', encoding='utf-8') as f:
                 return f.read()
         else:
@@ -62,7 +66,8 @@ async def get_providers(current_user: dict = Depends(get_current_user)):
         
         return ProviderResponse(
             success=True,
-            providers=providers
+            providers=providers,
+            defaultProvider=flowviz_service.get_default_provider()
         )
         
     except Exception as e:
@@ -110,9 +115,9 @@ async def get_analysis_history(
     """
     try:
         # 从数据库或文件加载历史记录
-        history_file = os.path.join(FLOWVIZ_DIR, 'history.json')
+        history_file = FLOWVIZ_DIR / 'history.json'
         
-        if os.path.exists(history_file):
+        if history_file.exists():
             with open(history_file, 'r', encoding='utf-8') as f:
                 history = json.load(f)
         else:
@@ -148,10 +153,10 @@ async def save_analysis(
     保存分析结果
     """
     try:
-        history_file = os.path.join(FLOWVIZ_DIR, 'history.json')
+        history_file = FLOWVIZ_DIR / 'history.json'
         
         # 加载现有历史
-        if os.path.exists(history_file):
+        if history_file.exists():
             with open(history_file, 'r', encoding='utf-8') as f:
                 history = json.load(f)
         else:
@@ -164,7 +169,7 @@ async def save_analysis(
         history.insert(0, analysis_data)
         
         # 保存
-        os.makedirs(os.path.dirname(history_file), exist_ok=True)
+        os.makedirs(history_file.parent, exist_ok=True)
         with open(history_file, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
         

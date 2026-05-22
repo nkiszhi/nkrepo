@@ -103,7 +103,6 @@
 import axios from 'axios'
 import router from '@/router'
 import store from '@/store'
-import { asyncRoutes } from '@/router'
 
 const configApi = axios.create({
   timeout: 5000
@@ -204,9 +203,7 @@ export default {
       localStorage.removeItem('token')
       sessionStorage.removeItem('token')
       store.commit('user/SET_TOKEN', '')
-      router.options.routes = router.options.routes.filter(route =>
-        !asyncRoutes.some(asyncRoute => asyncRoute.path === route.path)
-      )
+      store.commit('user/SET_ROLES', [])
     },
     handleLogin() {
       if (this.configElLoading) {
@@ -220,21 +217,20 @@ export default {
         console.log('最终登录地址:', loginUrl)
 
         axios.post(loginUrl, this.loginForm)
-          .then(response => {
+          .then(async response => {
             const token = response.data.token || ''
             if (token) {
               localStorage.setItem('token', token)
               sessionStorage.setItem('token', token)
               store.commit('user/SET_TOKEN', token)
-              store.commit('user/SET_ROLES', ['admin'])
+              const roles = ['admin']
+              store.commit('user/SET_ROLES', roles)
 
-              const newRoutes = asyncRoutes.filter(route =>
-                !router.options.routes.some(r => r.path === route.path)
-              )
-              newRoutes.forEach(route => {
+              const accessRoutes = await store.dispatch('permission/generateRoutes', roles)
+              accessRoutes.forEach(route => {
+                if (route.name && router.hasRoute(route.name)) return
                 router.addRoute(route)
               })
-              router.options.routes = [...router.options.routes, ...newRoutes]
 
               this.$message.success('登录成功')
               router.replace('/sample')

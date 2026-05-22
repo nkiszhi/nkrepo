@@ -4,9 +4,7 @@
 
 <script>
 import * as echarts from 'echarts'
-// ECharts theme
 import resize from './mixins/resize.js'
-import chartData from '@/data/chart_data.js' // 导入数据
 
 const animationDuration = 6000
 
@@ -24,6 +22,10 @@ export default {
     height: {
       type: String,
       default: '400px'
+    },
+    chartData: {
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -31,43 +33,33 @@ export default {
       chart: null
     }
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.initChart()
-    })
-  },
-  beforeDestroy() {
-    if (!this.chart) {
-      return
+  watch: {
+    chartData() {
+      this.setOptions()
     }
+  },
+  mounted() {
+    this.$nextTick(this.initChart)
+  },
+  beforeUnmount() {
+    if (!this.chart) return
     this.chart.dispose()
     this.chart = null
   },
   methods: {
     initChart() {
       this.chart = echarts.init(this.$el, 'macarons')
+      this.setOptions()
+    },
+    setOptions() {
+      if (!this.chart) return
 
-      // 从导入的数据中获取top10Category
-      const top10Category = chartData.top10Category || []
-
-      // 提取categories和counts
-      const displayData = top10Category.slice(0, 10) // 取前10个数据
-
-      // 处理category名称，如果太长可以简化
+      const displayData = this.chartData.slice(0, 10)
       const categories = displayData.map(item => {
-        // 简化category名称显示
         const category = item.category
-        // 如果包含括号，可以提取括号前的内容
-        if (category.includes('(')) {
-          return category.split('(')[0].trim()
-        }
-        return category
+        return category.includes('(') ? category.split('(')[0].trim() : category
       })
-
-      // 将count转换为百万单位，保留1位小数
       const values = displayData.map(item => item.count / 1000000)
-
-      // 使用鲜艳的彩色系列
       const colors = [
         '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
         '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#60acfc'
@@ -79,15 +71,13 @@ export default {
           axisPointer: {
             type: 'shadow'
           },
-          formatter: function(params) {
+          formatter(params) {
             const param = params[0]
             const originalData = displayData[param.dataIndex]
-            if (originalData) {
-              const originalCount = originalData.count.toLocaleString()
-              const originalCategory = originalData.category
-              return `${originalCategory}<br/>数量: ${originalCount}`
+            if (!originalData) {
+              return `${param.name}<br/>数量: ${param.value}`
             }
-            return `${param.name}<br/>数量: ${param.value}`
+            return `${originalData.category}<br/>数量: ${originalData.count.toLocaleString()}`
           }
         },
         grid: {
@@ -115,12 +105,8 @@ export default {
             fontSize: 11,
             margin: 15,
             color: '#666',
-            formatter: function(value) {
-              // 如果标签太长，可以截断显示
-              if (value.length > 15) {
-                return value.substring(0, 15) + '...'
-              }
-              return value
+            formatter(value) {
+              return value.length > 15 ? `${value.substring(0, 15)}...` : value
             }
           }
         },
@@ -148,10 +134,7 @@ export default {
           },
           axisLabel: {
             color: '#666',
-            fontSize: 11,
-            formatter: function(value) {
-              return value
-            }
+            fontSize: 11
           }
         },
         series: [{
@@ -159,7 +142,7 @@ export default {
           type: 'bar',
           barWidth: '40%',
           data: values.map((value, index) => ({
-            value: value,
+            value,
             itemStyle: {
               color: colors[index],
               borderRadius: [2, 2, 0, 0]
@@ -170,13 +153,9 @@ export default {
           label: {
             show: true,
             position: 'top',
-            formatter: function(params) {
+            formatter(params) {
               const originalData = displayData[params.dataIndex]
-              if (originalData) {
-                // 显示百万单位的数值，保留1位小数
-                return (originalData.count / 1000000).toFixed(1)
-              }
-              return params.value.toFixed(1)
+              return originalData ? (originalData.count / 1000000).toFixed(1) : params.value.toFixed(1)
             },
             fontSize: 10,
             color: '#333',

@@ -2,9 +2,11 @@
 FlowViz服务
 整合flowviz模块的功能
 """
+import json
 import os
 import sys
 import logging
+import time
 from typing import Dict, Any, List, Optional
 
 # 添加flowviz到路径
@@ -52,30 +54,46 @@ class FlowVizService:
             {
                 "id": "openai",
                 "name": "OpenAI",
+                "displayName": "OpenAI",
                 "description": "OpenAI GPT模型",
                 "models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
-                "available": True
+                "defaultModel": "gpt-4o",
+                "available": False,
+                "configured": False,
+                "supports_strict_mode": True
             },
             {
                 "id": "anthropic",
                 "name": "Anthropic",
+                "displayName": "Anthropic",
                 "description": "Claude模型",
                 "models": ["claude-2", "claude-3-opus", "claude-3-sonnet"],
-                "available": True
+                "defaultModel": "claude-3-5-sonnet-20241022",
+                "available": False,
+                "configured": False,
+                "supports_strict_mode": True
             },
             {
                 "id": "deepseek",
                 "name": "DeepSeek",
+                "displayName": "DeepSeek",
                 "description": "DeepSeek模型",
                 "models": ["deepseek-chat", "deepseek-coder"],
-                "available": True
+                "defaultModel": "deepseek-chat",
+                "available": False,
+                "configured": False,
+                "supports_strict_mode": False
             },
             {
                 "id": "local",
                 "name": "本地模型",
+                "displayName": "本地模型",
                 "description": "本地部署的模型",
                 "models": ["local-model"],
-                "available": True
+                "defaultModel": "local-model",
+                "available": False,
+                "configured": False,
+                "supports_strict_mode": False
             }
         ]
         
@@ -83,12 +101,28 @@ class FlowVizService:
         if self.provider_factory:
             try:
                 available_providers = self.provider_factory.get_available_providers()
+                available_map = {provider.get('id'): provider for provider in available_providers}
                 for provider in providers:
-                    provider['available'] = provider['id'] in available_providers
+                    provider_config = available_map.get(provider['id'])
+                    if provider_config:
+                        provider.update(provider_config)
+                        provider['available'] = True
+                        provider['configured'] = True
             except Exception as e:
                 logger.warning(f"获取可用Provider失败: {str(e)}")
         
         return providers
+
+    def get_default_provider(self) -> Optional[str]:
+        """获取默认Provider。"""
+        if not self.provider_factory:
+            return None
+
+        try:
+            return self.provider_factory.get_default_provider()
+        except Exception as e:
+            logger.warning(f"获取默认Provider失败: {str(e)}")
+            return None
     
     async def analyze(
         self,
@@ -111,33 +145,73 @@ class FlowVizService:
         """
         try:
             # 如果有真实的provider factory,使用它
+            if self.provider_factory:
+                provider = provider or self.get_default_provider()
             if self.provider_factory and provider:
                 try:
-                    provider_instance = self.provider_factory.get_provider(provider)
-                    result = await provider_instance.analyze(input_value, **(options or {}))
+                    result = self._analyze_with_provider(input_value, provider, options or {})
                     return result
                 except Exception as e:
                     logger.warning(f"使用Provider {provider} 分析失败: {str(e)}")
             
-            # 尝试使用AI路由
-            try:
-                from app.services.flowviz.routes.ai import analyze_with_ai
-                result = await analyze_with_ai(
-                    input_type=input_type,
-                    input_value=input_value,
-                    provider=provider,
-                    **(options or {})
-                )
-                return result
-            except Exception as e:
-                logger.warning(f"AI分析失败: {str(e)}")
-            
-            # 否则返回模拟数据
+            # 未配置AI Provider或Provider调用失败时返回模拟数据，保持接口可用。
             return self._generate_mock_analysis(input_type, input_value)
             
         except Exception as e:
             logger.error(f"分析失败: {str(e)}")
             raise
+
+    def _analyze_with_provider(
+        self,
+        input_value: str,
+        provider: str,
+        options: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Use the configured FlowViz provider and parse its JSON response."""
+        provider_config = self.provider_factory.get_provider_config(provider)
+        if not provider_config:
+            raise ValueError(f"Provider未配置: {provider}")
+
+        model = options.get('model') or provider_config.get('model')
+        if model:
+            provider_config['model'] = model
+
+        provider_instance = self.provider_factory.create(provider, provider_config)
+        params = {
+            'text': input_value,
+            'system': options.get(
+                'system',
+                '你是网络威胁情报分析专家，请返回包含 nodes 和 edges 的 JSON。'
+            ),
+            'model': provider_config.get('model'),
+            'strict_mode': options.get('strict_mode', True)
+        }
+
+        response_text = ''
+        start_time = time.time()
+        for chunk in provider_instance.stream(params, None):
+            if not chunk or not chunk.startswith('data: ') or chunk == 'data: [DONE]\n\n':
+                continue
+            try:
+                chunk_data = json.loads(chunk[6:].strip())
+            except json.JSONDecodeError:
+                continue
+            if chunk_data.get('type') == 'content_block_delta':
+                response_text += chunk_data.get('delta', {}).get('text', '')
+
+        from app.services.flowviz.utils.advanced_parser import AdvancedFlowParser
+
+        parser = AdvancedFlowParser(f"flowviz_{int(start_time)}")
+        parsed = parser.parse_technical_data(response_text)
+        if parsed.get('error'):
+            raise ValueError(parsed.get('error'))
+
+        return {
+            'nodes': parsed.get('nodes', []),
+            'edges': parsed.get('edges', []),
+            'analysis_time': round(time.time() - start_time, 2),
+            'provider': provider
+        }
     
     def _generate_mock_analysis(self, input_type: str, input_value: str) -> Dict[str, Any]:
         """生成模拟分析结果"""

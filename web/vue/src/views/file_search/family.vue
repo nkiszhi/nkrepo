@@ -16,7 +16,7 @@
     </div>
 
     <div class="chart-wrapper" style="width:100%; height:200%;">
-      <bar-chart />
+      <pie-family :chart-data="pieFamilyData" />
     </div>
     <div v-if="isSearchElLoading" class="search-status">
       <svg-icon icon-class="file_search" class="result-icon" />
@@ -57,7 +57,8 @@
 <script>
 /* eslint-disable template-curly-spacing */ // 只关闭模板花括号空格校验（解决编译报错）
 import axios from 'axios'
-import barChart from '../dashboard/sample/admin/components/BarChart.vue'
+import PieFamily from '../dashboard/sample/admin/components/pie-family.vue'
+import chartData from '@/data/chart_data.js'
 
 // 创建统一axios实例（10分钟超时 + 自动携带Token）
 const apiService = axios.create({
@@ -81,7 +82,7 @@ apiService.interceptors.request.use(
 
 export default {
   components: {
-    barChart
+    PieFamily
   },
   data() {
     return {
@@ -94,6 +95,7 @@ export default {
       isSearchElLoading: false, // 仅搜索时的加载状态
       loadingDetails: {}, // 单条数据的加载状态
       searchResults: [],
+      pieFamilyData: chartData.pieTop10Data?.family || [],
       apiBaseUrl: 'http://10.134.13.242:5005', // 兜底地址
       searchTriggered: false // 标记是否触发过搜索
     }
