@@ -97,12 +97,6 @@ export const asyncRoutes = [
         component: () => import('@/views/detect/av-scan-history.vue'),
         name: 'AVScanHistory',
         meta: { title: '检测历史记录' }
-      },
-      {
-        path: 'codefender',
-        component: () => import('@/views/detect/codefender-detect.vue'),
-        name: 'CodefenderDetect',
-        meta: { title: 'Codefender检测' }
       }
     ]
   },
