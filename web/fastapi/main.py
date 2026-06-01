@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 def start_vue_data_scheduler():
-    """启动vue_data定时任务 - 完全按照旧Flask实现"""
+    """启动vue_data定时任务。"""
     logger.info("启动vue_data后台生成任务")
     
     # 启动时先运行一次
@@ -58,25 +58,16 @@ def start_vue_data_scheduler():
     # 设置定时任务
     scheduler = BackgroundScheduler()
     
-    # 每天凌晨2点运行
+    # 每天早上8点30分读取最新联动表并生成前端数据
     scheduler.add_job(
         generate_frontend_data,
-        CronTrigger(hour=2, minute=0),
+        CronTrigger(hour=8, minute=30),
         id='daily_vue_data_generation',
         replace_existing=True
     )
-    
-    # 每6小时运行一次(测试用)
-    scheduler.add_job(
-        generate_frontend_data,
-        'interval',
-        hours=6,
-        id='interval_vue_data_generation',
-        replace_existing=True
-    )
-    
+
     scheduler.start()
-    logger.info("vue_data定时任务已启动:每天凌晨2点运行,每6小时运行一次(测试)")
+    logger.info("vue_data定时任务已启动:每天08:30读取联动表并生成前端数据")
 
 
 @asynccontextmanager

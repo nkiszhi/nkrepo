@@ -52,7 +52,7 @@ python app/services/data/sample_stats_refresh.py --mode full
 
 ## 后续有新数据后的刷新
 
-如果只是新增或更新部分样本，执行：
+如果只是新增或更新部分样本，只需要手动刷新样本联动表：
 
 ```bash
 cd /home/nkamg/nkrepo/web/fastapi
@@ -65,6 +65,13 @@ python app/services/data/sample_stats_refresh.py --mode incremental
 - `MAX(updated_at)`
 
 只有数量或最大更新时间变化的分表才会重新统计。最后脚本会重新汇总全局联动表。
+
+FastAPI 后端启动时会自动读取 `sample_stats` 和域名联动表，并继续生成前端使用的：
+
+- `web/vue/src/data/chart_data.js`
+- `web/vue/src/data/stats_summary.txt`
+
+后端运行期间还会每天 `08:30` 自动重新读取数据库联动表并生成上述前端数据文件。这个定时任务只读取联动表，不会自动刷新 `sample_stats`；样本联动表刷新仍由你手动执行 `sample_stats_refresh.py`。
 
 ## 如果数据迁移很大
 

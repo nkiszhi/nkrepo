@@ -66,7 +66,7 @@ def get_db_config():
             'database': config.get('mysql', 'db'),
             'user': config.get('mysql', 'user'),
             'password': config.get('mysql', 'passwd'),
-            'port': 3306,
+            'port': config.getint('mysql', 'port', fallback=3306),
             'pool_name': 'mypool',
             'pool_size': 4,
             'autocommit': True
@@ -99,13 +99,45 @@ def get_benign_db_config():
             'database': config.get('mysql', 'db_benign'),
             'user': config.get('mysql', 'user'),
             'password': config.get('mysql', 'passwd'),
-            'port': 3306,
+            'port': config.getint('mysql', 'port', fallback=3306),
             'pool_name': 'benign_pool',
             'pool_size': 2,
             'autocommit': True
         }
     except Exception as e:
         error_msg = f"读取良性数据库配置出错: {str(e)}"
+        logger.error(error_msg)
+        print(f"\033[91m{error_msg}\033[0m")
+        return None
+
+def get_stats_db_config():
+    """读取配置文件获取样本统计联动库信息。"""
+    config = configparser.ConfigParser()
+    config_path = os.path.join(
+        os.path.dirname(__file__),
+        '../../../config.ini'
+    )
+
+    if not os.path.exists(config_path):
+        error_msg = f"错误：配置文件 {config_path} 不存在"
+        logger.error(error_msg)
+        print(f"\033[91m{error_msg}\033[0m")
+        return None
+
+    try:
+        config.read(config_path, encoding='utf-8')
+        return {
+            'host': config.get('mysql', 'host'),
+            'database': config.get('mysql', 'db_stats', fallback='sample_stats'),
+            'user': config.get('mysql', 'user'),
+            'password': config.get('mysql', 'passwd'),
+            'port': config.getint('mysql', 'port', fallback=3306),
+            'pool_name': 'sample_stats_pool',
+            'pool_size': 3,
+            'autocommit': True
+        }
+    except Exception as e:
+        error_msg = f"读取样本统计数据库配置出错: {str(e)}"
         logger.error(error_msg)
         print(f"\033[91m{error_msg}\033[0m")
         return None
@@ -172,6 +204,7 @@ def get_save_path():
 # 初始化数据库配置
 DB_CONFIG = get_db_config()
 BENIGN_DB_CONFIG = get_benign_db_config()
+STATS_DB_CONFIG = get_stats_db_config()
 DOMAIN_DB_CONFIG = get_domain_db_config()  # 新增域名数据库配置
 
 def create_db_pool():
@@ -210,6 +243,26 @@ def create_benign_db_pool():
         return pool
     except Error as e:
         error_msg = f"创建良性连接池时发生错误: {str(e)}"
+        logger.error(error_msg)
+        print(f"\033[91m{error_msg}\033[0m")
+    return None
+
+def create_stats_db_pool():
+    """创建样本统计联动库连接池"""
+    if not STATS_DB_CONFIG:
+        error_msg = "样本统计数据库配置无效，无法创建连接池"
+        logger.error(error_msg)
+        print(f"\033[91m{error_msg}\033[0m")
+        return None
+
+    try:
+        pool = mysql.connector.pooling.MySQLConnectionPool(**STATS_DB_CONFIG)
+        info_msg = f"成功创建样本统计数据库连接池，大小: {STATS_DB_CONFIG['pool_size']}"
+        logger.info(info_msg)
+        print(f"\033[92m{info_msg}\033[0m")
+        return pool
+    except Error as e:
+        error_msg = f"创建样本统计连接池时发生错误: {str(e)}"
         logger.error(error_msg)
         print(f"\033[91m{error_msg}\033[0m")
     return None
@@ -657,6 +710,153 @@ def get_malicious_sample_data(pool):
         if 'connection' in locals() and connection.is_connected():
             connection.close()
             logger.info("主数据库连接（恶意样本库）已关闭")
+
+def get_sample_stats_frontend_data(pool):
+    """从sample_stats联动库读取前端需要的样本统计数据。"""
+    try:
+        connection = pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+        logger.info("成功获取sample_stats连接，开始读取联动统计数据")
+
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+
+        cursor.execute("""
+            SELECT year, SUM(total_samples) AS total_samples
+            FROM sample_yearly_stats
+            WHERE sample_class = 'malicious'
+            GROUP BY year
+            ORDER BY year
+        """)
+        year_data = cursor.fetchall()
+        year_counts = {item['year']: item['total_samples'] for item in year_data}
+
+        cursor.execute("""
+            SELECT COALESCE(SUM(total_samples), 0) AS total_count
+            FROM sample_total_stats
+            WHERE sample_class = 'malicious'
+        """)
+        malicious_total_row = cursor.fetchone() or {}
+        malicious_total = malicious_total_row.get('total_count') or 0
+        logger.info(f"sample_stats恶意样本总数: {malicious_total:,}")
+
+        cursor.execute("""
+            SELECT COALESCE(SUM(total_samples), 0) AS total_count
+            FROM sample_total_stats
+            WHERE sample_class = 'benign'
+        """)
+        benign_total_row = cursor.fetchone() or {}
+        benign_total_count = benign_total_row.get('total_count') or 0
+        logger.info(f"sample_stats白样本总数: {benign_total_count:,}")
+
+        start_year = current_year - 1
+        start_month = current_month + 1
+        if start_month > 12:
+            start_month = 1
+            start_year = current_year
+
+        cursor.execute("""
+            SELECT year, month, SUM(total_samples) AS total_samples
+            FROM sample_monthly_stats
+            WHERE sample_class = 'malicious'
+              AND (year > %s OR (year = %s AND month >= %s))
+              AND (year < %s OR (year = %s AND month <= %s))
+            GROUP BY year, month
+            ORDER BY year, month
+        """, (start_year, start_year, start_month, current_year, current_year, current_month))
+        monthly_data = cursor.fetchall()
+        monthly_counts = {f"{item['year']}-{item['month']:02d}": item['total_samples'] for item in monthly_data}
+        recent_year_malicious = sum(item['total_samples'] for item in monthly_data)
+        logger.info(f"sample_stats近12个月恶意样本数: {recent_year_malicious:,}")
+
+        cursor.execute("""
+            SELECT category, SUM(total_samples) AS count
+            FROM sample_category_stats
+            WHERE sample_class = 'malicious'
+            GROUP BY category
+        """)
+        category_counter = Counter({item['category']: item['count'] for item in cursor.fetchall()})
+
+        cursor.execute("""
+            SELECT platform, SUM(total_samples) AS count
+            FROM sample_platform_stats
+            WHERE sample_class = 'malicious'
+            GROUP BY platform
+        """)
+        platform_counter = Counter({item['platform']: item['count'] for item in cursor.fetchall()})
+
+        cursor.execute("""
+            SELECT family, SUM(total_samples) AS count
+            FROM sample_family_stats
+            WHERE sample_class = 'malicious'
+            GROUP BY family
+        """)
+        family_counter = Counter({item['family']: item['count'] for item in cursor.fetchall()})
+
+        cursor.execute("""
+            SELECT
+                COALESCE(SUM(has_vt_1), 0) AS has_vt_1,
+                COALESCE(SUM(has_vt_summary_1), 0) AS has_vt_summary_1,
+                COALESCE(SUM(has_vt_mitre_1), 0) AS has_vt_mitre_1
+            FROM sample_behavior_stats
+            WHERE sample_class = 'malicious'
+        """)
+        behavior_data = cursor.fetchone() or {
+            'has_vt_1': 0,
+            'has_vt_summary_1': 0,
+            'has_vt_mitre_1': 0
+        }
+
+        cursor.execute("""
+            SELECT filetype, SUM(total_samples) AS count
+            FROM sample_filetype_stats
+            WHERE sample_class = 'malicious'
+            GROUP BY filetype
+        """)
+        filetype_counter = {item['filetype']: item['count'] for item in cursor.fetchall()}
+
+        filetype_kaspersky = {
+            'exe32': {'total': 0, 'has_result': 0, 'no_result': 0},
+            'exe64': {'total': 0, 'has_result': 0, 'no_result': 0},
+            'dll32': {'total': 0, 'has_result': 0, 'no_result': 0},
+            'dll64': {'total': 0, 'has_result': 0, 'no_result': 0},
+            'total': {'total': 0, 'has_result': 0, 'no_result': 0}
+        }
+        for ft, count in filetype_counter.items():
+            ft_key = str(ft or '').lower()
+            if ft_key in filetype_kaspersky:
+                filetype_kaspersky[ft_key]['total'] = count
+                filetype_kaspersky[ft_key]['has_result'] = count
+                filetype_kaspersky['total']['total'] += count
+
+        malicious_data = {
+            'year_counts': year_counts,
+            'monthly_counts': monthly_counts,
+            'category_counter': category_counter,
+            'platform_counter': platform_counter,
+            'family_counter': family_counter,
+            'malicious_total': malicious_total,
+            'recent_year_malicious': recent_year_malicious,
+            'filetype_kaspersky': filetype_kaspersky,
+            'detection_1': behavior_data['has_vt_1'],
+            'behaviour_summary_1': behavior_data['has_vt_summary_1'],
+            'behaviour_mitre_trees_1': behavior_data['has_vt_mitre_1'],
+            'current_year': current_year
+        }
+
+        return malicious_data, benign_total_count
+
+    except Error as e:
+        error_msg = f"读取sample_stats联动统计数据时出错: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        print(f"\033[91m{error_msg}\033[0m")
+        return None
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'connection' in locals() and connection.is_connected():
+            connection.close()
+            logger.info("sample_stats数据库连接已关闭")
 
 def process_pie_top10(counter):
     """处理饼图数据：取Top10，其余合并为Others"""
@@ -1116,27 +1316,21 @@ def generate_frontend_data():
     logger.info("="*60)
 
     try:
-        # 1. 检查数据库配置
-        if not DB_CONFIG:
-            logger.error("主数据库（恶意样本库）配置无效，数据生成任务终止")
+        # 1. 从sample_stats联动库读取样本统计，不再回退旧样本统计库。
+        stats_pool = create_stats_db_pool()
+        if not stats_pool:
+            logger.error("sample_stats连接池创建失败，数据生成任务终止")
             return False
 
-        # 2. 创建数据库连接池
-        malicious_pool = create_db_pool()
-        if not malicious_pool:
-            logger.error("主连接池（恶意样本库）创建失败，数据生成任务终止")
+        stats_result = get_sample_stats_frontend_data(stats_pool)
+        if not stats_result:
+            logger.error("sample_stats联动统计数据读取失败，数据生成任务终止")
             return False
 
-        # 3. 创建良性数据库连接池（可选）
-        benign_pool = create_benign_db_pool()
-        benign_total_count = 0
-        if benign_pool:
-            benign_total_count = get_benign_sample_count(benign_pool)
-            logger.info(f"良性样本总数: {benign_total_count:,}")
-        else:
-            logger.warning("未获取到良性样本数据，良性样本数按0计算")
+        malicious_data, benign_total_count = stats_result
+        logger.info("已从sample_stats联动库读取样本统计数据")
 
-        # 4. 创建域名数据库连接池并读取相关数据（含12个完整月明细）
+        # 2. 创建域名数据库连接池并读取相关数据（含12个完整月明细）
         domain_pool = create_domain_db_pool()
         domain_stats_data = None
         top10_source = None
@@ -1149,20 +1343,14 @@ def generate_frontend_data():
         else:
             logger.warning("未获取到域名数据库数据，域名相关统计按空值计算")
 
-        # 5. 读取恶意样本统计数据
-        malicious_data = get_malicious_sample_data(malicious_pool)
-        if not malicious_data:
-            logger.error("恶意样本统计数据读取失败，数据生成任务终止")
-            return False
-
-        # 6. 准备图表数据（新增域名12个完整月明细）
+        # 3. 准备图表数据（新增域名12个完整月明细）
         chart_data = prepare_chart_data(malicious_data, benign_total_count, domain_stats_data, top10_source, top10_category)
 
-        # 7. 保存JS和TXT文件（含12个完整月明细）
+        # 4. 保存JS和TXT文件（含12个完整月明细）
         save_to_js(chart_data)
         save_to_txt(chart_data)
 
-        # 8. 输出执行结果【同步修正统计逻辑，新增域名12个月数据展示】
+        # 5. 输出执行结果【同步修正统计逻辑，新增域名12个月数据展示】
         end_time = datetime.now()
         elapsed = (end_time - start_time).total_seconds()
         logger.info("="*60)
