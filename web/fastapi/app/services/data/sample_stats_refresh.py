@@ -289,6 +289,55 @@ def register_sources(mysql_cfg: dict[str, Any], stats_db: str, sources: list[Sou
         conn.commit()
 
 
+def cleanup_stale_source_stats(mysql_cfg: dict[str, Any], stats_db: str, sources: list[SourceDb]) -> int:
+    """Delete cached table stats whose source DB is no longer in config.ini."""
+    valid_sources = {(s.sample_class, s.file_kind, s.db_name) for s in sources}
+    stale_sources: set[tuple[str, str, str]] = set()
+    source_tables = (
+        "sample_source_table_state",
+        "sample_table_total_stats",
+        "sample_table_yearly_stats",
+        "sample_table_monthly_stats",
+        "sample_table_category_stats",
+        "sample_table_platform_stats",
+        "sample_table_family_stats",
+        "sample_table_filetype_stats",
+    )
+
+    with connect(mysql_cfg, stats_db) as conn:
+        cursor = conn.cursor()
+        for table in source_tables:
+            cursor.execute(
+                f"""
+                SELECT DISTINCT sample_class, file_kind, source_db
+                FROM {quote_identifier(table)}
+                """
+            )
+            for sample_class, file_kind, source_db in cursor.fetchall():
+                key = (sample_class, file_kind, source_db)
+                if key not in valid_sources:
+                    stale_sources.add(key)
+
+        deleted = 0
+        for sample_class, file_kind, source_db in stale_sources:
+            for table in source_tables:
+                cursor.execute(
+                    f"""
+                    DELETE FROM {quote_identifier(table)}
+                    WHERE sample_class = %s
+                      AND file_kind = %s
+                      AND source_db = %s
+                    """,
+                    (sample_class, file_kind, source_db),
+                )
+                deleted += cursor.rowcount
+        conn.commit()
+
+    if stale_sources:
+        LOGGER.warning("deleted stale source stats: %s", sorted(stale_sources))
+    return deleted
+
+
 def table_exists(conn, db_name: str, table_name: str) -> bool:
     cursor = conn.cursor()
     cursor.execute(
@@ -704,6 +753,9 @@ def refresh_stats(config_path: Path, mode: str) -> bool:
     mysql_cfg, stats_db, sources = load_config(config_path)
     create_database_and_tables(mysql_cfg, stats_db)
     register_sources(mysql_cfg, stats_db, sources)
+    stale_deleted = cleanup_stale_source_stats(mysql_cfg, stats_db, sources)
+    if stale_deleted:
+        LOGGER.warning("removed %s stale cached stat rows before refresh", stale_deleted)
 
     if mode == "full":
         truncate_table_level_stats(mysql_cfg, stats_db)

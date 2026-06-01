@@ -68,6 +68,8 @@ python app/services/data/sample_stats_refresh.py --mode incremental
 
 如果样本从 `others` 调整到 `pe` 或 `elf`，通常会表现为旧库分表数量减少、新库分表数量增加，增量刷新会重算对应分表并更新汇总。因此新增、删除、库间迁移都能通过下一次 `sample_stats_refresh.py --mode incremental` 反映到联动表。大批量迁移后仍建议跑一次 `--mode full` 做全量校准。
 
+如果曾经用错误配置跑过刷新，例如日志里出现过 `db=benign` 或 `db=malicious_stats` 这种旧 source，新的增量脚本会在刷新前清理不在当前 `config.ini` 里的旧 source 缓存，避免旧缓存继续参与汇总。配置刚改完时仍建议先跑一次 `--mode full`。
+
 FastAPI 后端启动时会自动读取 `sample_stats` 和域名联动表，并继续生成前端使用的：
 
 - `web/vue/src/data/chart_data.js`
