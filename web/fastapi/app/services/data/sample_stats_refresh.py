@@ -601,14 +601,16 @@ def refresh_source_tables(
     stats_db: str,
     source: SourceDb,
     mode: str,
+    only_tables: set[str] | None = None,
+    force: bool = False,
 ) -> tuple[int, int]:
     refreshed = 0
     skipped = 0
 
     with connect(mysql_cfg, source.db_name) as source_conn, connect(mysql_cfg, stats_db) as stats_conn:
         stats_conn.start_transaction()
-        for suffix in HEX_SUFFIXES:
-            table_name = f"sample_{suffix}"
+        table_names = sorted(only_tables) if only_tables else [f"sample_{suffix}" for suffix in HEX_SUFFIXES]
+        for table_name in table_names:
             if not table_exists(source_conn, source.db_name, table_name):
                 skipped += 1
                 continue
@@ -617,7 +619,7 @@ def refresh_source_tables(
             row_count, last_updated_at = get_table_signature(source_conn, source.db_name, table_name, columns)
             previous_state = get_source_state(stats_conn, source, table_name)
 
-            if mode == "incremental" and previous_state == (row_count, last_updated_at):
+            if not force and mode == "incremental" and previous_state == (row_count, last_updated_at):
                 skipped += 1
                 continue
 
@@ -748,14 +750,32 @@ def insert_refresh_log(
         conn.commit()
 
 
-def refresh_stats(config_path: Path, mode: str) -> bool:
+def parse_changed_tables(values: list[str] | None) -> dict[str, set[str]]:
+    changed: dict[str, set[str]] = defaultdict(set)
+    for value in values or []:
+        if "." not in value:
+            raise ValueError(f"Invalid --changed-table value: {value}. Expected db.sample_xx")
+        db_name, table_name = value.split(".", 1)
+        quote_identifier(db_name)
+        quote_identifier(table_name)
+        if not table_name.startswith("sample_"):
+            raise ValueError(f"Invalid sample table: {table_name}")
+        changed[db_name].add(table_name)
+    return changed
+
+
+def refresh_stats(config_path: Path, mode: str, changed_table_values: list[str] | None = None) -> bool:
     started_at = datetime.now()
     mysql_cfg, stats_db, sources = load_config(config_path)
+    changed_tables = parse_changed_tables(changed_table_values)
     create_database_and_tables(mysql_cfg, stats_db)
     register_sources(mysql_cfg, stats_db, sources)
     stale_deleted = cleanup_stale_source_stats(mysql_cfg, stats_db, sources)
     if stale_deleted:
         LOGGER.warning("removed %s stale cached stat rows before refresh", stale_deleted)
+
+    if changed_tables and mode == "full":
+        raise ValueError("--changed-table cannot be used with --mode full")
 
     if mode == "full":
         truncate_table_level_stats(mysql_cfg, stats_db)
@@ -763,8 +783,24 @@ def refresh_stats(config_path: Path, mode: str) -> bool:
     refreshed_total = 0
     skipped_total = 0
     try:
+        source_by_db = {source.db_name: source for source in sources}
+        unknown_dbs = sorted(set(changed_tables) - set(source_by_db))
+        if unknown_dbs:
+            raise ValueError(f"--changed-table contains DBs not configured in malicious_dbs/benign_dbs: {unknown_dbs}")
+
         for source in sources:
-            refreshed, skipped = refresh_source_tables(mysql_cfg, stats_db, source, mode)
+            only_tables = changed_tables.get(source.db_name) if changed_tables else None
+            if changed_tables and not only_tables:
+                continue
+
+            refreshed, skipped = refresh_source_tables(
+                mysql_cfg,
+                stats_db,
+                source,
+                mode,
+                only_tables=only_tables,
+                force=bool(changed_tables),
+            )
             refreshed_total += refreshed
             skipped_total += skipped
             LOGGER.info(
@@ -816,6 +852,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default="full",
         help="full refresh or incremental refresh by table updated_at signature",
     )
+    parser.add_argument(
+        "--changed-table",
+        action="append",
+        default=[],
+        help="Refresh only a known changed table, format: database.sample_xx. Can be passed multiple times.",
+    )
     parser.add_argument("--log-level", default="INFO", choices=("DEBUG", "INFO", "WARNING", "ERROR"))
     return parser.parse_args(argv)
 
@@ -826,7 +868,7 @@ def main(argv: list[str] | None = None) -> int:
         level=getattr(logging, args.log_level),
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    ok = refresh_stats(Path(args.config).resolve(), args.mode)
+    ok = refresh_stats(Path(args.config).resolve(), args.mode, args.changed_table)
     return 0 if ok else 1
 
 

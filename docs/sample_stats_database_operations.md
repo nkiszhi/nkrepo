@@ -70,6 +70,16 @@ python app/services/data/sample_stats_refresh.py --mode incremental
 
 如果曾经用错误配置跑过刷新，例如日志里出现过 `db=benign` 或 `db=malicious_stats` 这种旧 source，新的增量脚本会在刷新前清理不在当前 `config.ini` 里的旧 source 缓存，避免旧缓存继续参与汇总。配置刚改完时仍建议先跑一次 `--mode full`。
 
+如果你明确知道哪些分表发生了变化，可以用更快的指定分表模式。例如某个 SHA 从 `malicious_others.sample_ab` 移到 `malicious_pe.sample_ab`：
+
+```bash
+python app/services/data/sample_stats_refresh.py --mode incremental \
+  --changed-table malicious_others.sample_ab \
+  --changed-table malicious_pe.sample_ab
+```
+
+这个模式不会扫描全部 `6 * 256` 张分表，只重算指定分表，然后重建全局汇总表。适合你手工迁移 `others -> pe/elf` 后快速同步联动表。
+
 FastAPI 后端启动时会自动读取 `sample_stats` 和域名联动表，并继续生成前端使用的：
 
 - `web/vue/src/data/chart_data.js`
