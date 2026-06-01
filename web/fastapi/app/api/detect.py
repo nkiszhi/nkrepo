@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 # 导入new_flask下的模型和服务
 from app.services.detection.ensemble_predict import run_ensemble_prediction
 from app.services.detection.dga_detection import MultiModelDetection
+from app.services.sample_locator import locate_sample
+from app.services.sample_records import build_sample_detail, get_record_value, get_sample_display_name
 
 # 导入旧后端的数据库查询工具(因为数据库逻辑在旧代码里)
 from app.utils.flask_mysql import Databaseoperation
@@ -86,14 +88,7 @@ def convert_to_serializable(obj):
 
 def get_field_value(result, field_name, index, default=''):
     """从查询结果中获取字段值"""
-    try:
-        if isinstance(result, dict):
-            return result.get(field_name, default)
-        elif isinstance(result, (list, tuple)) and len(result) > index:
-            return result[index] if result[index] is not None else default
-        return default
-    except Exception:
-        return default
+    return get_record_value(result, field_name, index, default)
 
 
 @router.post("/detect")
@@ -147,24 +142,7 @@ async def upload_file(file: UploadFile = File(...), current_user: dict = Depends
                 str_sha256 = data_dict.get('sha256', '')
                 str_md5 = data_dict.get('md5', '')
                 
-                # 构建完整的基础信息
-                query_result_dict = {
-                    'MD5': str_md5,
-                    'SHA-256': str_sha256,
-                    'SSDEEP': data_dict.get('ssdeep', ''),
-                    'vhash': data_dict.get('vhash', ''),
-                    'Authentihash': data_dict.get('authentihash', ''),
-                    'Imphash': data_dict.get('imphash', ''),
-                    'Rich header hash': data_dict.get('rich_header_hash', ''),
-                    '类型': data_dict.get('category', ''),
-                    '平台': data_dict.get('platform', ''),
-                    '家族': data_dict.get('family', ''),
-                    '文件大小': f"{data_dict.get('length', 0)} bytes",
-                    '文件类型': data_dict.get('filetype', ''),
-                    '来源': data_dict.get('source', ''),
-                    '卡巴结果': data_dict.get('kav_result', ''),
-                    'Defender结果': data_dict.get('defender_result', '')
-                }
+                query_result_dict = build_sample_detail(data_dict, sha_label='SHA-256')
                 VT_API = str_sha256
             else:
                 logger.error(f"数据库查询结果格式错误: {query_result}")
@@ -320,30 +298,22 @@ async def get_detection_API(sha256: str, current_user: dict = Depends(get_curren
 
 
 def get_existing_sample_path(sha256):
-    """查找样本文件路径 - 从config.ini读取配置"""
+    """查找样本文件路径 - 支持六个正式样本目录和web上传目录"""
     sha256 = (sha256 or '').strip().lower()
     if not _is_valid_sha256(sha256):
         logger.error(f"无效的SHA256值: {sha256}")
         return None, None
 
     try:
-        samples_root, web_upload_root = _load_sample_roots()
+        query_result = db_op.mysqlsha256s(sha256)
+        record = query_result[0] if isinstance(query_result, list) and query_result else None
+        location = locate_sample(sha256, record)
+        if location:
+            logger.info(f"样本文件找到: {location.sample_file_path}")
+            return location.sample_dir_path, location.sample_file_path
 
-        prefix_parts = list(sha256[:5])
-        old_sample_dir = _safe_resolve_path(samples_root, *prefix_parts)
-        old_sample_path = _safe_resolve_path(samples_root, *prefix_parts, sha256)
-        new_sample_dir = _safe_resolve_path(web_upload_root)
-        new_sample_path = _safe_resolve_path(web_upload_root, sha256)
-
-        if old_sample_path.exists():
-            logger.info(f"样本在五级目录找到: {old_sample_path}")
-            return str(old_sample_dir), str(old_sample_path)
-        elif new_sample_path.exists():
-            logger.info(f"样本在web上传目录找到: {new_sample_path}")
-            return str(new_sample_dir), str(new_sample_path)
-        else:
-            logger.warning(f"样本文件不存在: 五级目录={old_sample_path}, web目录={new_sample_path}")
-            return None, None
+        logger.warning(f"样本文件不存在: sha256={sha256}")
+        return None, None
     except Exception as e:
         logger.error(f"查找样本路径异常: {str(e)}")
         return None, None
@@ -369,21 +339,8 @@ async def detect_by_sha256(request: dict, current_user: dict = Depends(get_curre
         query_result = convert_to_serializable(query_result)
         query_result_inner = query_result[0] if isinstance(query_result, (list, tuple)) else query_result
         
-        filename = get_field_value(query_result_inner, 'name', 0, sha256)
-        
-        query_result_dict = {
-            'MD5': get_field_value(query_result_inner, 'md5', 3, ''),
-            'SHA-256': sha256,
-            'SSDEEP': get_field_value(query_result_inner, 'ssdeep', 4, ''),
-            'vhash': get_field_value(query_result_inner, 'vhash', 5, ''),
-            'Authentihash': get_field_value(query_result_inner, 'authentihash', 6, ''),
-            'Imphash': get_field_value(query_result_inner, 'imphash', 7, ''),
-            'Rich header hash': get_field_value(query_result_inner, 'rich_header_hash', 8, ''),
-            '类型': get_field_value(query_result_inner, 'category', 11, ''),
-            '平台': get_field_value(query_result_inner, 'platform', 12, ''),
-            '家族': get_field_value(query_result_inner, 'family', 13, ''),
-            '文件大小': f"{get_field_value(query_result_inner, 'length', 1, 0)} bytes",
-        }
+        filename = get_sample_display_name(query_result_inner, sha256)
+        query_result_dict = build_sample_detail(query_result_inner, sha_label='SHA-256')
         
         # 尝试获取模型检测结果
         exe_result = {}

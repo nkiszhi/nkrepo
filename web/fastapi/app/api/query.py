@@ -5,6 +5,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.api.auth import get_current_user
 from app.core import db
 from app.utils.flask_mysql import Databaseoperation
+from app.services.sample_locator import locate_sample
+from app.services.sample_records import build_sample_detail, get_record_value
 import logging
 import sys
 import os
@@ -109,14 +111,7 @@ def convert_to_serializable(obj):
 
 def get_field_value(result, field_name, index, default=''):
     """从查询结果中获取字段值"""
-    try:
-        if isinstance(result, dict):
-            return result.get(field_name, default)
-        elif isinstance(result, (list, tuple)) and len(result) > index:
-            return result[index] if result[index] is not None else default
-        return default
-    except Exception:
-        return default
+    return get_record_value(result, field_name, index, default)
 
 
 @router.post("/query_sha256")
@@ -162,19 +157,7 @@ async def query_sha256(request: dict, current_user: dict = Depends(get_current_u
         # 兼容列表/单个字典两种返回格式
         query_result_inner = query_result[0] if isinstance(query_result, (list, tuple)) and len(query_result) > 0 else query_result
         
-        # 构建详情字典 - 完全按照旧Flask格式
-        detail_dict = {
-            'MD5': get_field_value(query_result_inner, 'md5', 3, ''),
-            'SHA256': get_field_value(query_result_inner, 'sha256', 2, ''),
-            'SSDEEP': get_field_value(query_result_inner, 'ssdeep', 4, ''),
-            'vhash': get_field_value(query_result_inner, 'vhash', 5, ''),
-            'Authentihash': get_field_value(query_result_inner, 'authentihash', 6, ''),
-            'Imphash': get_field_value(query_result_inner, 'imphash', 7, ''),
-            'Rich header hash': get_field_value(query_result_inner, 'rich_header_hash', 8, ''),
-            '类型': get_field_value(query_result_inner, 'category', 11, ''),
-            '平台': get_field_value(query_result_inner, 'platform', 12, ''),
-            '家族': get_field_value(query_result_inner, 'family', 13, '')
-        }
+        detail_dict = build_sample_detail(query_result_inner, sha_label='SHA256')
         
         logger.info(f"SHA256查询成功: sha256='{sha256}'")
         return {
@@ -383,19 +366,7 @@ def get_detail_common(sha256: str):
         # 兼容列表/单个字典两种返回格式
         query_result_inner = query_result[0] if isinstance(query_result, (list, tuple)) and len(query_result) > 0 else query_result
         
-        # 构建详情字典
-        detail_dict = {
-            'MD5': get_field_value(query_result_inner, 'md5', 3, ''),
-            'SHA256': get_field_value(query_result_inner, 'sha256', 2, ''),
-            'SSDEEP': get_field_value(query_result_inner, 'ssdeep', 4, ''),
-            'vhash': get_field_value(query_result_inner, 'vhash', 5, ''),
-            'Authentihash': get_field_value(query_result_inner, 'authentihash', 6, ''),
-            'Imphash': get_field_value(query_result_inner, 'imphash', 7, ''),
-            'Rich header hash': get_field_value(query_result_inner, 'rich_header_hash', 8, ''),
-            '类型': get_field_value(query_result_inner, 'category', 11, ''),
-            '平台': get_field_value(query_result_inner, 'platform', 12, ''),
-            '家族': get_field_value(query_result_inner, 'family', 13, '')
-        }
+        detail_dict = build_sample_detail(query_result_inner, sha_label='SHA256')
         
         logger.info(f"详情查询成功: sha256={sha256}")
         return {
@@ -506,29 +477,19 @@ def get_file_path_and_zip(sha256: str, zip_password: str = "infected"):
             logger.error(f"无效的压缩密码格式")
             return None
         
-        # 五级目录结构: {sha256[0]}/{sha256[1]}/{sha256[2]}/{sha256[3]}/{sha256[4]}
-        prefix_parts = list(sha256[:5])
-        samples_root, web_upload_root, zips_root = _load_query_path_roots()
-
-        # 样本文件路径1: 五级目录
-        original_sample_path = _safe_resolve_path(samples_root, *prefix_parts, sha256)
-
-        # 样本文件路径2: web上传目录
-        web_upload_path = _safe_resolve_path(web_upload_root, sha256)
+        _, _, zips_root = _load_query_path_roots()
 
         # 压缩文件路径
         zip_file_path = _safe_resolve_path(zips_root, f"{sha256}.zip")
-        
-        # 检查样本文件是否存在
-        if original_sample_path.exists():
-            target_file_path = original_sample_path
-            logger.info(f"找到样本文件(五级目录): {original_sample_path}")
-        elif web_upload_path.exists():
-            target_file_path = web_upload_path
-            logger.info(f"找到样本文件(web上传目录): {web_upload_path}")
-        else:
-            logger.warning(f"样本文件不存在，无法压缩: sha256={sha256}, 五级目录={original_sample_path}, web目录={web_upload_path}")
+
+        query_result = db_op.mysqlsha256s(sha256)
+        record = query_result[0] if isinstance(query_result, list) and query_result else None
+        location = locate_sample(sha256, record)
+        if not location:
+            logger.warning(f"样本文件不存在，无法压缩: sha256={sha256}")
             return None
+        target_file_path = Path(location.sample_file_path)
+        logger.info(f"找到样本文件: {target_file_path}")
         
         # 如果压缩文件已存在,直接返回
         if zip_file_path.exists():

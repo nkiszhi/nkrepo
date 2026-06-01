@@ -4,7 +4,39 @@ import hashlib
 import os
 import configparser
 import shutil
+import re
 from datetime import datetime
+
+MYSQL_IDENTIFIER_RE = re.compile(r"\A[A-Za-z0-9_]{1,64}\Z")
+
+
+def _split_config_list(value):
+    if not value:
+        return []
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+def _sanitize_mysql_identifier(identifier):
+    if not MYSQL_IDENTIFIER_RE.fullmatch(identifier or ""):
+        raise ValueError(f"非法MySQL标识符: {identifier}")
+    return identifier
+
+
+def _infer_file_kind(db_name):
+    lowered = (db_name or "").lower()
+    for kind in ("elf", "pe", "others"):
+        if lowered.endswith(f"_{kind}") or f"_{kind}_" in lowered:
+            return kind
+    return ""
+
+
+def _infer_sample_class(db_name):
+    lowered = (db_name or "").lower()
+    if lowered.startswith("malicious"):
+        return "malicious"
+    if lowered.startswith("benign"):
+        return "benign"
+    return ""
 
 class Databaseoperation:
     def __init__(self):
@@ -19,13 +51,83 @@ class Databaseoperation:
         self.host = config.get('mysql', 'host', fallback='localhost')
         self.user = config.get('mysql', 'user', fallback='root')
         self.passwd = config.get('mysql', 'passwd', fallback='')
+        self.port = config.getint('mysql', 'port', fallback=3306)
         self.db = config.get('mysql', 'db', fallback='malicious')
+        self.malicious_dbs = _split_config_list(config.get('mysql', 'malicious_dbs', fallback=''))
+        self.benign_dbs = _split_config_list(config.get('mysql', 'benign_dbs', fallback=''))
+        if not self.malicious_dbs:
+            self.malicious_dbs = [self.db]
+        if not self.benign_dbs:
+            legacy_benign = config.get('mysql', 'db_benign', fallback='')
+            self.benign_dbs = [legacy_benign] if legacy_benign else []
+        self.sample_dbs = self._build_sample_db_infos()
         self.db_web = config.get('mysql', 'db_web', fallback='webdatadb')
         self.charset = config.get('mysql', 'charset', fallback='utf8mb4')
 
         # 读取文件路径配置
         self.upload_dir = config.get('paths', 'upload_dir', fallback='uploads')
         self.web_upload_dir = config.get('paths', 'web_upload_dir', fallback='../../../data/web_upload_file')
+
+    def _build_sample_db_infos(self):
+        infos = []
+        for db_name in self.malicious_dbs:
+            infos.append({
+                'db_name': db_name,
+                'sample_class': 'malicious',
+                'file_kind': _infer_file_kind(db_name)
+            })
+        for db_name in self.benign_dbs:
+            infos.append({
+                'db_name': db_name,
+                'sample_class': 'benign',
+                'file_kind': _infer_file_kind(db_name)
+            })
+        return infos
+
+    def _connect(self, database):
+        return pymysql.connect(
+            host=self.host,
+            user=self.user,
+            passwd=self.passwd,
+            port=self.port,
+            db=database,
+            charset=self.charset,
+            cursorclass=pymysql.cursors.DictCursor
+        )
+
+    def _decorate_rows(self, rows, db_name, sample_class=None, file_kind=None, is_upload=False):
+        decorated = []
+        for row in rows:
+            if isinstance(row, dict):
+                item = dict(row)
+                item['__source_db'] = db_name
+                item['__sample_class'] = sample_class or _infer_sample_class(db_name)
+                item['__file_kind'] = file_kind or _infer_file_kind(db_name)
+                item['__is_upload'] = is_upload
+                decorated.append(item)
+            else:
+                decorated.append(row)
+        return decorated
+
+    def _query_sha256_in_db(self, database, table_name, sha256, sample_class=None, file_kind=None, is_upload=False):
+        _sanitize_mysql_identifier(database)
+        _sanitize_mysql_identifier(table_name)
+
+        conn = None
+        try:
+            conn = self._connect(database)
+            with conn.cursor() as cursor:
+                sql = f"SELECT * FROM `{table_name}` WHERE TRIM(sha256) = %s;"
+                cursor.execute(sql, (sha256,))
+                rows = cursor.fetchall()
+                if rows:
+                    return self._decorate_rows(rows, database, sample_class, file_kind, is_upload)
+        except pymysql.MySQLError as e:
+            print(f"数据库查询错误: db={database}, table={table_name}, error={e}")
+        finally:
+            if conn:
+                conn.close()
+        return []
 
     def filesha256(self, name):
         """
@@ -104,40 +206,23 @@ class Databaseoperation:
         table_prefix = str_sha256[:2]  
         table_name = f"sample_{table_prefix}"  
 
-        # 1. 先查询恶意样本库（malicious）
-        conn = None
-        try:  
-            conn = pymysql.connect(
-                host=self.host, 
-                user=self.user, 
-                passwd=self.passwd, 
-                db=self.db, 
-                charset=self.charset,
-                cursorclass=pymysql.cursors.DictCursor  # 统一用字典游标（易读）
-            )  
-            with conn.cursor() as cursor:  
-                sql = f"SELECT * FROM `{table_name}` WHERE TRIM(sha256) = %s;"  
-                cursor.execute(sql, (str_sha256,))  
-                query_result = cursor.fetchall()    
-                if query_result:
-                    return query_result
-        except pymysql.MySQLError as e:  
-            print(f"恶意样本库查询错误: {e}")  
-        finally:  
-            if conn:
-                conn.close()
+        # 1. 先查询六个正式样本库
+        for db_info in self.sample_dbs:
+            query_result = self._query_sha256_in_db(
+                db_info['db_name'],
+                table_name,
+                str_sha256,
+                db_info['sample_class'],
+                db_info['file_kind'],
+                False
+            )
+            if query_result:
+                return query_result
         
         # 2. 再查询web上传库（webdatadb）
         conn_web = None
         try:
-            conn_web = pymysql.connect(
-                host=self.host, 
-                user=self.user, 
-                passwd=self.passwd, 
-                db=self.db_web, 
-                charset=self.charset,
-                cursorclass=pymysql.cursors.DictCursor
-            )
+            conn_web = self._connect(self.db_web)
             with conn_web.cursor() as cursor_web:
                 # 查询是否存在
                 sql_web = f"SELECT * FROM `{table_name}` WHERE TRIM(sha256) = %s;"
@@ -146,7 +231,7 @@ class Databaseoperation:
                 
                 # 存在则返回结果
                 if query_result_web:
-                    return query_result_web
+                    return self._decorate_rows(query_result_web, self.db_web, 'upload', 'upload', True)
                 
                 # 不存在则插入新记录（适配表结构的9个字段）
                 current_date = datetime.now().strftime('%Y-%m-%d')
@@ -201,13 +286,7 @@ class Databaseoperation:
         """
         conn = None
         try: 
-            conn = pymysql.connect(
-                host=self.host, 
-                user=self.user, 
-                passwd=self.passwd, 
-                db=database, 
-                charset=self.charset
-            )
+            conn = self._connect(database)
             with conn.cursor() as cursor:
                 # 表名安全校验（防止SQL注入）
                 if not table_name.startswith('sample_'):
@@ -216,7 +295,7 @@ class Databaseoperation:
                 sql = f"SELECT sha256 FROM `{table_name}` ORDER BY RAND() LIMIT 20"
                 cursor.execute(sql)
                 results = cursor.fetchall()
-                sha256s = [row[0] for row in results]
+                sha256s = [row.get('sha256') if isinstance(row, dict) else row[0] for row in results]
                 return sha256s
         except pymysql.MySQLError as e:  
             print(f"随机查询错误: {e}")
@@ -234,40 +313,35 @@ class Databaseoperation:
         table_prefix = str_sha256[:2]
         table_name = f"sample_{table_prefix}"  
         
-        # 1. 先更新恶意样本库
-        conn = None
-        try:
-            conn = pymysql.connect(
-                host=self.host, 
-                user=self.user, 
-                passwd=self.passwd, 
-                db=self.db, 
-                charset=self.charset
-            )
-            with conn.cursor() as cursor:
-                sql = f"UPDATE `{table_name}` SET has_vt = %s, has_vt_summary = %s WHERE sha256 = %s;"  
-                update_data = (1, 1, str_sha256)  
-                cursor.execute(sql, update_data)  
-                conn.commit()  
-                affected = cursor.rowcount
-                if affected > 0:
-                    return affected
-        except pymysql.Error as e:  
-            print(f"恶意样本库更新错误: {e}")  
-        finally:  
-            if conn:  
-                conn.close()
+        # 1. 先更新六个正式样本库
+        for db_info in self.sample_dbs:
+            conn = None
+            try:
+                conn = self._connect(db_info['db_name'])
+                with conn.cursor() as cursor:
+                    try:
+                        sql = f"UPDATE `{table_name}` SET has_vt = %s, has_vt_summary = %s WHERE sha256 = %s;"
+                        update_data = (1, 1, str_sha256)
+                        cursor.execute(sql, update_data)
+                    except pymysql.Error:
+                        conn.rollback()
+                        sql = f"UPDATE `{table_name}` SET has_vt = %s WHERE sha256 = %s;"
+                        update_data = (1, str_sha256)
+                        cursor.execute(sql, update_data)
+                    conn.commit()
+                    affected = cursor.rowcount
+                    if affected > 0:
+                        return affected
+            except pymysql.Error as e:
+                print(f"样本库更新错误: db={db_info['db_name']}, error={e}")
+            finally:
+                if conn:
+                    conn.close()
         
         # 2. 再更新web上传库
         conn_web = None
         try:
-            conn_web = pymysql.connect(
-                host=self.host, 
-                user=self.user, 
-                passwd=self.passwd, 
-                db=self.db_web, 
-                charset=self.charset
-            )
+            conn_web = self._connect(self.db_web)
             with conn_web.cursor() as cursor:
                 # 修正字段名：detection -> has_vt, behaviour_summary -> has_vt_summary
                 sql = f"UPDATE `{table_name}` SET has_vt = %s, has_vt_summary = %s WHERE sha256 = %s;"  
@@ -291,46 +365,29 @@ class Databaseoperation:
         table_prefix = str_sha256[:2]
         table_name = f"sample_{table_prefix}"  
 
-        # 1. 先查恶意样本库
-        conn = None
-        try:
-            conn = pymysql.connect(
-                host=self.host, 
-                user=self.user, 
-                passwd=self.passwd, 
-                db=self.db, 
-                charset=self.charset,
-                cursorclass=pymysql.cursors.DictCursor
-            )  
-            with conn.cursor() as cursor:  
-                sql = f"SELECT * FROM `{table_name}` WHERE TRIM(sha256) = %s;"
-                cursor.execute(sql, (str_sha256,))  
-                query_result = cursor.fetchall()  
-                if query_result:  
-                    return query_result  
-        except pymysql.MySQLError as e:
-            print(f"恶意样本库查询错误: {e}")
-        finally:  
-            if conn:  
-                conn.close()
+        # 1. 先查六个正式样本库
+        for db_info in self.sample_dbs:
+            query_result = self._query_sha256_in_db(
+                db_info['db_name'],
+                table_name,
+                str_sha256,
+                db_info['sample_class'],
+                db_info['file_kind'],
+                False
+            )
+            if query_result:
+                return query_result
         
         # 2. 再查web上传库
         conn_web = None
         try:
-            conn_web = pymysql.connect(
-                host=self.host, 
-                user=self.user, 
-                passwd=self.passwd, 
-                db=self.db_web, 
-                charset=self.charset,
-                cursorclass=pymysql.cursors.DictCursor
-            )  
+            conn_web = self._connect(self.db_web)
             with conn_web.cursor() as cursor:  
                 sql = f"SELECT * FROM `{table_name}` WHERE TRIM(sha256) = %s;"
                 cursor.execute(sql, (str_sha256,))  
                 query_result = cursor.fetchall()  
                 if query_result:  
-                    return query_result  
+                    return self._decorate_rows(query_result, self.db_web, 'upload', 'upload', True)
                 else:  
                     return 0 
         except pymysql.MySQLError as e:

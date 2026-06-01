@@ -66,6 +66,8 @@ python app/services/data/sample_stats_refresh.py --mode incremental
 
 只有数量或最大更新时间变化的分表才会重新统计。最后脚本会重新汇总全局联动表。
 
+如果样本从 `others` 调整到 `pe` 或 `elf`，通常会表现为旧库分表数量减少、新库分表数量增加，增量刷新会重算对应分表并更新汇总。因此新增、删除、库间迁移都能通过下一次 `sample_stats_refresh.py --mode incremental` 反映到联动表。大批量迁移后仍建议跑一次 `--mode full` 做全量校准。
+
 FastAPI 后端启动时会自动读取 `sample_stats` 和域名联动表，并继续生成前端使用的：
 
 - `web/vue/src/data/chart_data.js`
