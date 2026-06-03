@@ -182,6 +182,29 @@ def ensure_directory_exists(path):
         logger.info(f"创建目录: {path}")
     return path
 
+def get_last_complete_12_month_range():
+    """返回最近12个完整自然月的起止年月。"""
+    today = datetime.now()
+    first_day_this_month = datetime(today.year, today.month, 1)
+    last_complete_month = first_day_this_month - timedelta(days=1)
+    end_year = last_complete_month.year
+    end_month = last_complete_month.month
+
+    start_month_index = end_year * 12 + end_month - 11
+    start_year = (start_month_index - 1) // 12
+    start_month = (start_month_index - 1) % 12 + 1
+    return start_year, start_month, end_year, end_month
+
+def iter_year_months(start_year, start_month, end_year, end_month):
+    """按月遍历起止年月，包含首尾。"""
+    year, month = start_year, start_month
+    while (year < end_year) or (year == end_year and month <= end_month):
+        yield year, month
+        month += 1
+        if month > 12:
+            month = 1
+            year += 1
+
 def get_save_path():
     """获取前端数据保存目录：web/vue/src/data。"""
     current_file = Path(__file__).resolve()
@@ -608,15 +631,7 @@ def get_malicious_sample_data(pool):
 
         # 2. 月度统计数据（近12个月恶意样本）
         current_year = datetime.now().year
-        current_month = datetime.now().month
-        
-        # 计算近12个月的起始年月（从当前月份往前推12个月）
-        # 例如：现在是2026年2月，近一年应该是2025年3月到2026年2月
-        start_year = current_year - 1
-        start_month = current_month + 1
-        if start_month > 12:
-            start_month = 1
-            start_year = current_year
+        start_year, start_month, end_year, end_month = get_last_complete_12_month_range()
         
         # 查询近12个月的数据
         cursor.execute("""
@@ -625,11 +640,11 @@ def get_malicious_sample_data(pool):
             WHERE (year > %s OR (year = %s AND month >= %s))
                AND (year < %s OR (year = %s AND month <= %s))
             ORDER BY year, month
-        """, (start_year, start_year, start_month, current_year, current_year, current_month))
+        """, (start_year, start_year, start_month, end_year, end_year, end_month))
         monthly_data = cursor.fetchall()
         monthly_counts = {f"{item['year']}-{item['month']:02d}": item['total_samples'] for item in monthly_data}
         recent_year_malicious = sum(item['total_samples'] for item in monthly_data)  # 近一年恶意样本数
-        logger.info(f"读取近12个月恶意样本月度数据: {len(monthly_counts)}个月份，样本数: {recent_year_malicious:,}")
+        logger.info(f"读取近12个完整月恶意样本月度数据({start_year}-{start_month:02d}至{end_year}-{end_month:02d}): {len(monthly_counts)}个月份，样本数: {recent_year_malicious:,}")
 
         # 3. 分类统计（恶意样本）
         cursor.execute("SELECT category, count FROM sample_category_stats")
@@ -719,7 +734,6 @@ def get_sample_stats_frontend_data(pool):
         logger.info("成功获取sample_stats连接，开始读取联动统计数据")
 
         current_year = datetime.now().year
-        current_month = datetime.now().month
 
         cursor.execute("""
             SELECT year, SUM(total_samples) AS total_samples
@@ -749,11 +763,7 @@ def get_sample_stats_frontend_data(pool):
         benign_total_count = benign_total_row.get('total_count') or 0
         logger.info(f"sample_stats白样本总数: {benign_total_count:,}")
 
-        start_year = current_year - 1
-        start_month = current_month + 1
-        if start_month > 12:
-            start_month = 1
-            start_year = current_year
+        start_year, start_month, end_year, end_month = get_last_complete_12_month_range()
 
         cursor.execute("""
             SELECT year, month, SUM(total_samples) AS total_samples
@@ -763,11 +773,11 @@ def get_sample_stats_frontend_data(pool):
               AND (year < %s OR (year = %s AND month <= %s))
             GROUP BY year, month
             ORDER BY year, month
-        """, (start_year, start_year, start_month, current_year, current_year, current_month))
+        """, (start_year, start_year, start_month, end_year, end_year, end_month))
         monthly_data = cursor.fetchall()
         monthly_counts = {f"{item['year']}-{item['month']:02d}": item['total_samples'] for item in monthly_data}
         recent_year_malicious = sum(item['total_samples'] for item in monthly_data)
-        logger.info(f"sample_stats近12个月恶意样本数: {recent_year_malicious:,}")
+        logger.info(f"sample_stats近12个完整月恶意样本数({start_year}-{start_month:02d}至{end_year}-{end_month:02d}): {recent_year_malicious:,}")
 
         cursor.execute("""
             SELECT category, SUM(total_samples) AS count
@@ -891,27 +901,9 @@ def prepare_chart_data(malicious_data, benign_total_count=0, domain_stats_data=N
         'amount_data': [item[1] for item in year_items]
     }
 
-    # 2. 近一年月度折线图数据（近12个月恶意样本）
-    # 生成完整的12个月,没有数据的月份显示为0
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-    
-    # 计算起始年月（从当前月份往前推12个月）
-    start_year = current_year - 1
-    start_month = current_month + 1
-    if start_month > 12:
-        start_month = 1
-        start_year = current_year
-    
-    # 生成完整的12个月列表
-    all_months = []
-    year, month = start_year, start_month
-    for _ in range(12):
-        all_months.append(f"{year}-{month:02d}")
-        month += 1
-        if month > 12:
-            month = 1
-            year += 1
+    # 2. 近一年月度折线图数据（最近12个完整自然月恶意样本）
+    start_year, start_month, end_year, end_month = get_last_complete_12_month_range()
+    all_months = [f"{year}-{month:02d}" for year, month in iter_year_months(start_year, start_month, end_year, end_month)]
     
     # 填充数据,没有数据的月份设为0
     full_monthly = {month: 0 for month in all_months}
