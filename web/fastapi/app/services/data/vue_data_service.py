@@ -1042,76 +1042,10 @@ def save_to_js(data, filename='chart_data.js'):
             'top10Category': convert_decimal_to_int(data['top10Category']),
             'summary': convert_decimal_to_int(data['summary'])
         }
-        
+
+        js_payload = json.dumps(data_converted, ensure_ascii=False, indent=2)
         with open(file_path, 'w', encoding='utf-8') as f:
-            # 写入固定开头
-            f.write("export default {\n")
-            
-            # 1. 折线图数据
-            f.write("  lineChartData: {\n")
-            total_amount = data_converted['lineChartData']['total_amount']
-            year_amount = data_converted['lineChartData']['year_amount']
-            f.write(f"    total_amount: {{'date_data': {json.dumps(total_amount['date_data'])}, 'amount_data': {json.dumps(total_amount['amount_data'])}}},\n")
-            f.write(f"    year_amount: {{'date_data': {json.dumps(year_amount['date_data'])}, 'amount_data': {json.dumps(year_amount['amount_data'])}}}\n")
-            f.write("  },\n")
-            
-            # 2. 饼图Top10数据
-            f.write("  pieTop10Data: {\n")
-            pie_data = data_converted['pieTop10Data']
-            f.write(f"    category: {json.dumps(pie_data['category'], ensure_ascii=False)},\n")
-            f.write(f"    platform: {json.dumps(pie_data['platform'], ensure_ascii=False)},\n")
-            f.write(f"    family: {json.dumps(pie_data['family'], ensure_ascii=False)}\n")
-            f.write("  },\n")
-
-            # 3. 域名折线图数据（符合Vue前端格式要求）
-            f.write("  lineChartDataDomain: {\n")
-            domain_line_data = data_converted['lineChartDataDomain']
-            
-            # 格式化total_domain数据
-            total_domain = domain_line_data['total_domain']
-            f.write(f"    total_domain: {{'name': '{total_domain['name']}', 'date_data': {json.dumps(total_domain['date_data'], ensure_ascii=False)}, 'amount_data': {json.dumps(total_domain['amount_data'])}}},\n")
-            
-            # 格式化messages数据
-            messages = domain_line_data['messages']
-            f.write(f"    messages: {{'name': '{messages['name']}', 'date_data': {json.dumps(messages['date_data'], ensure_ascii=False)}, 'amount_data': {json.dumps(messages['amount_data'])}}},\n")
-            
-            # 格式化purchases数据
-            purchases = domain_line_data['purchases']
-            f.write(f"    purchases: {{'name': '{purchases['name']}', 'date_data': {json.dumps(purchases['date_data'], ensure_ascii=False)}, 'amount_data': {json.dumps(purchases['amount_data'])}}}\n")
-            f.write("  },\n")
-
-            # 4. Top10 Source
-            top10_source_data = data_converted['top10Source']
-            f.write("  top10Source: [")
-            for i, item in enumerate(top10_source_data):
-                source = item['source'].replace('\r', '\\r')
-                f.write(f'{{"source": "{source}", "count": {item["count"]}}}')
-                if i < len(top10_source_data) - 1:
-                    f.write(", ")
-            f.write("],\n")
-
-            # 5. Top10 Category
-            top10_category_data = data_converted['top10Category']
-            f.write("  top10Category: [")
-            for i, item in enumerate(top10_category_data):
-                f.write(f'{{"category": "{item["category"]}", "count": {item["count"]}}}')
-                if i < len(top10_category_data) - 1:
-                    f.write(", ")
-            f.write("],\n")
-
-            # 6. 汇总信息
-            summary = data_converted['summary']
-            f.write("  summary: {\n")
-            f.write(f"    total_samples: {summary['total_samples']},\n")
-            f.write(f"    benign_samples: {summary['benign_samples']},\n")
-            f.write(f"    malicious_samples: {summary['malicious_samples']},\n")
-            f.write(f"    recent_year_samples: {summary['recent_year_samples']},\n")
-            f.write(f"    current_year: {summary['current_year']},\n")
-            f.write(f"    generated_at: '{summary['generated_at']}'\n")
-            f.write("  }\n")
-            
-            # 结尾
-            f.write("};\n")
+            f.write(f"export default {js_payload};\n")
         
         success_msg = f"Vue可用JS文件已保存到 {file_path}"
         logger.info(success_msg)
