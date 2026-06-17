@@ -146,4 +146,34 @@ export default {
     }
   }
 }
+
+@media (max-width: 768px) {
+  .navbar {
+    .breadcrumb-container {
+      max-width: calc(100% - 116px);
+      margin-left: 8px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .right-menu {
+      .avatar-container {
+        margin-right: 16px;
+
+        .avatar-wrapper {
+          .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+          }
+
+          .el-icon-caret-bottom {
+            right: -14px;
+            top: 21px;
+          }
+        }
+      }
+    }
+  }
+}
 </style>

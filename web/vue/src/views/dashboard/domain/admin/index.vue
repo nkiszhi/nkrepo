@@ -3,36 +3,36 @@
 
     <domain-summary-panels @handleSetLineChartData="handleSetLineChartData" />
 
-    <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
+    <el-row class="chart-panel chart-panel--line">
       <!-- 添加标题区域 -->
-      <div class="chart-header" style="margin-bottom: 16px;">
+      <div class="chart-header chart-header--line">
         <h3 class="chart-title">{{ lineChartTitle }}</h3>
         <div class="chart-subtitle">{{ lineChartSubtitle }}</div>
       </div>
-      <line-domain-trend :chart-data="lineChartData" />
+      <line-domain-trend :chart-data="lineChartData" height="clamp(260px, 42vh, 360px)" />
     </el-row>
 
-    <el-row :gutter="32" style="margin-bottom: 24px;">
+    <el-row :gutter="24" class="chart-row">
       <el-col :xs="24" :sm="24" :lg="24">
-        <div class="chart-wrapper" style="height: 450px;">
-          <div class="chart-header" style="margin-bottom: 8px;">
+        <div class="chart-wrapper">
+          <div class="chart-header">
             <h3 class="chart-title">恶意域名来源(Source)Top10</h3>
           </div>
-          <div style="height: calc(100% - 40px);">
-            <bar-domain-source :chart-data="sourceChartData" />
+          <div class="chart-body">
+            <bar-domain-source :chart-data="sourceChartData" height="clamp(300px, 52vh, 420px)" />
           </div>
         </div>
       </el-col>
     </el-row>
 
-    <el-row :gutter="32" style="margin-bottom: 24px;">
+    <el-row :gutter="24" class="chart-row">
       <el-col :xs="24" :sm="24" :lg="24">
-        <div class="chart-wrapper" style="height: 450px;">
-          <div class="chart-header" style="margin-bottom: 8px;">
+        <div class="chart-wrapper">
+          <div class="chart-header">
             <h3 class="chart-title">恶意域名类型(Category)Top10</h3>
           </div>
-          <div style="height: calc(100% - 40px);">
-            <bar-domain-category :chart-data="categoryChartData" />
+          <div class="chart-body">
+            <bar-domain-category :chart-data="categoryChartData" height="clamp(300px, 52vh, 420px)" />
           </div>
         </div>
       </el-col>
@@ -92,6 +92,7 @@ export default {
   padding: 32px;
   background-color: rgb(240, 242, 245);
   position: relative;
+  min-width: 0;
 
   .github-corner {
     position: absolute;
@@ -100,13 +101,36 @@ export default {
     right: 0;
   }
 
+  .chart-panel,
   .chart-wrapper {
     background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .chart-panel {
     padding: 16px 16px 0;
     margin-bottom: 32px;
   }
 
+  .chart-row {
+    margin-bottom: 24px;
+  }
+
+  .chart-wrapper {
+    padding: 12px;
+    margin-bottom: 32px;
+  }
+
+  .chart-body {
+    min-width: 0;
+  }
+
   .chart-header {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ebeef5;
+
     h3.chart-title {
       margin: 0;
       font-size: 18px;
@@ -122,11 +146,31 @@ export default {
       line-height: 1.4;
     }
   }
+
+  .chart-header--line {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
 }
 
-@media (max-width:1024px) {
-  .chart-wrapper {
-    padding: 8px;
+@media (max-width: 768px) {
+  .dashboard-editor-container {
+    padding: 12px;
+
+    .chart-panel,
+    .chart-wrapper {
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .chart-header h3.chart-title {
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .chart-header .chart-subtitle {
+      font-size: 12px;
+    }
   }
 }
 </style>

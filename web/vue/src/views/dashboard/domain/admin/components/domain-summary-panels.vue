@@ -1,6 +1,6 @@
 <template>
   <el-row :gutter="40" class="panel-group">
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+    <el-col :xs="24" :sm="12" :lg="8" class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('total_domain')">
         <div class="card-panel-icon-wrapper icon-people">
           <svg-icon icon-class="chart" class-name="card-panel-icon" />
@@ -24,7 +24,7 @@
         </div>
       </div>
     </el-col>
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+    <el-col :xs="24" :sm="12" :lg="8" class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('messages')">
         <div class="card-panel-icon-wrapper icon-message">
           <svg-icon icon-class="chart" class-name="card-panel-icon" />
@@ -48,7 +48,7 @@
         </div>
       </div>
     </el-col>
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+    <el-col :xs="24" :sm="12" :lg="8" class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('purchases')">
         <div class="card-panel-icon-wrapper icon-money">
           <svg-icon icon-class="chart" class-name="card-panel-icon" />
@@ -275,14 +275,12 @@ export default {
   margin-top: 18px;
 
   .card-panel-col {
-    margin-left: 0%;
-    margin-right: 8%;
     margin-bottom: 30px;
   }
 
   .card-panel {
-    height: 110px;
-    width: 120%;
+    min-height: 110px;
+    width: 100%;
     cursor: pointer;
     font-size: 12px;
     position: relative;
@@ -382,7 +380,8 @@ export default {
 
     .card-panel-description {
       font-weight: normal;
-      margin: 26px 10%;
+      margin: 24px 16px 18px 92px;
+      min-width: 0;
 
       /* 修改5：覆盖原有的card-panel-text样式 */
       .card-panel-text {
@@ -406,6 +405,29 @@ export default {
 /* 修改7：响应式调整 - 保持加粗效果 */
 @media (max-width: 768px) {
   .panel-group {
+    margin-top: 8px;
+
+    .card-panel-col {
+      margin-bottom: 12px;
+    }
+
+    .card-panel {
+      min-height: 96px;
+
+      .card-panel-icon-wrapper {
+        margin: 16px 0 0 14px;
+        padding: 12px;
+      }
+
+      .card-panel-icon {
+        font-size: 36px;
+      }
+
+      .card-panel-description {
+        margin: 18px 14px 14px 76px;
+      }
+    }
+
     .card-panel-description {
       .card-panel-text {
         font-size: 12px;
@@ -432,25 +454,7 @@ export default {
     display: block !important;
   }
 
-  .card-panel-icon-wrapper {
-    float: none !important;
-    width: 100%;
-    height: 100%;
-    margin: 0 !important;
-
-    .svg-icon {
-      display: block;
-      margin: 14px auto !important;
-      float: none !important;
-    }
-  }
-
   .panel-group {
-    .card-panel-col {
-      margin-left: 2%;
-      margin-right: 2%;
-    }
-
     .card-panel {
       .flex-container {
         flex-wrap: wrap;

@@ -6,24 +6,24 @@
     />
 
     <!-- 折线图区域 -->
-    <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px; min-height: 400px; border-radius: 4px; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);">
+    <el-row class="chart-panel chart-panel--line">
       <!-- 添加标题区域 -->
-      <div class="chart-header" style="margin-bottom: 16px; padding-bottom: 12px;">
+      <div class="chart-header chart-header--line">
         <h3 class="chart-title">{{ lineChartTitle }}</h3>
       </div>
-      <line-sample-trend v-if="chartDataReady" :chart-data="lineChartData" />
+      <line-sample-trend v-if="chartDataReady" :chart-data="lineChartData" height="clamp(260px, 42vh, 360px)" />
       <el-skeleton v-else :rows="6" animated />
     </el-row>
 
     <!-- 恶意文件样本类型top10 -->
-    <el-row :gutter="32" style="margin-bottom: 24px;">
+    <el-row :gutter="24" class="chart-row">
       <el-col :xs="24" :sm="24" :lg="24">
-        <div class="chart-wrapper" style="height: 450px;">
-          <div class="chart-header" style="margin-bottom: 8px;">
+        <div class="chart-wrapper">
+          <div class="chart-header">
             <h3 class="chart-title">恶意文件类型(Category)Top10</h3>
           </div>
-          <div style="height: calc(100% - 40px);">
-            <pie-category v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" />
+          <div class="chart-body">
+            <pie-category v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" height="clamp(280px, 48vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -31,14 +31,14 @@
     </el-row>
 
     <!-- Family 饼图 -->
-    <el-row :gutter="32" style="margin-bottom: 24px;">
+    <el-row :gutter="24" class="chart-row">
       <el-col :xs="24" :sm="24" :lg="24">
-        <div class="chart-wrapper" style="height: 450px;">
-          <div class="chart-header" style="margin-bottom: 8px;">
+        <div class="chart-wrapper">
+          <div class="chart-header">
             <h3 class="chart-title">恶意文件平台(Platform)Top10</h3>
           </div>
-          <div style="height: calc(100% - 40px);">
-            <pie-platform v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" />
+          <div class="chart-body">
+            <pie-platform v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" height="clamp(280px, 48vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -46,14 +46,14 @@
     </el-row>
 
     <!-- Platform 饼图 -->
-    <el-row :gutter="32" style="margin-bottom: 24px;">
+    <el-row :gutter="24" class="chart-row">
       <el-col :xs="24" :sm="24" :lg="24">
-        <div class="chart-wrapper" style="height: 450px;">
-          <div class="chart-header" style="margin-bottom: 8px;">
+        <div class="chart-wrapper">
+          <div class="chart-header">
             <h3 class="chart-title">恶意文件家族(Family)Top10</h3>
           </div>
-          <div style="height: calc(100% - 40px);">
-            <pie-family v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" />
+          <div class="chart-body">
+            <pie-family v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" height="clamp(280px, 48vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -153,15 +153,30 @@ export default {
   padding: 32px;
   background-color: rgb(240, 242, 245);
   position: relative;
+  min-width: 0;
 
+  .chart-panel,
   .chart-wrapper {
     background: #fff;
-    padding: 12px;
     border-radius: 4px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .chart-panel {
+    padding: 16px 16px 0;
+    margin-bottom: 32px;
+  }
+
+  .chart-row {
+    margin-bottom: 24px;
+  }
+
+  .chart-wrapper {
+    padding: 12px;
 
     .chart-header {
       padding: 0 0 8px 0;
+      margin-bottom: 8px;
       border-bottom: 1px solid #ebeef5;
 
       .chart-title {
@@ -173,15 +188,38 @@ export default {
     }
   }
 
-  .el-row:first-of-type {
-    .chart-header {
-      .chart-title {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-        color: #303133;
-        line-height: 1.4;
-      }
+  .chart-body {
+    min-width: 0;
+  }
+
+  .chart-header--line {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+
+    .chart-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #303133;
+      line-height: 1.4;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-editor-container {
+    padding: 12px;
+
+    .chart-panel,
+    .chart-wrapper {
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .chart-header--line .chart-title,
+    .chart-wrapper .chart-header .chart-title {
+      font-size: 15px;
+      line-height: 1.35;
     }
   }
 }

@@ -188,3 +188,42 @@ aside {
 .multiselect--active {
   z-index: 1000 !important;
 }
+
+@media (max-width: 768px) {
+  body {
+    min-width: 0;
+  }
+
+  .app-container,
+  .components-container {
+    padding: 12px;
+    margin: 0;
+  }
+
+  .filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 12px;
+
+    .filter-item {
+      width: 100%;
+      margin-right: 0 !important;
+      margin-bottom: 0;
+    }
+  }
+
+  .el-table {
+    width: 100% !important;
+  }
+
+  .el-pagination {
+    white-space: normal;
+    justify-content: flex-start;
+  }
+
+  .el-dialog {
+    width: calc(100vw - 24px) !important;
+    margin: 5vh auto 0 !important;
+  }
+}

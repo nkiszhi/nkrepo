@@ -1,7 +1,7 @@
 <template>
   <div class="panel-group-container">
     <el-row :gutter="40" class="panel-group">
-      <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+      <el-col :xs="24" :sm="12" :lg="6" class="card-panel-col">
         <div class="card-panel" @click="handleSetLineChartData('total_amount')">
           <div class="card-panel-icon-wrapper icon-people">
             <svg-icon icon-class="chart" class-name="card-panel-icon" />
@@ -17,7 +17,7 @@
         </div>
       </el-col>
 
-      <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+      <el-col :xs="24" :sm="12" :lg="6" class="card-panel-col">
         <div class="card-panel" @click="handleSetLineChartData('year_amount')">
           <div class="card-panel-icon-wrapper icon-message">
             <svg-icon icon-class="chart" class-name="card-panel-icon" />
@@ -33,7 +33,7 @@
         </div>
       </el-col>
 
-      <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+      <el-col :xs="24" :sm="12" :lg="6" class="card-panel-col">
         <div class="card-panel">
           <div class="card-panel-icon-wrapper icon-money">
             <svg-icon icon-class="user" class-name="card-panel-icon" />
@@ -49,7 +49,7 @@
         </div>
       </el-col>
 
-      <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+      <el-col :xs="24" :sm="12" :lg="6" class="card-panel-col">
         <div class="card-panel">
           <div class="card-panel-icon-wrapper icon-shopping">
             <svg-icon icon-class="bug" class-name="card-panel-icon" />
@@ -182,7 +182,7 @@ export default {
   }
 
   .card-panel {
-    height: 108px;
+    min-height: 108px;
     cursor: pointer;
     font-size: 12px;
     position: relative;
@@ -259,18 +259,20 @@ export default {
 
     .card-panel-description {
       font-weight: bold;
-      margin: 26px 10%;
+      margin: 24px 16px 18px 92px;
+      min-width: 0;
 
       .card-panel-info {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         margin-bottom: 8px;
       }
 
       .card-panel-text {
         line-height: 18px;
         color: rgba(0, 0, 0, 0.45);
-        font-size: 0.79vw;
+        font-size: 13px;
       }
 
       .card-panel-label {
@@ -278,9 +280,10 @@ export default {
       }
 
       .card-panel-num {
-        font-size: 24px;
+        font-size: clamp(20px, 2vw, 24px);
         color: #333;
         margin: 0 4px;
+        line-height: 1.1;
       }
 
       .card-panel-unit {
@@ -292,26 +295,51 @@ export default {
         font-size: 12px;
         color: #999;
         margin-top: 4px;
+        line-height: 1.4;
       }
     }
   }
 }
 
-@media (max-width:550px) {
-  .card-panel-description {
-    display: none;
+@media (max-width: 768px) {
+  .panel-group-container {
+    padding: 8px 0 4px;
   }
 
-  .card-panel-icon-wrapper {
-    float: none !important;
-    width: 100%;
-    height: 100%;
-    margin: 0 !important;
+  .panel-group {
+    margin-top: 0;
 
-    .svg-icon {
-      display: block;
-      margin: 14px auto !important;
-      float: none !important;
+    .card-panel-col {
+      margin-bottom: 12px;
+    }
+
+    .card-panel {
+      min-height: 92px;
+
+      &:hover {
+        transform: none;
+      }
+
+      .card-panel-icon-wrapper {
+        margin: 16px 0 0 14px;
+        padding: 12px;
+      }
+
+      .card-panel-icon {
+        font-size: 36px;
+      }
+
+      .card-panel-description {
+        margin: 18px 14px 14px 76px;
+
+        .card-panel-text {
+          font-size: 12px;
+        }
+
+        .card-panel-num {
+          font-size: 22px;
+        }
+      }
     }
   }
 }
