@@ -9,7 +9,7 @@
         <h3 class="chart-title">{{ lineChartTitle }}</h3>
         <div class="chart-subtitle">{{ lineChartSubtitle }}</div>
       </div>
-      <line-domain-trend :chart-data="lineChartData" :resize-key="resizeKey" height="clamp(260px, 42vh, 360px)" />
+      <line-domain-trend :key="`line-${resizeKey}`" :chart-data="lineChartData" :resize-key="resizeKey" height="clamp(260px, 42vh, 360px)" />
     </el-row>
 
     <el-row :gutter="24" class="chart-row">
@@ -19,7 +19,7 @@
             <h3 class="chart-title">恶意域名来源(Source)Top10</h3>
           </div>
           <div class="chart-body">
-            <bar-domain-source :chart-data="sourceChartData" :resize-key="resizeKey" height="clamp(240px, 46vh, 420px)" />
+            <bar-domain-source :key="`source-${resizeKey}`" :chart-data="sourceChartData" :resize-key="resizeKey" height="clamp(240px, 46vh, 420px)" />
           </div>
         </div>
       </el-col>
@@ -32,7 +32,7 @@
             <h3 class="chart-title">恶意域名类型(Category)Top10</h3>
           </div>
           <div class="chart-body">
-            <bar-domain-category :chart-data="categoryChartData" :resize-key="resizeKey" height="clamp(240px, 46vh, 420px)" />
+            <bar-domain-category :key="`category-${resizeKey}`" :chart-data="categoryChartData" :resize-key="resizeKey" height="clamp(240px, 46vh, 420px)" />
           </div>
         </div>
       </el-col>
@@ -69,7 +69,7 @@ export default {
       categoryChartData,
       currentChartType: 'total_domain',
       resizeKey: 0,
-      resizeFrame: null
+      resizeTimer: null
     }
   },
   computed: {
@@ -85,18 +85,20 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.handleDashboardResize)
-    if (this.resizeFrame) {
-      window.cancelAnimationFrame(this.resizeFrame)
-      this.resizeFrame = null
+    if (this.resizeTimer) {
+      window.clearTimeout(this.resizeTimer)
+      this.resizeTimer = null
     }
   },
   methods: {
     handleDashboardResize() {
-      if (this.resizeFrame) return
-      this.resizeFrame = window.requestAnimationFrame(() => {
-        this.resizeFrame = null
+      if (this.resizeTimer) {
+        window.clearTimeout(this.resizeTimer)
+      }
+      this.resizeTimer = window.setTimeout(() => {
+        this.resizeTimer = null
         this.resizeKey += 1
-      })
+      }, 180)
     },
     handleSetLineChartData(type) {
       this.lineChartData = lineChartData[type]
