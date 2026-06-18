@@ -9,7 +9,7 @@
         <h3 class="chart-title">{{ lineChartTitle }}</h3>
         <div class="chart-subtitle">{{ lineChartSubtitle }}</div>
       </div>
-      <line-domain-trend :chart-data="lineChartData" height="clamp(260px, 42vh, 360px)" />
+      <line-domain-trend :chart-data="lineChartData" :resize-key="resizeKey" height="clamp(260px, 42vh, 360px)" />
     </el-row>
 
     <el-row :gutter="24" class="chart-row">
@@ -19,7 +19,7 @@
             <h3 class="chart-title">恶意域名来源(Source)Top10</h3>
           </div>
           <div class="chart-body">
-            <bar-domain-source :chart-data="sourceChartData" height="clamp(240px, 46vh, 420px)" />
+            <bar-domain-source :chart-data="sourceChartData" :resize-key="resizeKey" height="clamp(240px, 46vh, 420px)" />
           </div>
         </div>
       </el-col>
@@ -32,7 +32,7 @@
             <h3 class="chart-title">恶意域名类型(Category)Top10</h3>
           </div>
           <div class="chart-body">
-            <bar-domain-category :chart-data="categoryChartData" height="clamp(240px, 46vh, 420px)" />
+            <bar-domain-category :chart-data="categoryChartData" :resize-key="resizeKey" height="clamp(240px, 46vh, 420px)" />
           </div>
         </div>
       </el-col>
@@ -67,7 +67,9 @@ export default {
       lineChartData: lineChartData.total_domain,
       sourceChartData,
       categoryChartData,
-      currentChartType: 'total_domain'
+      currentChartType: 'total_domain',
+      resizeKey: 0,
+      resizeFrame: null
     }
   },
   computed: {
@@ -78,7 +80,24 @@ export default {
       return lineChartData[this.currentChartType]?.subtitle || ''
     }
   },
+  mounted() {
+    window.addEventListener('resize', this.handleDashboardResize, { passive: true })
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.handleDashboardResize)
+    if (this.resizeFrame) {
+      window.cancelAnimationFrame(this.resizeFrame)
+      this.resizeFrame = null
+    }
+  },
   methods: {
+    handleDashboardResize() {
+      if (this.resizeFrame) return
+      this.resizeFrame = window.requestAnimationFrame(() => {
+        this.resizeFrame = null
+        this.resizeKey += 1
+      })
+    },
     handleSetLineChartData(type) {
       this.lineChartData = lineChartData[type]
       this.currentChartType = type

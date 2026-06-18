@@ -1,4 +1,10 @@
 export default {
+  props: {
+    resizeKey: {
+      type: Number,
+      default: 0
+    }
+  },
   data() {
     return {
       $_sidebarElm: null,
@@ -6,6 +12,11 @@ export default {
       $_resizeObserver: null,
       $_parentResizeObserver: null,
       $_resizeFrame: null
+    }
+  },
+  watch: {
+    resizeKey() {
+      this.$_resizeHandler && this.$_resizeHandler()
     }
   },
   mounted() {

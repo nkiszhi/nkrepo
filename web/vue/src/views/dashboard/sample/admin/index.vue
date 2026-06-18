@@ -11,7 +11,7 @@
       <div class="chart-header chart-header--line">
         <h3 class="chart-title">{{ lineChartTitle }}</h3>
       </div>
-      <line-sample-trend v-if="chartDataReady" :chart-data="lineChartData" height="clamp(260px, 42vh, 360px)" />
+      <line-sample-trend v-if="chartDataReady" :chart-data="lineChartData" :resize-key="resizeKey" height="clamp(260px, 42vh, 360px)" />
       <el-skeleton v-else :rows="6" animated />
     </el-row>
 
@@ -23,7 +23,7 @@
             <h3 class="chart-title">恶意文件类型(Category)Top10</h3>
           </div>
           <div class="chart-body">
-            <pie-category v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" height="clamp(220px, 42vh, 400px)" />
+            <pie-category v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" :resize-key="resizeKey" height="clamp(220px, 42vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -38,7 +38,7 @@
             <h3 class="chart-title">恶意文件平台(Platform)Top10</h3>
           </div>
           <div class="chart-body">
-            <pie-platform v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" height="clamp(220px, 42vh, 400px)" />
+            <pie-platform v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" :resize-key="resizeKey" height="clamp(220px, 42vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -53,7 +53,7 @@
             <h3 class="chart-title">恶意文件家族(Family)Top10</h3>
           </div>
           <div class="chart-body">
-            <pie-family v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" height="clamp(220px, 42vh, 400px)" />
+            <pie-family v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" :resize-key="resizeKey" height="clamp(220px, 42vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -92,7 +92,9 @@ export default {
       chartData: emptyChartData,
       chartDataReady: false,
       lineChartData: emptyChartData.lineChartData.total_amount,
-      currentChartType: 'total_amount'
+      currentChartType: 'total_amount',
+      resizeKey: 0,
+      resizeFrame: null
     }
   },
   computed: {
@@ -106,8 +108,23 @@ export default {
   },
   mounted() {
     this.loadChartData()
+    window.addEventListener('resize', this.handleDashboardResize, { passive: true })
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.handleDashboardResize)
+    if (this.resizeFrame) {
+      window.cancelAnimationFrame(this.resizeFrame)
+      this.resizeFrame = null
+    }
   },
   methods: {
+    handleDashboardResize() {
+      if (this.resizeFrame) return
+      this.resizeFrame = window.requestAnimationFrame(() => {
+        this.resizeFrame = null
+        this.resizeKey += 1
+      })
+    },
     async loadChartData() {
       try {
         const module = await import('@/data/chart_data.js')

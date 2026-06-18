@@ -50,6 +50,10 @@ export default {
     initChart() {
       this.chart = echarts.init(this.$el, 'macarons')
       this.setOptions()
+      this.$_resizeHandler && this.$_resizeHandler()
+      setTimeout(() => {
+        this.$_resizeHandler && this.$_resizeHandler()
+      }, 120)
     },
     setOptions() {
       if (!this.chart) return

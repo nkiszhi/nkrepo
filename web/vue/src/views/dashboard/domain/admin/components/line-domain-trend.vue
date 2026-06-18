@@ -59,6 +59,10 @@ export default {
     initChart() {
       this.chart = echarts.init(this.$el)
       this.setOptions(this.chartData)
+      this.$_resizeHandler && this.$_resizeHandler()
+      setTimeout(() => {
+        this.$_resizeHandler && this.$_resizeHandler()
+      }, 120)
     },
     setOptions(chartData) {
       if (!this.chart || !chartData) return
