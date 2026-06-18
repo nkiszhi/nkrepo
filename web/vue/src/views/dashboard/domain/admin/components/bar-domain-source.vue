@@ -53,6 +53,8 @@ export default {
     },
     setOptions() {
       if (!this.chart) return
+      const chartWidth = this.$el?.clientWidth || window.innerWidth
+      const isNarrow = chartWidth < 520
 
       const displayData = [...this.chartData]
         .sort((a, b) => b.count - a.count)
@@ -78,10 +80,10 @@ export default {
           }
         },
         grid: {
-          left: '3%',
-          right: '3%',
+          left: isNarrow ? '2%' : '3%',
+          right: isNarrow ? '2%' : '3%',
           top: '15%',
-          bottom: '25%',
+          bottom: isNarrow ? '30%' : '25%',
           containLabel: true
         },
         xAxis: {
@@ -99,11 +101,12 @@ export default {
           axisLabel: {
             interval: 0,
             rotate: 45,
-            fontSize: 10,
-            margin: 15,
+            fontSize: isNarrow ? 9 : 10,
+            margin: isNarrow ? 10 : 15,
             color: '#666',
             formatter(value) {
-              return value.length > 20 ? `${value.substring(0, 20)}...` : value
+              const maxLength = isNarrow ? 10 : 20
+              return value.length > maxLength ? `${value.substring(0, maxLength)}...` : value
             }
           }
         },
@@ -131,13 +134,13 @@ export default {
           },
           axisLabel: {
             color: '#666',
-            fontSize: 11
+            fontSize: isNarrow ? 9 : 11
           }
         },
         series: [{
           name: '恶意域名来源',
           type: 'bar',
-          barWidth: '40%',
+          barWidth: isNarrow ? '55%' : '40%',
           data: values.map((value, index) => ({
             value,
             itemStyle: {
@@ -148,7 +151,7 @@ export default {
           animationDuration,
           animationEasing: 'cubicOut',
           label: {
-            show: true,
+            show: !isNarrow,
             position: 'top',
             formatter(params) {
               const originalData = displayData[params.dataIndex]

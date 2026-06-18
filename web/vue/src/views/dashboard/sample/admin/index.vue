@@ -23,7 +23,7 @@
             <h3 class="chart-title">恶意文件类型(Category)Top10</h3>
           </div>
           <div class="chart-body">
-            <pie-category v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" height="clamp(280px, 48vh, 400px)" />
+            <pie-category v-if="chartDataReady" :chart-data="chartData.pieTop10Data.category" height="clamp(220px, 42vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -38,7 +38,7 @@
             <h3 class="chart-title">恶意文件平台(Platform)Top10</h3>
           </div>
           <div class="chart-body">
-            <pie-platform v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" height="clamp(280px, 48vh, 400px)" />
+            <pie-platform v-if="chartDataReady" :chart-data="chartData.pieTop10Data.platform" height="clamp(220px, 42vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>
@@ -53,7 +53,7 @@
             <h3 class="chart-title">恶意文件家族(Family)Top10</h3>
           </div>
           <div class="chart-body">
-            <pie-family v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" height="clamp(280px, 48vh, 400px)" />
+            <pie-family v-if="chartDataReady" :chart-data="chartData.pieTop10Data.family" height="clamp(220px, 42vh, 400px)" />
             <el-skeleton v-else :rows="6" animated />
           </div>
         </div>

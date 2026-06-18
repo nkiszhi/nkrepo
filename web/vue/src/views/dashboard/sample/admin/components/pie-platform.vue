@@ -56,6 +56,9 @@ export default {
     },
     setOptions() {
       if (!this.chart) return
+      const chartWidth = this.$el?.clientWidth || window.innerWidth
+      const isNarrow = chartWidth < 520
+
       this.chart.setOption({
         tooltip: {
           trigger: 'item',
@@ -75,22 +78,27 @@ export default {
             name: '恶意文件样本平台Top10',
             type: 'pie',
             roseType: 'radius',
-            radius: [15, 95],
-            center: ['50%', '42%'],
+            radius: isNarrow ? ['12%', '48%'] : ['10%', '68%'],
+            center: isNarrow ? ['50%', '42%'] : ['50%', '40%'],
             data: this.chartData,
             animationEasing: 'cubicInOut',
             animationDuration: 2600,
             // 优化标签显示
             label: {
+              show: !isNarrow,
               formatter: '{b}: {d}%',
-              fontSize: 12,
+              fontSize: isNarrow ? 10 : 12,
               overflow: 'truncate', // 标签过长时截断
               ellipsis: '...'
+            },
+            labelLine: {
+              show: !isNarrow
             },
             // 鼠标悬停时放大标签
             emphasis: {
               label: {
-                fontSize: 14,
+                show: true,
+                fontSize: isNarrow ? 11 : 14,
                 fontWeight: 'bold',
                 overflow: 'none' // 悬停时不截断
               }

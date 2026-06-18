@@ -19,7 +19,7 @@
             <h3 class="chart-title">恶意域名来源(Source)Top10</h3>
           </div>
           <div class="chart-body">
-            <bar-domain-source :chart-data="sourceChartData" height="clamp(300px, 52vh, 420px)" />
+            <bar-domain-source :chart-data="sourceChartData" height="clamp(240px, 46vh, 420px)" />
           </div>
         </div>
       </el-col>
@@ -32,7 +32,7 @@
             <h3 class="chart-title">恶意域名类型(Category)Top10</h3>
           </div>
           <div class="chart-body">
-            <bar-domain-category :chart-data="categoryChartData" height="clamp(300px, 52vh, 420px)" />
+            <bar-domain-category :chart-data="categoryChartData" height="clamp(240px, 46vh, 420px)" />
           </div>
         </div>
       </el-col>

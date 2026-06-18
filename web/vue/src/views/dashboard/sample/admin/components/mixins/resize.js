@@ -4,30 +4,38 @@ export default {
   data() {
     return {
       $_sidebarElm: null,
-      $_resizeHandler: null
+      $_resizeHandler: null,
+      $_resizeObserver: null
     }
   },
   mounted() {
     this.$_resizeHandler = debounce(() => {
       if (this.chart) {
         this.chart.resize()
+        if (typeof this.setOptions === 'function') {
+          this.setOptions(this.chartData)
+        }
       }
     }, 100)
     this.$_initResizeEvent()
+    this.$_initElementResizeEvent()
     this.$_initSidebarResizeEvent()
   },
   beforeUnmount() {
     this.$_destroyResizeEvent()
+    this.$_destroyElementResizeEvent()
     this.$_destroySidebarResizeEvent()
   },
   // to fixed bug when cached by keep-alive
   // https://github.com/PanJiaChen/vue-element-admin/issues/2116
   activated() {
     this.$_initResizeEvent()
+    this.$_initElementResizeEvent()
     this.$_initSidebarResizeEvent()
   },
   deactivated() {
     this.$_destroyResizeEvent()
+    this.$_destroyElementResizeEvent()
     this.$_destroySidebarResizeEvent()
   },
   methods: {
@@ -38,6 +46,21 @@ export default {
     },
     $_destroyResizeEvent() {
       window.removeEventListener('resize', this.$_resizeHandler)
+    },
+    $_initElementResizeEvent() {
+      if (!window.ResizeObserver || this.$_resizeObserver || !this.$el) {
+        return
+      }
+      this.$_resizeObserver = new ResizeObserver(() => {
+        this.$_resizeHandler()
+      })
+      this.$_resizeObserver.observe(this.$el)
+    },
+    $_destroyElementResizeEvent() {
+      if (this.$_resizeObserver) {
+        this.$_resizeObserver.disconnect()
+        this.$_resizeObserver = null
+      }
     },
     $_sidebarResizeHandler(e) {
       if (e.propertyName === 'width') {
