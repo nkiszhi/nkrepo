@@ -1,22 +1,21 @@
-import { debounce } from '@/utils'
-
 export default {
   data() {
     return {
       $_sidebarElm: null,
       $_resizeHandler: null,
-      $_resizeObserver: null
+      $_resizeObserver: null,
+      $_parentResizeObserver: null,
+      $_resizeFrame: null
     }
   },
   mounted() {
-    this.$_resizeHandler = debounce(() => {
-      if (this.chart) {
-        this.chart.resize()
-        if (typeof this.setOptions === 'function') {
-          this.setOptions(this.chartData)
-        }
-      }
-    }, 100)
+    this.$_resizeHandler = () => {
+      if (this.$_resizeFrame) return
+      this.$_resizeFrame = window.requestAnimationFrame(() => {
+        this.$_resizeFrame = null
+        this.$_resizeChart()
+      })
+    }
     this.$_initResizeEvent()
     this.$_initElementResizeEvent()
     this.$_initSidebarResizeEvent()
@@ -47,6 +46,22 @@ export default {
     $_destroyResizeEvent() {
       window.removeEventListener('resize', this.$_resizeHandler)
     },
+    $_resizeChart() {
+      if (!this.chart || !this.$el) {
+        return
+      }
+      const rect = this.$el.getBoundingClientRect()
+      if (rect.width <= 0 || rect.height <= 0) {
+        return
+      }
+      this.chart.resize({
+        width: Math.floor(rect.width),
+        height: Math.floor(rect.height)
+      })
+      if (typeof this.setOptions === 'function') {
+        this.setOptions(this.chartData)
+      }
+    },
     $_initElementResizeEvent() {
       if (!window.ResizeObserver || this.$_resizeObserver || !this.$el) {
         return
@@ -55,11 +70,25 @@ export default {
         this.$_resizeHandler()
       })
       this.$_resizeObserver.observe(this.$el)
+      if (this.$el.parentElement) {
+        this.$_parentResizeObserver = new ResizeObserver(() => {
+          this.$_resizeHandler()
+        })
+        this.$_parentResizeObserver.observe(this.$el.parentElement)
+      }
     },
     $_destroyElementResizeEvent() {
       if (this.$_resizeObserver) {
         this.$_resizeObserver.disconnect()
         this.$_resizeObserver = null
+      }
+      if (this.$_parentResizeObserver) {
+        this.$_parentResizeObserver.disconnect()
+        this.$_parentResizeObserver = null
+      }
+      if (this.$_resizeFrame) {
+        window.cancelAnimationFrame(this.$_resizeFrame)
+        this.$_resizeFrame = null
       }
     },
     $_sidebarResizeHandler(e) {

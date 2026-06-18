@@ -190,6 +190,7 @@ export default {
 
   .chart-body {
     min-width: 0;
+    overflow: hidden;
   }
 
   .chart-header--line {

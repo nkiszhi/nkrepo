@@ -177,3 +177,11 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.chart {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+}
+</style>
