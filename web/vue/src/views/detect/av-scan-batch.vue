@@ -237,7 +237,7 @@
               :key="engine"
               :prop="`engines.${engine}`"
               :label="engine"
-              width="100"
+              width="140"
             >
               <template #default="scope">
                 <div>
@@ -248,7 +248,7 @@
                     {{ getEngineStatusText(scope.row.engines[engine]) }}
                   </el-tag>
                   <div v-if="getEngineLabel(scope.row.engines[engine])" class="engine-label-tag">
-                    {{ getEngineLabel(scope.row.engines[engine]) }}
+                    威胁：{{ getEngineLabel(scope.row.engines[engine]) }}
                   </div>
                 </div>
               </template>
@@ -1251,6 +1251,14 @@ export default {
 .malicious-count {
   color: #f56c6c;
   font-weight: bold;
+}
+
+.engine-label-tag {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: #c45656;
+  word-break: break-all;
 }
 
 .result-actions {

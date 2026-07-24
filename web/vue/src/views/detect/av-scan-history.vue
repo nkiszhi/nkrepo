@@ -123,12 +123,17 @@
             v-for="engine in currentDetail.selected_engines"
             :key="engine"
             :label="engine"
-            width="100"
+            width="140"
           >
             <template #default="scope">
-              <el-tag :type="getEngineStatusType(scope.row.engines[engine])" size="small">
-                {{ getEngineStatusText(scope.row.engines[engine]) }}
-              </el-tag>
+              <div>
+                <el-tag :type="getEngineStatusType(scope.row.engines[engine])" size="small">
+                  {{ getEngineStatusText(scope.row.engines[engine]) }}
+                </el-tag>
+                <div v-if="getEngineLabel(scope.row.engines[engine])" class="engine-label-tag">
+                  威胁：{{ getEngineLabel(scope.row.engines[engine]) }}
+                </div>
+              </div>
             </template>
           </el-table-column>
           <el-table-column prop="malicious_count" label="恶意数" width="80" fixed="right">
@@ -376,14 +381,28 @@ export default {
       return textMap[status] || '未知'
     },
 
+    getEngineStatus(engineInfo) {
+      if (typeof engineInfo === 'object' && engineInfo !== null) {
+        return engineInfo.status || 'N/A'
+      }
+      return engineInfo || 'N/A'
+    },
+
+    getEngineLabel(engineInfo) {
+      if (typeof engineInfo === 'object' && engineInfo !== null) {
+        return engineInfo.label || ''
+      }
+      return ''
+    },
+
     getEngineStatusType(status) {
       const typeMap = { 'malicious': 'danger', 'safe': 'success', 'unsupported': 'info' }
-      return typeMap[status] || 'info'
+      return typeMap[this.getEngineStatus(status)] || 'info'
     },
 
     getEngineStatusText(status) {
       const textMap = { 'malicious': '恶意', 'safe': '安全', 'unsupported': '不支持' }
-      return textMap[status] || 'N/A'
+      return textMap[this.getEngineStatus(status)] || 'N/A'
     },
 
     getTagType(tagType) {
@@ -464,5 +483,13 @@ export default {
 .malicious-count {
   color: #f56c6c;
   font-weight: bold;
+}
+
+.engine-label-tag {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: #c45656;
+  word-break: break-all;
 }
 </style>

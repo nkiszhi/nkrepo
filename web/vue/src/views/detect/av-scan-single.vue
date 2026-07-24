@@ -110,7 +110,7 @@
               <span class="status-text">{{ getStatusText(engine.status) }}</span>
             </div>
             <div class="engine-label" v-if="engine.label">
-              <span class="label-text">{{ engine.label }}</span>
+              <span class="label-text">威胁：{{ engine.label }}</span>
             </div>
             <div class="engine-info">
               <span class="engine-vm">VM: {{ engine.vm }}</span>
@@ -867,6 +867,14 @@ export default {
   justify-content: space-between;
   font-size: 12px;
   color: #909399;
+}
+
+.engine-label {
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #c45656;
+  word-break: break-all;
 }
 
 .engine-vm,
