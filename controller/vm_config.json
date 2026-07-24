@@ -1,0 +1,63 @@
+{
+  "virtual_machines": [
+    {
+      "id": "vm1",
+      "ip": "192.168.8.100",
+      "port": 27483,
+      "engines": ["Avira", "McAfee", "WindowsDefender", "IkarusT3", "Emsisoft", "FProtect", "Vba32"]
+    },
+    {
+      "id": "vm2",
+      "ip": "192.168.8.101",
+      "port": 27483,
+      "engines": ["ClamAV"]
+    },
+    {
+      "id": "vm3",
+      "ip": "192.168.8.102",
+      "port": 27483,
+      "engines": ["Kaspersky"]
+    },
+    {
+      "id": "vm4",
+      "ip": "192.168.8.113",
+      "port": 27483,
+      "engines": ["ESET"]
+    },
+    {
+      "id": "vm5",
+      "ip": "192.168.8.104",
+      "port": 27483,
+      "engines": ["DrWeb"]
+    },
+    {
+      "id": "vm6",
+      "ip": "192.168.8.105",
+      "port": 27483,
+      "engines": ["Avast"]
+    },
+    {
+      "id": "vm7",
+      "ip": "192.168.8.106",
+      "port": 27483,
+      "engines": ["AVG"]
+    },
+    {
+      "id": "vm8",
+      "ip": "192.168.8.107",
+      "port": 27483,
+      "engines": ["AdAware"]
+    },
+    {
+      "id": "vm9",
+      "ip": "192.168.8.108",
+      "port": 27483,
+      "engines": ["FSecure"]
+    }
+  ],
+  "all_engines": [
+    "Avira", "McAfee", "WindowsDefender", "ClamAV", "Kaspersky",
+    "ESET", "DrWeb", "IkarusT3", "Emsisoft", "Avast",
+    "AVG", "FProtect", "AdAware", "Vba32", "FSecure"
+  ]
+}

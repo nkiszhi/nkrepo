@@ -1,6 +1,9 @@
 """
 分布式杀毒软件扫描API
 功能: 单个文件检测、批量文件检测、任务进度查询、CSV报告下载
+
+架构 v2: 本模块为薄代理层，所有 AV 扫描请求转发到独立检测服务 (:5006)。
+         认证在此层处理，排队和 VM 通信由独立服务负责。
 """
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, BackgroundTasks, Form
 from fastapi.responses import FileResponse, StreamingResponse
@@ -17,24 +20,35 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 import sys
 import asyncio
+import requests
+
+# 批量任务本地队列（仅用于本地追踪，实际排队由独立服务处理）
+from app.services.av_detection.scan_queue import join_queue, leave_queue
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# 导入AV分布式客户端
-try:
-    from app.services.av_detection import AVDistributedClient
-    from pathlib import Path
-    
-    # 获取vm_config.json的路径
-    config_path = Path(__file__).parent.parent / "services" / "av_detection" / "vm_config.json"
-    
-    # 初始化AV客户端
-    av_client = AVDistributedClient(config_path=str(config_path))
-    logger.info(f"AV分布式客户端初始化成功,配置文件: {config_path}")
-except Exception as e:
-    logger.error(f"AV分布式客户端初始化失败: {str(e)}")
-    av_client = None
+# ============================================================
+# 配置：独立检测服务地址
+# ============================================================
+AV_SERVICE_URL = getattr(settings, "AV_SERVICE_URL", os.environ.get("AV_SERVICE_URL", "http://127.0.0.1:5006"))
+
+# 降级模式：如果独立服务不可用，回退到直接客户端
+_use_direct_client = False
+_av_client = None
+
+if os.environ.get("AV_USE_DIRECT_CLIENT", "").lower() == "true":
+    _use_direct_client = True
+    try:
+        from app.services.av_detection import AVDistributedClient
+        config_path = Path(__file__).parent.parent / "services" / "av_detection" / "vm_config.json"
+        _av_client = AVDistributedClient(config_path=str(config_path))
+        logger.info(f"降级模式: 使用直接 AV 客户端, config={config_path}")
+    except Exception as e:
+        logger.error(f"直接客户端初始化失败: {e}")
+
+# 保留旧引用兼容
+av_client = _av_client
 
 # 批量任务存储(生产环境应使用Redis)
 batch_tasks: Dict[str, Dict[str, Any]] = {}
@@ -68,117 +82,169 @@ async def scan_single_file(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    单个文件杀毒软件检测
-    使用15个杀毒引擎并行检测单个文件
+    单个文件杀毒软件检测（代理到独立检测服务 :5006）
     """
-    if av_client is None:
-        raise HTTPException(status_code=500, detail="AV分布式客户端未初始化")
+    if _use_direct_client:
+        return await _scan_single_direct(file)
 
     try:
-        # 保存上传文件
-        upload_dir = Path(settings.UPLOAD_DIR) / "av_scan_temp"
-        upload_dir.mkdir(parents=True, exist_ok=True)
+        content = await file.read()
 
-        file_path = upload_dir / file.filename
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
+        def _call():
+            resp = requests.post(
+                f"{AV_SERVICE_URL}/api/av_scan_single",
+                files={"file": (file.filename, content, file.content_type or "application/octet-stream")},
+                timeout=600,
+            )
+            resp.raise_for_status()
+            return resp.json()
 
-        # 获取文件大小
-        file_size_bytes = os.path.getsize(file_path)
-        file_size_mb = file_size_bytes / (1024 * 1024)
-        file_size_str = f"{file_size_mb:.2f} MB"
+        return await asyncio.to_thread(_call)
 
-        logger.info(f"开始扫描文件: {file.filename}, 大小: {file_size_str}")
-
-        # 调用AV分布式客户端进行扫描
-        scan_result = av_client.scan_single_file(str(file_path))
-
-        # 格式化结果
-        formatted_result = format_single_scan_result(scan_result, file.filename, file_size_str)
-
-        # 清理临时文件
-        if file_path.exists():
-            os.remove(file_path)
-
-        logger.info(f"文件扫描完成: {file.filename}")
-        return formatted_result
-
+    except requests.HTTPError as e:
+        logger.error(f"检测服务返回错误: {e.response.status_code}")
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except requests.RequestException as e:
+        logger.error(f"无法连接到独立检测服务 {AV_SERVICE_URL}: {e}")
+        raise HTTPException(status_code=503, detail=f"检测服务不可用: {AV_SERVICE_URL}")
     except Exception as e:
-        logger.error(f"文件扫描失败: {str(e)}")
-        # 清理临时文件
-        if 'file_path' in locals() and file_path.exists():
-            os.remove(file_path)
-        raise HTTPException(status_code=500, detail=f"扫描失败: {str(e)}")
+        logger.error(f"扫描失败: {e}")
+        raise HTTPException(status_code=500, detail=f"扫描失败: {e}")
 
 
+async def _scan_single_direct(file: UploadFile):
+    """降级：直接使用本地 AV 客户端"""
+    from app.services.av_detection.scan_queue import SCAN_LOCK, join_queue, leave_queue, get_position, set_current, clear_current
+
+    if _av_client is None:
+        raise HTTPException(status_code=500, detail="AV客户端未初始化")
+
+    task_id = uuid.uuid4().hex[:8]
+    join_queue(task_id)
+    try:
+        async with SCAN_LOCK:
+            set_current({"type": "single_scan", "task_id": task_id, "file_name": file.filename})
+            upload_dir = Path(settings.UPLOAD_DIR) / "av_scan_temp"
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            file_path = upload_dir / file.filename
+            content = await file.read()
+            file_path.write_bytes(content)
+            file_size_str = f"{len(content) / (1024*1024):.2f} MB"
+
+            scan_result = await asyncio.to_thread(_av_client.scan_single_file, str(file_path))
+            formatted = format_single_scan_result(scan_result, file.filename, file_size_str)
+
+            if file_path.exists():
+                os.remove(file_path)
+            clear_current()
+            return formatted
+    finally:
+        leave_queue(task_id)
 @router.post("/av_scan_single_streaming")
 async def scan_single_file_streaming(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
     """
-    单个文件杀毒软件检测 - 流式返回结果
-    每完成一个引擎就返回结果,实现实时显示
+    单个文件流式扫描（代理 SSE 流从独立检测服务 :5006）
     """
-    if av_client is None:
-        raise HTTPException(status_code=500, detail="AV分布式客户端未初始化")
+    if _use_direct_client:
+        return await _scan_single_streaming_direct(file)
 
-    try:
-        # 保存上传文件
-        upload_dir = Path(settings.UPLOAD_DIR) / "av_scan_temp"
-        upload_dir.mkdir(parents=True, exist_ok=True)
+    raw_content = await file.read()
 
-        file_path = upload_dir / file.filename
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
+    async def generate():
+        import threading
+        loop = asyncio.get_running_loop()
+        q = asyncio.Queue()
 
-        # 获取文件大小
-        file_size_bytes = os.path.getsize(file_path)
-        file_size_mb = file_size_bytes / (1024 * 1024)
-        file_size_str = f"{file_size_mb:.2f} MB"
-
-        logger.info(f"开始流式扫描文件: {file.filename}, 大小: {file_size_str}")
-
-        # 生成器函数,用于流式返回结果
-        async def generate():
+        def _stream():
             try:
-                # 先发送文件信息
-                file_info = {
-                    'type': 'file_info',
-                    'file_name': file.filename,
-                    'file_size': file_size_str
-                }
-                yield f"data: {json.dumps(file_info)}\n\n"
-
-                # 调用流式扫描
-                for result in av_client.scan_single_file_streaming(str(file_path)):
-                    yield f"data: {json.dumps(result)}\n\n"
-
-                logger.info(f"流式扫描完成: {file.filename}")
-
+                resp = requests.post(
+                    f"{AV_SERVICE_URL}/api/av_scan_single_streaming",
+                    files={"file": (file.filename, raw_content, file.content_type or "application/octet-stream")},
+                    stream=True,
+                    timeout=600,
+                )
+                resp.raise_for_status()
+                for line in resp.iter_lines():
+                    if line:
+                        loop.call_soon_threadsafe(
+                            q.put_nowait,
+                            line.decode("utf-8", errors="replace") + "\n",
+                        )
+            except Exception as e:
+                loop.call_soon_threadsafe(
+                    q.put_nowait,
+                    f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n",
+                )
             finally:
-                # 清理临时文件
+                loop.call_soon_threadsafe(q.put_nowait, None)
+
+        threading.Thread(target=_stream, daemon=True).start()
+
+        while True:
+            chunk = await q.get()
+            if chunk is None:
+                break
+            yield chunk
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+    )
+
+
+async def _scan_single_streaming_direct(file: UploadFile):
+    """降级：直接使用本地 AV 客户端流式扫描"""
+    from app.services.av_detection.scan_queue import SCAN_LOCK, join_queue, leave_queue, get_position, set_current, clear_current
+
+    if _av_client is None:
+        raise HTTPException(status_code=500, detail="AV客户端未初始化")
+
+    raw_content = await file.read()
+    file_size_str = f"{len(raw_content) / (1024*1024):.2f} MB"
+    task_id = uuid.uuid4().hex[:8]
+    join_queue(task_id)
+
+    async def generate():
+        try:
+            while True:
+                pos = get_position(task_id)
+                if pos <= 0:
+                    yield f"data: {json.dumps({'type': 'error', 'error': '任务已被取消'})}\n\n"
+                    return
+                if pos == 1:
+                    break
+                yield f"data: {json.dumps({'type': 'queued', 'position': pos, 'message': f'排队中，前面还有 {pos - 1} 个任务'})}\n\n"
+                await asyncio.sleep(1)
+
+            async with SCAN_LOCK:
+                set_current({"type": "single_scan_streaming", "task_id": task_id, "file_name": file.filename})
+                upload_dir = Path(settings.UPLOAD_DIR) / "av_scan_temp"
+                upload_dir.mkdir(parents=True, exist_ok=True)
+                file_path = upload_dir / file.filename
+                file_path.write_bytes(raw_content)
+
+                yield f"data: {json.dumps({'type': 'file_info', 'file_name': file.filename, 'file_size': file_size_str})}\n\n"
+
+                results = await asyncio.to_thread(lambda: list(_av_client.scan_single_file_streaming(
+                    file_content=raw_content, file_name=file.filename,
+                )))
+                for r in results:
+                    yield f"data: {json.dumps(r)}\n\n"
+
                 if file_path.exists():
                     os.remove(file_path)
+                clear_current()
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+        finally:
+            leave_queue(task_id)
 
-        return StreamingResponse(
-            generate(),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "X-Accel-Buffering": "no"
-            }
-        )
-
-    except Exception as e:
-        logger.error(f"流式扫描失败: {str(e)}")
-        # 清理临时文件
-        if 'file_path' in locals() and file_path.exists():
-            os.remove(file_path)
-        raise HTTPException(status_code=500, detail=f"扫描失败: {str(e)}")
+    return StreamingResponse(generate(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"})
 
 
 def format_single_scan_result(scan_result: Dict, file_name: str, file_size: str) -> Dict:
@@ -204,6 +270,9 @@ def format_single_scan_result(scan_result: Dict, file_name: str, file_size: str)
                 status = "unsupported"
                 unsupported_count += 1
 
+            # 获取检测标签
+            label = file_result.get('labels', {}).get(engine_name, '')
+
             # 从engine_details中获取耗时
             elapsed = 0
             for engine_detail in scan_result.get('engine_details', []):
@@ -214,6 +283,7 @@ def format_single_scan_result(scan_result: Dict, file_name: str, file_size: str)
             engines_result.append({
                 "name": engine_name,
                 "status": status,
+                "label": label,
                 "vm": get_engine_vm(engine_name),
                 "elapsed_seconds": round(elapsed, 3)
             })
@@ -336,12 +406,8 @@ async def start_batch_scan(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    启动批量检测任务
-    在后台异步执行批量扫描
+    启动批量检测任务（代理到独立检测服务）
     """
-    if av_client is None:
-        raise HTTPException(status_code=500, detail="AV分布式客户端未初始化")
-
     task_id = request.get('task_id')
     if not task_id:
         raise HTTPException(status_code=400, detail="缺少task_id参数")
@@ -353,105 +419,133 @@ async def start_batch_scan(
     if task['status'] != 'pending':
         raise HTTPException(status_code=400, detail=f"任务状态不正确: {task['status']}")
 
-    # 更新任务状态
-    task['status'] = 'running'
+    # 加入 :5005 本地排队
+    join_queue(task_id)
+
+    # 注册到 :5006 内部队列（统一排队，所有任务可见）
+    remote_pos = 1
+    try:
+        def _register_remote():
+            resp = requests.post(f"{AV_SERVICE_URL}/api/av_scan_queue_register",
+                json={"task_id": task_id, "type": "batch_scan",
+                      "file_name": f"批量{len(task['files'])}个文件",
+                      "file_count": len(task['files'])},
+                timeout=5)
+            if resp.ok:
+                return resp.json().get("position", 0)
+            return 1
+        remote_pos = await asyncio.to_thread(_register_remote)
+        logger.info(f"[批次 {task_id}] 在 :5006 队列位置: {remote_pos}")
+    except requests.RequestException:
+        pass
+
+    task['status'] = 'queued' if remote_pos > 1 else 'pending'
     task['start_time'] = datetime.now()
 
     # 在后台执行批量扫描
     background_tasks.add_task(execute_batch_scan, task_id)
 
-    logger.info(f"批量检测任务已启动: task_id={task_id}")
+    logger.info(f"批量检测任务已启动: task_id={task_id}  status={task['status']}")
 
     return {
         "task_id": task_id,
-        "status": "running",
-        "message": "批量检测任务已启动"
+        "status": task['status'],
+        "message": "批量检测任务已启动" + ("（排队中）" if task['status'] == 'queued' else "")
     }
 
 
 async def execute_batch_scan(task_id: str):
-    """执行批量扫描任务(后台任务) - 优化版：文件级并行扫描"""
+    """执行批量扫描任务(通过独立检测服务)"""
+    from app.services.av_detection.scan_queue import SCAN_LOCK, set_current, clear_current
+
     try:
         task = batch_tasks[task_id]
         files = task['files']
         total_files = len(files)
-        selected_engines = task.get('selected_engines', AV_ENGINES)  # 获取选择的引擎
+        selected_engines = task.get('selected_engines', AV_ENGINES)
 
-        logger.info(f"开始执行批量扫描: task_id={task_id}, files={total_files}, engines={len(selected_engines)}")
-
-        # 定义单个文件扫描函数
-        async def scan_single_file_task(file_info: dict, idx: int) -> dict:
-            """扫描单个文件的异步任务"""
+        # —— 在 :5006 队列中等待，直到排到第 1 ——
+        task['status'] = 'queued'
+        logger.info(f"[批次 {task_id}] 在 :5006 队列中等待...")
+        while True:
             try:
-                file_path = file_info['path']
-                file_name = file_info['name']
+                def _check_pos():
+                    resp = requests.get(f"{AV_SERVICE_URL}/api/av_scan_queue_position/{task_id}", timeout=5)
+                    if resp.ok:
+                        return resp.json().get("position", -1)
+                    return -1
+                pos = await asyncio.to_thread(_check_pos)
+            except requests.RequestException:
+                pos = -1
 
-                logger.info(f"扫描文件 [{idx+1}/{total_files}]: {file_name}")
+            if pos <= 0:
+                # 不在队列中了（可能被取消）
+                task['status'] = 'failed'
+                task['error'] = '任务已从队列中移除'
+                return
+            if pos == 1:
+                break
+            await asyncio.sleep(2)
 
-                # 更新当前正在扫描的文件
-                task['current_file'] = file_name
+        # —— 排到了，离开 :5006 队列，开始扫描 ——
+        try:
+            def _leave_remote():
+                requests.post(f"{AV_SERVICE_URL}/api/av_scan_queue_unregister",
+                    json={"task_id": task_id}, timeout=5)
+            await asyncio.to_thread(_leave_remote)
+        except requests.RequestException:
+            pass
 
-                # 调用AV客户端扫描 - 使用选择的引擎
-                # 优化：max_workers设为引擎数量，timeout减少到30秒
-                scan_result = await asyncio.to_thread(
-                    av_client.scan_single_file,
-                    file_path,
-                    selected_engines,  # 传递选择的引擎列表
-                    len(selected_engines),  # max_workers: 动态设置为引擎数量
-                    60   # timeout: 
-                )
+        async with SCAN_LOCK:
+            set_current({"type": "batch_scan", "task_id": task_id, "files": total_files, "engines": selected_engines})
+            task['status'] = 'running'
+            task['start_time'] = datetime.now()
+            logger.info(f"[批次 {task_id}] 开始扫描 {total_files} 个文件")
 
-                # 格式化结果
-                formatted = format_batch_scan_result(scan_result, file_name)
+            async def scan_one(file_info, idx):
+                try:
+                    task['current_file'] = file_info['name']
+                    file_path = file_info['path']
 
-                # 更新进度
-                task['scanned_files'] = idx + 1
-                task['progress'] = (idx + 1) / total_files * 100
-                logger.info(f"[进度更新] scanned_files={idx+1}, progress={task['progress']:.1f}%")
+                    def _call():
+                        with open(file_path, "rb") as f:
+                            file_content = f.read()
+                        resp = requests.post(
+                            f"{AV_SERVICE_URL}/api/av_scan_single",
+                            files={"file": (file_info['name'], file_content, "application/octet-stream")},
+                            data={"engines": ",".join(selected_engines)},
+                            timeout=120,
+                        )
+                        resp.raise_for_status()
+                        return resp.json()
 
-                return formatted
+                    scan_result = await asyncio.to_thread(_call)
 
-            except Exception as e:
-                logger.error(f"扫描文件失败: {file_info['name']}, error={str(e)}")
-                # 返回错误结果
-                task['scanned_files'] = idx + 1
-                task['progress'] = (idx + 1) / total_files * 100
-                return {
-                    "file_name": file_info['name'],
-                    "error": str(e),
-                    "engines": {}
-                }
+                    formatted = format_batch_scan_result_from_service(scan_result, file_info['name'])
+                    task['scanned_files'] = idx + 1
+                    task['progress'] = (idx + 1) / total_files * 100
+                    logger.info(f"[进度] scanned_files={idx+1}/{total_files}, progress={task['progress']:.1f}%")
+                    return formatted
 
-        # 使用 asyncio.gather 并行扫描所有文件
-        # 限制并发数为 min(文件数, 5) 避免资源耗尽
-        max_concurrent = min(total_files, 5)
-        results = []
-        
-        # 分批处理，每批 max_concurrent 个文件
-        for batch_start in range(0, total_files, max_concurrent):
-            batch_end = min(batch_start + max_concurrent, total_files)
-            batch_files = files[batch_start:batch_end]
-            
-            # 并行扫描当前批次
-            batch_tasks_list = [
-                scan_single_file_task(file_info, batch_start + idx) 
-                for idx, file_info in enumerate(batch_files)
-            ]
-            batch_results = await asyncio.gather(*batch_tasks_list)
-            results.extend(batch_results)
-            
-            logger.info(f"批次完成: {batch_start}-{batch_end}/{total_files}")
+                except Exception as e:
+                    logger.error(f"扫描文件失败: {file_info['name']}, error={e}")
+                    task['scanned_files'] = idx + 1
+                    task['progress'] = (idx + 1) / total_files * 100
+                    return {"file_name": file_info['name'], "error": str(e), "engines": {}}
 
-        # 保存结果
+            # 改为逐个扫描（不并发），实时更新进度
+            results = []
+            for i, file_info in enumerate(files):
+                r = await scan_one(file_info, i)
+                results.append(r)
+
         task['results'] = results
-
-        # 任务完成
         task['status'] = 'completed'
         task['end_time'] = datetime.now()
-        task['current_file'] = None  # 清空当前文件
+        task['current_file'] = None
         logger.info(f"批量扫描完成: task_id={task_id}")
 
-        # 保存到历史记录
+        # 保存历史记录
         try:
             from app.api.av_scan_history import save_scan_to_history
             save_scan_to_history(
@@ -460,15 +554,48 @@ async def execute_batch_scan(task_id: str):
                 status='completed',
                 total_files=total_files,
                 selected_engines=selected_engines,
-                scan_results=task['results']
+                scan_results=task['results'],
             )
         except Exception as e:
-            logger.error(f"保存历史记录失败: {str(e)}")
+            logger.error(f"保存历史记录失败: {e}")
 
+    except requests.RequestException as e:
+        logger.error(f"无法连接检测服务 {AV_SERVICE_URL}: {e}")
+        task['status'] = 'failed'
+        task['error'] = f"检测服务不可用: {AV_SERVICE_URL}"
     except Exception as e:
-        logger.error(f"批量扫描任务异常: task_id={task_id}, error={str(e)}")
+        logger.error(f"批量扫描任务异常: task_id={task_id}, error={e}")
         task['status'] = 'failed'
         task['error'] = str(e)
+    finally:
+        clear_current()
+        leave_queue(task_id)
+        # 从 :5006 的统一队列视图注销
+        try:
+            def _unregister_remote():
+                requests.post(f"{AV_SERVICE_URL}/api/av_scan_queue_unregister",
+                    json={"task_id": task_id}, timeout=5)
+            await asyncio.to_thread(_unregister_remote)
+        except Exception:
+            pass
+
+
+def format_batch_scan_result_from_service(scan_result: Dict, file_name: str) -> Dict:
+    """将从独立服务返回的单文件扫描结果转为批量格式"""
+    engines = {}; malicious_count = 0
+    for engine_info in scan_result.get("engines", []):
+        name = engine_info.get("name", "")
+        status = engine_info.get("status", "unsupported")
+        label = engine_info.get("label", "")
+        engines[name] = {"status": status, "label": label}
+        if status == "malicious":
+            malicious_count += 1
+    return {
+        "file_name": file_name,
+        "malicious_count": malicious_count,
+        "safe_count": len(engines) - malicious_count,
+        "engines": engines,
+    }
 
 
 def format_batch_scan_result(scan_result: Dict, file_name: str) -> Dict:
@@ -480,13 +607,14 @@ def format_batch_scan_result(scan_result: Dict, file_name: str) -> Dict:
         file_result = scan_result['file_results'][file_name]
 
         for engine_name, detection in file_result['engines'].items():
+            label = file_result.get('labels', {}).get(engine_name, '')
             if detection == 1:
-                engines[engine_name] = "malicious"
+                engines[engine_name] = {"status": "malicious", "label": label}
                 malicious_count += 1
             elif detection == 0:
-                engines[engine_name] = "safe"
+                engines[engine_name] = {"status": "safe", "label": label}
             else:
-                engines[engine_name] = "unsupported"
+                engines[engine_name] = {"status": "unsupported", "label": label}
 
     return {
         "file_name": file_name,
@@ -599,7 +727,11 @@ async def download_batch_scan_report(
             for result in task['results']:
                 row = [result['file_name']]
                 for engine in selected_engines:
-                    status = result['engines'].get(engine, 'N/A')
+                    engine_info = result['engines'].get(engine, {})
+                    if isinstance(engine_info, dict):
+                        status = engine_info.get('status', 'N/A')
+                    else:
+                        status = engine_info or 'N/A'
                     # 转换状态为中文
                     if status == 'malicious':
                         status_cn = '恶意'
@@ -628,45 +760,65 @@ async def download_batch_scan_report(
 
 @router.get("/av_engines")
 async def get_av_engines(current_user: dict = Depends(get_current_user)):
-    """
-    获取可用的杀毒引擎列表
-    """
-    if av_client is None:
-        raise HTTPException(status_code=500, detail="AV分布式客户端未初始化")
-
+    """获取可用的杀毒引擎列表（从独立服务查询）"""
     try:
-        engines = av_client.get_available_engines()
-        engine_list = []
-
-        for engine in engines:
-            vm_info = av_client.engine_to_vm.get(engine, {})
-            engine_list.append({
-                "name": engine,
-                "vm": vm_info.get('vm_id', 'unknown')
-            })
-
-        return {
-            "total": len(engine_list),
-            "engines": engine_list
-        }
-
-    except Exception as e:
-        logger.error(f"获取引擎列表失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"获取引擎列表失败: {str(e)}")
+        def _call():
+            resp = requests.get(f"{AV_SERVICE_URL}/api/av_engines", timeout=10)
+            resp.raise_for_status()
+            return resp.json()
+        return await asyncio.to_thread(_call)
+    except requests.RequestException:
+        if _use_direct_client and _av_client:
+            engines = _av_client.get_available_engines()
+            return {
+                "total": len(engines),
+                "engines": [{"name": e, "vm": _av_client.engine_to_vm.get(e, {}).get("vm_id", "unknown")} for e in engines],
+            }
+        raise HTTPException(status_code=503, detail=f"检测服务不可用: {AV_SERVICE_URL}")
 
 
 @router.get("/av_vm_status")
 async def get_av_vm_status(current_user: dict = Depends(get_current_user)):
-    """
-    获取虚拟机状态
-    """
-    if av_client is None:
-        raise HTTPException(status_code=500, detail="AV分布式客户端未初始化")
-
+    """获取虚拟机状态（从独立服务查询）"""
     try:
-        vm_status = av_client.get_vm_status()
-        return vm_status
+        def _call():
+            resp = requests.get(f"{AV_SERVICE_URL}/api/av_vm_status", timeout=15)
+            resp.raise_for_status()
+            return resp.json()
+        return await asyncio.to_thread(_call)
+    except requests.RequestException:
+        if _use_direct_client and _av_client:
+            return _av_client.get_vm_status()
+        raise HTTPException(status_code=503, detail=f"检测服务不可用: {AV_SERVICE_URL}")
 
-    except Exception as e:
-        logger.error(f"获取虚拟机状态失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"获取虚拟机状态失败: {str(e)}")
+
+@router.get("/av_scan_queue_status")
+async def get_scan_queue_status(current_user: dict = Depends(get_current_user)):
+    """查询扫描任务队列状态（合并本地批量任务 + :5006 单个扫描任务）"""
+    from app.services.av_detection.scan_queue import get_status as local_get_status
+
+    local_status = local_get_status()
+
+    remote_status = {"running": False, "queue_length": 0, "current": None, "all_queued": []}
+    try:
+        def _call():
+            resp = requests.get(f"{AV_SERVICE_URL}/api/av_scan_queue_status", timeout=10)
+            resp.raise_for_status()
+            return resp.json()
+        remote_status = await asyncio.to_thread(_call)
+    except requests.RequestException:
+        pass  # :5006 不可达时只用本地状态
+
+    # 合并队列（去重）
+    local_queued = local_status.get("all_queued", [])
+    remote_queued = remote_status.get("all_queued", [])
+    # 用 dict 去重保序
+    merged_queued = list(dict.fromkeys(local_queued + remote_queued))
+
+    return {
+        "running": local_status.get("running") or remote_status.get("running", False),
+        "queue_length": len([x for x in merged_queued if x != (remote_status.get("current") or {}).get("task_id")]),
+        "current": local_status.get("current") or remote_status.get("current"),
+        "all_queued": merged_queued,
+        "external_tasks": remote_status.get("external_tasks", []),
+    }

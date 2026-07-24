@@ -2,7 +2,7 @@
 API路由初始化
 """
 from fastapi import APIRouter
-from app.api import auth, detect, attck, flowviz, query, config, flowviz_streaming, av_scan, av_scan_history, dolos
+from app.api import auth, detect, attck, flowviz, query, config, flowviz_streaming, av_scan, av_scan_history, dolos, probe
 
 # 创建路由实例
 auth_router = auth.router
@@ -15,6 +15,7 @@ flowviz_streaming_router = flowviz_streaming.router
 av_scan_router = av_scan.router
 av_scan_history_router = av_scan_history.router
 dolos_router = dolos.router
+probe_router = probe.router
 
 __all__ = [
     'auth_router',
@@ -26,5 +27,6 @@ __all__ = [
     'flowviz_streaming_router',
     'av_scan_router',
     'av_scan_history_router',
-    'dolos_router'
+    'dolos_router',
+    'probe_router'
 ]

@@ -28,6 +28,13 @@
           </el-button>
         </div>
 
+        <!-- 排队中状态 -->
+        <div v-else-if="queuePosition > 1" class="uploading-state">
+          <i class="el-icon-time" style="font-size: 48px; color: #e6a23c;"></i>
+          <p class="uploading-text">{{ queueMessage || `排队中，前面还有 ${queuePosition - 1} 个任务` }}</p>
+          <p v-if="selectedFile" class="file-info">{{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})</p>
+        </div>
+
         <!-- 检测中状态 -->
         <div v-else-if="uploading || scanning" class="uploading-state">
           <i class="el-icon-loading" style="font-size: 48px; color: #409EFF;"></i>
@@ -102,6 +109,9 @@
               <span class="status-icon">{{ getStatusIcon(engine.status) }}</span>
               <span class="status-text">{{ getStatusText(engine.status) }}</span>
             </div>
+            <div class="engine-label" v-if="engine.label">
+              <span class="label-text">{{ engine.label }}</span>
+            </div>
             <div class="engine-info">
               <span class="engine-vm">VM: {{ engine.vm }}</span>
               <span class="engine-time">{{ engine.elapsed_seconds }}s</span>
@@ -149,7 +159,9 @@ export default {
       uploading: false,
       scanning: false,
       scanResult: null,
-      apiBaseUrl: '', // 初始为空,等待从配置文件加载
+      apiBaseUrl: '',
+      queuePosition: 0,
+      queueMessage: '',
       avEngines: [
         'Avira', 'McAfee', 'WindowsDefender', 'IkarusT3', 'Emsisoft',
         'FProtect', 'Vba32', 'ClamAV', 'Kaspersky', 'ESET',
@@ -158,6 +170,9 @@ export default {
     }
   },
   computed: {
+    isScanCompleted() {
+      return this.scanResult && !this.scanning
+    },
     resultClass() {
       if (!this.scanResult) return ''
       return this.scanResult.malicious_count > 0 ? 'malicious' : 'safe'
@@ -169,8 +184,8 @@ export default {
   },
   mounted() {
     console.log('=== av-scan-single 组件挂载 ===')
-    console.log('file-upload-input ref:', this.$refs['file-upload-input'])
     console.log('API地址:', this.apiBaseUrl)
+    this.checkSavedScan()
   },
   methods: {
     // 加载配置文件
@@ -304,11 +319,18 @@ export default {
 
       this.scanning = true
       this.uploading = true
+      this.queuePosition = 0
+      this.queueMessage = ''
+      localStorage.setItem('av_single_scan', JSON.stringify({
+        name: this.selectedFile.name, size: this.selectedFile.size,
+        startedAt: Date.now(),
+      }))
 
       // 初始化引擎结果列表(15个引擎,初始状态都是检测中)
       this.scanResult = {
         file_name: this.selectedFile.name,
         file_size: this.formatFileSize(this.selectedFile.size),
+        elapsed_seconds: 0,
         total_engines: 15,
         malicious_count: 0,
         safe_count: 0,
@@ -367,14 +389,19 @@ export default {
                 console.log('收到流式数据:', data)
 
                 // 处理不同类型的数据
-                if (data.type === 'file_info') {
-                  // 文件信息
+                if (data.type === 'queued') {
+                  this.queuePosition = data.position || 0
+                  this.queueMessage = data.message || ''
+                } else if (data.type === 'file_info') {
+                  // 开始扫描，清除排队状态
+                  this.queuePosition = 0
+                  this.queueMessage = ''
                   this.scanResult.file_name = data.file_name
                   this.scanResult.file_size = data.file_size
                 } else if (data.type === 'complete') {
-                  // 扫描完成
                   this.scanResult.elapsed_seconds = data.elapsed_seconds
                   this.scanResult.total_engines = data.total_engines
+                  localStorage.removeItem('av_single_scan')
                   this.$message.success('扫描完成!')
                 } else if (data.engine) {
                   // 引擎结果 - 立即更新对应的引擎
@@ -389,6 +416,7 @@ export default {
 
       } catch (error) {
         console.error('扫描失败:', error)
+        localStorage.removeItem('av_single_scan')
         let errMsg = '扫描失败!'
         if (error.message) {
           errMsg += ' ' + error.message
@@ -410,6 +438,7 @@ export default {
         this.scanResult.engines[engineIndex] = {
           name: data.engine,
           status: data.status,
+          label: data.label || '',
           vm: data.vm_id || 'unknown',
           elapsed_seconds: data.elapsed_seconds || 0,
           error: data.error
@@ -445,10 +474,27 @@ export default {
       this.scanResult = null
       this.scanning = false
       this.uploading = false
-      // 清空文件输入
+      this.queuePosition = 0
+      this.queueMessage = ''
+      localStorage.removeItem('av_single_scan')
       if (this.$refs['file-upload-input']) {
         this.$refs['file-upload-input'].value = ''
       }
+    },
+
+    checkSavedScan() {
+      const saved = localStorage.getItem('av_single_scan')
+      if (!saved) return
+      try {
+        const info = JSON.parse(saved)
+        const elapsed = Math.floor((Date.now() - info.startedAt) / 1000)
+        this.$notify({
+          title: '检测到未完成任务',
+          message: `${info.name} 正在分布式检测中 (已运行 ${elapsed}秒)，刷新页面不会中断任务。`,
+          type: 'warning',
+          duration: 8000,
+        })
+      } catch {}
     },
 
     // 格式化文件大小

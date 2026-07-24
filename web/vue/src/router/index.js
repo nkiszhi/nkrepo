@@ -101,6 +101,21 @@ export const asyncRoutes = [
     ]
   },
     {
+    path: '/probe',
+    component: Layout,
+    redirect: '/probe/av-probe',
+    name: 'Probe',
+    meta: { title: '边界探测', icon: 'probe' },
+    children: [
+      {
+        path: 'av-probe',
+        component: () => import('@/views/detect/av-scan-probe.vue'),
+        name: 'AVProbe',
+        meta: { title: '边界探测' }
+      }
+    ]
+  },
+    {
     path: '/dolos',
     component: Layout,
     redirect: '/dolos/analysis',

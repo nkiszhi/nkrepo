@@ -129,7 +129,32 @@
           class="progress-bar"
         />
 
-        <div class="progress-detail">
+        <!-- 排队中：队列信息 -->
+        <div v-if="taskStatus === 'queued'" class="progress-detail">
+          <div class="detail-card" v-if="queueCurrent">
+            <div class="card-icon" style="background: linear-gradient(135deg, #e6a23c 0%, #f0ad4e 100%);">
+              <i class="el-icon-warning"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-label">当前正在执行</div>
+              <div class="card-value file-name-text">{{ queueCurrent.file_name || queueCurrent.type || '未知任务' }}</div>
+              <div class="card-desc">{{ queueCurrent.type === 'probe' ? '边界探测' : queueCurrent.type === 'batch_scan' ? '批量检测' : queueCurrent.type === 'single_scan' ? '单文件检测' : queueCurrent.type || '' }}</div>
+            </div>
+          </div>
+          <div class="detail-card">
+            <div class="card-icon" style="background: linear-gradient(135deg, #909399 0%, #b0b3b8 100%);">
+              <i class="el-icon-sort"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-label">排队位置</div>
+              <div class="card-value">前面 {{ queueAhead }} 个任务</div>
+              <div class="card-desc">{{ totalFiles }} 个文件等待检测</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 运行中：进度信息 -->
+        <div v-else class="progress-detail">
           <div class="detail-card">
             <div class="card-icon"><i class="el-icon-document"></i></div>
             <div class="card-content">
@@ -207,9 +232,14 @@
               width="100"
             >
               <template #default="scope">
-                <el-tag :type="getEngineStatusType(scope.row.engines[engine])" size="small">
-                  {{ getEngineStatusText(scope.row.engines[engine]) }}
-                </el-tag>
+                <div>
+                  <el-tag :type="getEngineStatusType(scope.row.engines[engine])" size="small">
+                    {{ getEngineStatusText(scope.row.engines[engine]) }}
+                  </el-tag>
+                  <div v-if="getEngineLabel(scope.row.engines[engine])" class="engine-label-tag">
+                    {{ getEngineLabel(scope.row.engines[engine]) }}
+                  </div>
+                </div>
               </template>
             </el-table-column>
             <el-table-column prop="malicious_count" label="恶意数" width="80" fixed="right">
@@ -295,17 +325,21 @@ export default {
       safeFilesCount: 0,
       maliciousFilesCount: 0,
       apiBaseUrl: '',
-      statusCheckInterval: null
+      statusCheckInterval: null,
+      queueCurrent: null,
+      queueAhead: 0
     }
   },
   computed: {
     progressStatus() {
       if (this.taskStatus === 'completed') return 'success'
       if (this.taskStatus === 'failed') return 'exception'
+      if (this.taskStatus === 'queued') return 'warning'
       return null
     },
     progressTitle() {
       if (this.taskStatus === 'pending') return '准备检测...'
+      if (this.taskStatus === 'queued') return '排队等待中...'
       if (this.taskStatus === 'running') return '检测进度'
       if (this.taskStatus === 'completed') return '检测完成'
       if (this.taskStatus === 'failed') return '检测失败'
@@ -314,6 +348,7 @@ export default {
   },
   created() {
     this.loadConfig()
+    this.checkUnfinishedTask()
   },
   beforeDestroy() {
     if (this.statusCheckInterval) {
@@ -321,6 +356,35 @@ export default {
     }
   },
   methods: {
+    async checkUnfinishedTask() {
+      const savedTaskId = localStorage.getItem('av_batch_v2_task_id')
+      if (!savedTaskId) return
+      try {
+        const response = await apiService.get(
+          `${this.apiBaseUrl}/api/av_batch_scan_status/${savedTaskId}`
+        )
+        this.taskId = savedTaskId
+        this.currentStep = 2
+        this.taskStatus = response.data.status
+        this.progress = response.data.progress
+        this.totalFiles = response.data.total_files
+        this.scannedFiles = response.data.scanned_files
+        this.currentFileName = response.data.current_file
+        this.elapsedSeconds = response.data.elapsed_seconds
+        this.estimatedRemaining = response.data.estimated_remaining
+
+        if (this.taskStatus === 'running' || this.taskStatus === 'pending' || this.taskStatus === 'queued') {
+          this.startStatusCheck()
+        } else if (this.taskStatus === 'completed') {
+          await this.fetchScanResults()
+          this.currentStep = 3
+        }
+      } catch (error) {
+        console.warn('任务不存在:', error.message)
+        localStorage.removeItem('av_batch_v2_task_id')
+      }
+    },
+
     async loadConfig() {
       try {
         const response = await apiService.get('/config.ini', { responseType: 'text', timeout: 5000 })
@@ -457,16 +521,18 @@ export default {
 
         this.taskId = uploadResponse.data.task_id
         this.totalFiles = uploadResponse.data.total_files
+        localStorage.setItem('av_batch_v2_task_id', this.taskId)
 
         this.$message.success(`成功上传 ${this.totalFiles} 个文件，正在启动检测...`)
 
-        this.startStatusCheck()
-
-        await apiService.post(`${this.apiBaseUrl}/api/av_batch_scan_start`, {
+        // 先发送启动请求，再开始轮询
+        const startResponse = await apiService.post(`${this.apiBaseUrl}/api/av_batch_scan_start`, {
           task_id: this.taskId
         })
 
+        this.taskStatus = startResponse.data.status
         this.$message.success('批量检测任务已启动')
+        this.startStatusCheck()
 
       } catch (error) {
         console.error('启动批量扫描失败:', error)
@@ -500,10 +566,16 @@ export default {
         this.estimatedRemaining = data.estimated_remaining
         this.currentFileName = data.current_file || ''
 
+        // 排队时拉取队列信息
+        if (this.taskStatus === 'queued') {
+          this.fetchQueueStatus()
+        }
+
         if (this.taskStatus === 'completed') {
           this.stopStatusCheck()
           await this.fetchScanResults()
           this.currentStep = 3
+          localStorage.removeItem('av_batch_v2_task_id')
           this.$message.success('检测完成!')
         } else if (this.taskStatus === 'failed') {
           this.stopStatusCheck()
@@ -512,6 +584,22 @@ export default {
       } catch (error) {
         console.error('检查任务状态失败:', error)
       }
+    },
+
+    async fetchQueueStatus() {
+      try {
+        const resp = await apiService.get(`${this.apiBaseUrl}/api/av_scan_queue_status`)
+        if (resp.data) {
+          this.queueCurrent = resp.data.current
+          let ahead = resp.data.current ? 1 : 0
+          const allQueued = resp.data.all_queued || []
+          const idx = allQueued.indexOf(this.taskId)
+          if (idx > 0) {
+            ahead += idx
+          }
+          this.queueAhead = ahead
+        }
+      } catch (e) {}
     },
 
     stopStatusCheck() {
@@ -585,7 +673,10 @@ export default {
       this.estimatedRemaining = 0
       this.scanResults = []
       this.currentFileName = ''
+      this.queueCurrent = null
+      this.queueAhead = 0
       this.stopStatusCheck()
+      localStorage.removeItem('av_batch_v2_task_id')
     },
 
     goToHistory() {
@@ -611,23 +702,39 @@ export default {
     },
 
     getTaskStatusType(status) {
-      const typeMap = { 'pending': 'info', 'running': 'warning', 'completed': 'success', 'failed': 'danger' }
+      const typeMap = { 'pending': 'info', 'queued': 'warning', 'running': 'warning', 'completed': 'success', 'failed': 'danger' }
       return typeMap[status] || 'info'
     },
 
     getTaskStatusText(status) {
-      const textMap = { 'pending': '等待中', 'running': '运行中', 'completed': '已完成', 'failed': '失败' }
+      const textMap = { 'pending': '等待中', 'queued': '排队中', 'running': '运行中', 'completed': '已完成', 'failed': '失败' }
       return textMap[status] || '未知'
+    },
+
+    // 提取引擎状态字符串（兼容新旧格式）
+    getEngineStatus(engineInfo) {
+      if (typeof engineInfo === 'object' && engineInfo !== null) {
+        return engineInfo.status || 'N/A'
+      }
+      return engineInfo || 'N/A'
+    },
+
+    // 提取引擎检测标签
+    getEngineLabel(engineInfo) {
+      if (typeof engineInfo === 'object' && engineInfo !== null) {
+        return engineInfo.label || ''
+      }
+      return ''
     },
 
     getEngineStatusType(status) {
       const typeMap = { 'malicious': 'danger', 'safe': 'success', 'unsupported': 'info' }
-      return typeMap[status] || 'info'
+      return typeMap[this.getEngineStatus(status)] || 'info'
     },
 
     getEngineStatusText(status) {
       const textMap = { 'malicious': '恶意', 'safe': '安全', 'unsupported': '不支持' }
-      return textMap[status] || 'N/A'
+      return textMap[this.getEngineStatus(status)] || 'N/A'
     }
   }
 }

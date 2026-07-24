@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 # 创建数据库连接 - 对密码进行URL编码以处理特殊字符
 encoded_password = quote_plus(settings.MYSQL_PASSWORD)
-DATABASE_URL = f"mysql+pymysql://{settings.MYSQL_USER}:{encoded_password}@{settings.MYSQL_HOST}:{settings.MYSQL_PORT}/{settings.MYSQL_DATABASE}"
+av_history_database = getattr(settings, "MYSQL_AV_HISTORY_DATABASE", "av_scan_history")
+DATABASE_URL = f"mysql+pymysql://{settings.MYSQL_USER}:{encoded_password}@{settings.MYSQL_HOST}:{settings.MYSQL_PORT}/{av_history_database}"
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=3600)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
