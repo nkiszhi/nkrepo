@@ -26,16 +26,8 @@ from typing import List, Dict, Any
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# 导入 AV 客户端（与 av_scan.py 相同方式）
-try:
-    from app.services.av_detection import AVDistributedClient
-
-    config_path = Path(__file__).parent.parent / "services" / "av_detection" / "vm_config.json"
-    av_client = AVDistributedClient(config_path=str(config_path))
-    logger.info(f"[Probe] AV分布式客户端初始化成功, config: {config_path}")
-except Exception as e:
-    logger.error(f"[Probe] AV分布式客户端初始化失败: {str(e)}")
-    av_client = None
+# 新版 probe 通过 :5006 独立检测服务代理执行，不在 Web 启动时初始化本地 AV 客户端。
+av_client = None
 
 # ========== 常量 ==========
 ZEROOUT_BYTE = 0x90      # 清零字节

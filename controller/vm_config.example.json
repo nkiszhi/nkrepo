@@ -1,0 +1,11 @@
+{
+  "virtual_machines": [
+    {
+      "id": "vm1",
+      "ip": "192.168.0.10",
+      "port": 27483,
+      "engines": ["ClamAV"]
+    }
+  ],
+  "all_engines": ["ClamAV"]
+}

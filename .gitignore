@@ -16,6 +16,7 @@ CLAUDE.md
 config.ini
 web/fastapi/config.ini
 web/fastapi/app/services/av_detection/vm_config.json
+controller/vm_config.json
 
 # Vue git submodule directory (should not be committed)
 web/vue/.git/
@@ -564,7 +565,7 @@ web/vue/.env.*
 #
 # 1. NEVER commit config.ini (contains MySQL passwords, JWT secrets, API keys)
 # 2. NEVER commit web/fastapi/config.ini (backend sensitive configuration)
-# 3. NEVER commit web/fastapi/app/services/av_detection/vm_config.json (VM IPs and ports)
+# 3. NEVER commit vm_config.json files (VM IPs, ports, and engine topology)
 # 4. NEVER commit malware samples from data/samples/, data/sample/, uploads/
 # 5. NEVER commit uploaded files from web/vue/uploads/, web/fastapi/uploads/
 # 6. NEVER commit trained ML models (too large, use model registry)
