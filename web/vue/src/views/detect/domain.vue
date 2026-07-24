@@ -82,6 +82,7 @@ apiService.interceptors.request.use(
 )
 
 export default {
+  name: 'DomainDetect',
   data() {
     return {
       inputValue: '',

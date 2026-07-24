@@ -75,6 +75,7 @@ apiService.interceptors.request.use(
 )
 
 export default {
+  name: 'SHA256Search',
   components: {
     LineSampleTrend
   },

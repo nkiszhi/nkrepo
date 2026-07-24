@@ -80,6 +80,7 @@ apiService.interceptors.request.use(
 )
 
 export default {
+  name: 'PlatformSearch',
   components: {
     PiePlatform
   },

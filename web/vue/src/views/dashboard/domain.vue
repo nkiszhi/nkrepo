@@ -10,7 +10,7 @@ import adminDashboard from './domain/admin/index.vue'
 import editorDashboard from './domain/editor/index.vue'
 
 export default {
-  name: 'Dashboard',
+  name: 'DomainDashboard',
   components: { adminDashboard, editorDashboard },
   data() {
     return {

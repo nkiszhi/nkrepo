@@ -81,6 +81,7 @@ apiService.interceptors.request.use(
 )
 
 export default {
+  name: 'FamilySearch',
   components: {
     PieFamily
   },

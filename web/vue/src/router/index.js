@@ -65,7 +65,7 @@ export const asyncRoutes = [
       {
         path: 'sample-vt',
         component: () => import('@/views/detect/sample-vt.vue'),
-        name: 'SampleVt',
+        name: 'SampleVT',
         meta: { title: '恶意文件检测' }
       },
       {
@@ -97,23 +97,24 @@ export const asyncRoutes = [
         component: () => import('@/views/detect/av-scan-history.vue'),
         name: 'AVScanHistory',
         meta: { title: '检测历史记录' }
-      }
-    ]
-  },
-    {
-    path: '/probe',
-    component: Layout,
-    redirect: '/probe/av-probe',
-    name: 'Probe',
-    meta: { title: '边界探测', icon: 'probe' },
-    children: [
+      },
       {
         path: 'av-probe',
         component: () => import('@/views/detect/av-scan-probe.vue'),
-        name: 'AVProbe',
+        name: 'AVScanProbe',
         meta: { title: '边界探测' }
       }
     ]
+  },
+  {
+    path: '/probe',
+    redirect: '/detect/av-probe',
+    hidden: true
+  },
+  {
+    path: '/probe/av-probe',
+    redirect: '/detect/av-probe',
+    hidden: true
   },
     {
     path: '/dolos',
@@ -181,7 +182,7 @@ export const asyncRoutes = [
       {
         path: 'analysis',
         component: () => import('@/views/flowviz/FlowAnalysis.vue'),
-        name: 'FlowVizAnalysis',
+        name: 'FlowAnalysis',
         meta: { title: '流式分析' }
       },
       {

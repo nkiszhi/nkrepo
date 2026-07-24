@@ -81,6 +81,7 @@ apiService.interceptors.request.use(
 )
 
 export default {
+  name: 'CategorySearch',
   components: {
     PieCategory
   },
