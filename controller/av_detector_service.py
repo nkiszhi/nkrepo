@@ -81,6 +81,9 @@ if not VM_CONFIG:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("av_detector")
 
+PUBLIC_SCAN_ERROR = "扫描失败，请稍后重试"
+PUBLIC_STREAM_ERROR = "扫描服务处理失败，请稍后重试"
+
 # ---- FastAPI 应用 ----------------------------------------------------
 
 app = FastAPI(
@@ -221,7 +224,7 @@ async def scan_single_file(file: UploadFile = File(...), engines: str = Form("")
             return formatted
     except Exception as e:
         logger.error(f"扫描失败: {e}")
-        raise HTTPException(status_code=500, detail=f"扫描失败: {e}")
+        raise HTTPException(status_code=500, detail=PUBLIC_SCAN_ERROR)
     finally:
         leave_queue(task_id)
 
@@ -277,7 +280,7 @@ async def scan_single_file_streaming(file: UploadFile = File(...), engines: str 
                 clear_current()
         except Exception as e:
             logger.error(f"流式扫描失败: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'error': PUBLIC_STREAM_ERROR})}\n\n"
         finally:
             leave_queue(task_id)
 
@@ -375,7 +378,7 @@ async def _execute_batch_scan(task_id: str):
                     logger.error(f"扫描文件失败: {file_info['name']} {e}")
                     task["scanned_files"] = idx + 1
                     task["progress"] = (idx + 1) / len(files) * 100
-                    return {"file_name": file_info["name"], "error": str(e), "engines": {}}
+                    return {"file_name": file_info["name"], "error": PUBLIC_SCAN_ERROR, "engines": {}}
 
             max_concurrent = min(len(files), 5)
             results = []
@@ -393,7 +396,7 @@ async def _execute_batch_scan(task_id: str):
     except Exception as e:
         logger.error(f"批量扫描异常: task_id={task_id} {e}")
         task["status"] = "failed"
-        task["error"] = str(e)
+        task["error"] = PUBLIC_SCAN_ERROR
     finally:
         clear_current()
         leave_queue(task_id)
@@ -606,14 +609,14 @@ async def probe_start(file: UploadFile = File(...), engines: str = Form("")):
                         yield f"data: {json.dumps({'type': 'engine_done', 'engine': engine, 'intervals': [[f'0x{a:x}', f'0x{b:x}'] for a,b in intervals], 'found_signatures': len(intervals), 'total_queries': queries})}\n\n"
                     except Exception as e:
                         logger.error(f"Probe {engine} error: {e}")
-                        yield f"data: {json.dumps({'type': 'engine_error', 'engine': engine, 'error': str(e)})}\n\n"
+                        yield f"data: {json.dumps({'type': 'engine_error', 'engine': engine, 'error': PUBLIC_STREAM_ERROR})}\n\n"
 
                 clear_current()
                 yield f"data: {json.dumps({'type': 'complete', 'file_name': file.filename, 'file_size': len(raw_content), 'results': all_results})}\n\n"
 
         except Exception as e:
             logger.error(f"Probe 异常: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'error': PUBLIC_STREAM_ERROR})}\n\n"
         finally:
             leave_queue(task_id)
 

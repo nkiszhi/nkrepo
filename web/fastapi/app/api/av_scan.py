@@ -28,6 +28,11 @@ from app.services.av_detection.scan_queue import join_queue, leave_queue
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+PUBLIC_SCAN_ERROR = "扫描失败，请稍后重试"
+PUBLIC_STREAM_ERROR = "扫描服务处理失败，请稍后重试"
+PUBLIC_UPLOAD_ERROR = "上传失败，请稍后重试"
+PUBLIC_REPORT_ERROR = "生成报告失败，请稍后重试"
+
 # ============================================================
 # 配置：独立检测服务地址
 # ============================================================
@@ -103,13 +108,13 @@ async def scan_single_file(
 
     except requests.HTTPError as e:
         logger.error(f"检测服务返回错误: {e.response.status_code}")
-        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+        raise HTTPException(status_code=e.response.status_code, detail=PUBLIC_SCAN_ERROR)
     except requests.RequestException as e:
         logger.error(f"无法连接到独立检测服务 {AV_SERVICE_URL}: {e}")
         raise HTTPException(status_code=503, detail=f"检测服务不可用: {AV_SERVICE_URL}")
     except Exception as e:
         logger.error(f"扫描失败: {e}")
-        raise HTTPException(status_code=500, detail=f"扫描失败: {e}")
+        raise HTTPException(status_code=500, detail=PUBLIC_SCAN_ERROR)
 
 
 async def _scan_single_direct(file: UploadFile):
@@ -174,9 +179,10 @@ async def scan_single_file_streaming(
                             line.decode("utf-8", errors="replace") + "\n",
                         )
             except Exception as e:
+                logger.error(f"流式扫描代理失败: {e}")
                 loop.call_soon_threadsafe(
                     q.put_nowait,
-                    f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n",
+                    f"data: {json.dumps({'type': 'error', 'error': PUBLIC_STREAM_ERROR})}\n\n",
                 )
             finally:
                 loop.call_soon_threadsafe(q.put_nowait, None)
@@ -239,7 +245,8 @@ async def _scan_single_streaming_direct(file: UploadFile):
                     os.remove(file_path)
                 clear_current()
         except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+            logger.error(f"直接流式扫描失败: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'error': PUBLIC_STREAM_ERROR})}\n\n"
         finally:
             leave_queue(task_id)
 
@@ -396,7 +403,7 @@ async def batch_upload_files(
 
     except Exception as e:
         logger.error(f"批量上传失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"上传失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=PUBLIC_UPLOAD_ERROR)
 
 
 @router.post("/av_batch_scan_start")
@@ -531,7 +538,7 @@ async def execute_batch_scan(task_id: str):
                     logger.error(f"扫描文件失败: {file_info['name']}, error={e}")
                     task['scanned_files'] = idx + 1
                     task['progress'] = (idx + 1) / total_files * 100
-                    return {"file_name": file_info['name'], "error": str(e), "engines": {}}
+                    return {"file_name": file_info['name'], "error": PUBLIC_SCAN_ERROR, "engines": {}}
 
             # 改为逐个扫描（不并发），实时更新进度
             results = []
@@ -566,7 +573,7 @@ async def execute_batch_scan(task_id: str):
     except Exception as e:
         logger.error(f"批量扫描任务异常: task_id={task_id}, error={e}")
         task['status'] = 'failed'
-        task['error'] = str(e)
+        task['error'] = PUBLIC_SCAN_ERROR
     finally:
         clear_current()
         leave_queue(task_id)
@@ -755,7 +762,7 @@ async def download_batch_scan_report(
 
     except Exception as e:
         logger.error(f"生成CSV报告失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"生成报告失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=PUBLIC_REPORT_ERROR)
 
 
 @router.get("/av_engines")
