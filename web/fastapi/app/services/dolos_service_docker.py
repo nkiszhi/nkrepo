@@ -10,6 +10,7 @@ from datetime import datetime
 import uuid
 import logging
 import subprocess
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,28 @@ class DolosAnalyzer:
         
         # 检查是否使用Docker
         self.use_docker = self._check_docker_available()
+
+    def _find_result_file(self, analysis_id: str) -> Optional[Path]:
+        """Find a generated result file without using the request value as a path."""
+        if not re.fullmatch(
+            r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-"
+            r"[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}",
+            analysis_id or "",
+        ):
+            return None
+
+        results_dir = self.results_dir.resolve()
+        normalized_id = analysis_id.lower()
+        for candidate in results_dir.glob("*.json"):
+            if candidate.stem.lower() != normalized_id:
+                continue
+
+            resolved_candidate = candidate.resolve()
+            if resolved_candidate.parent != results_dir or not resolved_candidate.is_file():
+                return None
+            return resolved_candidate
+
+        return None
         
     def _check_docker_available(self) -> bool:
         """检查Docker是否可用"""
@@ -270,8 +293,8 @@ class DolosAnalyzer:
         Returns:
             分析结果字典
         """
-        result_file = self.results_dir / f"{analysis_id}.json"
-        if not result_file.exists():
+        result_file = self._find_result_file(analysis_id)
+        if result_file is None:
             return None
         
         try:
@@ -291,8 +314,8 @@ class DolosAnalyzer:
         Returns:
             是否删除成功
         """
-        result_file = self.results_dir / f"{analysis_id}.json"
-        if not result_file.exists():
+        result_file = self._find_result_file(analysis_id)
+        if result_file is None:
             return False
         
         try:

@@ -161,6 +161,28 @@ class DolosAnalyzer:
         self.results_dir.mkdir(exist_ok=True)
         self.temp_dir = Path("uploads/dolos_temp")
         self.temp_dir.mkdir(parents=True, exist_ok=True)
+
+    def _find_result_file(self, analysis_id: str) -> Optional[Path]:
+        """Find a generated result file without using the request value as a path."""
+        if not re.fullmatch(
+            r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-"
+            r"[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}",
+            analysis_id or "",
+        ):
+            return None
+
+        results_dir = self.results_dir.resolve()
+        normalized_id = analysis_id.lower()
+        for candidate in results_dir.glob("*.json"):
+            if candidate.stem.lower() != normalized_id:
+                continue
+
+            resolved_candidate = candidate.resolve()
+            if resolved_candidate.parent != results_dir or not resolved_candidate.is_file():
+                return None
+            return resolved_candidate
+
+        return None
     
     async def analyze(self, file_paths: List[str]) -> Dict[str, Any]:
         """
@@ -333,8 +355,8 @@ class DolosAnalyzer:
         Returns:
             分析结果字典
         """
-        result_file = self.results_dir / f"{analysis_id}.json"
-        if not result_file.exists():
+        result_file = self._find_result_file(analysis_id)
+        if result_file is None:
             return None
         
         try:
@@ -354,8 +376,8 @@ class DolosAnalyzer:
         Returns:
             是否删除成功
         """
-        result_file = self.results_dir / f"{analysis_id}.json"
-        if not result_file.exists():
+        result_file = self._find_result_file(analysis_id)
+        if result_file is None:
             return False
         
         try:
